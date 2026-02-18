@@ -1,0 +1,1843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0d0f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Chronicle</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;--border:#2e2e42;--border2:#3d3d58;--gold:#c9a84c;--gold2:#e8c97a;--text:#d4d4e8;--text2:#9090aa;--accent:#7b6cee;--accent2:#a99bff;--red:#cc5555;--green:#55aa77;--amber:#cc8844;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4;}
+
+/* LOCK SCREEN */
+#lockScreen{position:fixed;inset:0;background:var(--bg);z-index:5000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px;}
+#lockScreen h1{font-family:'Cinzel',serif;font-size:28px;color:var(--gold);letter-spacing:0.2em;text-shadow:0 0 40px rgba(201,168,76,0.4);}
+#lockSubtitle{font-size:13px;color:var(--text2);letter-spacing:0.05em;}
+.pin-dots{display:flex;gap:14px;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:all 0.15s;}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold);box-shadow:0 0 10px rgba(201,168,76,0.5);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px;}
+.pin-btn{width:72px;height:72px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Cinzel',serif;font-size:20px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;}
+.pin-btn:active{background:var(--bg4);border-color:var(--gold);color:var(--gold);transform:scale(0.95);}
+.pin-btn.del{font-size:16px;color:var(--text2);}
+.pin-btn.bio-icon{font-size:22px;}
+.pin-error{color:var(--red);font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.1em;min-height:18px;text-align:center;}
+#lockSetupMsg{font-size:12px;color:var(--text2);text-align:center;max-width:240px;line-height:1.6;display:none;}
+
+/* NAV */
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0);overflow-x:auto;}
+nav button{flex:0 0 auto;min-width:52px;background:none;border:none;color:var(--text2);padding:10px 6px 8px;font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;transition:color 0.2s;display:flex;flex-direction:column;align-items:center;gap:3px;}
+nav button svg{width:18px;height:18px;}
+nav button.active{color:var(--gold);}
+
+/* HEADER */
+header{background:linear-gradient(180deg,#0d0d0f 0%,var(--bg2) 100%);border-bottom:1px solid var(--border);padding:14px 16px 10px;position:sticky;top:0;z-index:50;}
+header h1{font-family:'Cinzel',serif;font-size:20px;font-weight:600;color:var(--gold);letter-spacing:0.15em;text-shadow:0 0 30px rgba(201,168,76,0.3);}
+header p{font-size:11px;color:var(--text2);letter-spacing:0.05em;margin-top:1px;}
+
+/* SECTIONS */
+.section{display:none;padding:16px 14px 100px;}
+.section.active{display:block;}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:12px;position:relative;}
+.card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--gold),transparent);border-radius:4px 0 0 4px;}
+
+/* BUTTONS */
+.btn{background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:8px 14px;border-radius:3px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;}
+.btn:hover,.btn:active{background:var(--bg4);border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,#8a6a20,var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.btn-gold:hover{filter:brightness(1.1);color:#1a1200;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+
+/* INPUTS */
+input[type="text"],input[type="date"],input[type="password"],input[type="time"],textarea,select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;transition:border-color 0.2s;}
+input:focus,textarea:focus,select:focus{border-color:var(--gold);}
+select option{background:var(--bg3);}
+textarea{resize:vertical;min-height:80px;}
+label{display:block;font-size:11px;letter-spacing:0.08em;color:var(--text2);font-family:'Cinzel',serif;text-transform:uppercase;margin-bottom:4px;}
+.field{margin-bottom:12px;}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text2);font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.15em;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;}
+.toggle-label{font-family:'Cinzel',serif;font-size:11px;color:var(--text2);letter-spacing:0.06em;}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--bg4);border-radius:12px;cursor:pointer;transition:0.2s;border:1px solid var(--border2);}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:2px;top:2px;background:var(--text2);border-radius:50%;transition:0.2s;}
+.toggle input:checked+.toggle-slider{background:var(--gold);border-color:var(--gold2);}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px);background:#1a1200;}
+
+/* CALENDAR */
+.week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.week-nav h2{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:0.08em;text-align:center;flex:1;}
+.day-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.day-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg3);cursor:pointer;user-select:none;}
+.day-header-left{display:flex;align-items:center;gap:10px;}
+.day-name{font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.1em;color:var(--gold2);}
+.day-date{font-size:12px;color:var(--text2);}
+.day-badge{background:var(--accent);color:white;border-radius:10px;padding:1px 7px;font-size:10px;font-family:'Cinzel',serif;}
+.day-body{padding:12px 14px;display:none;}
+.day-body.open{display:block;}
+.entry-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}
+.entry-item:last-child{border-bottom:none;}
+.entry-time{font-family:'Cinzel',serif;font-size:10px;color:var(--text2);min-width:40px;padding-top:3px;}
+.entry-text{flex:1;font-size:15px;color:var(--text);line-height:1.4;}
+.entry-bell{background:none;border:none;cursor:pointer;padding:0 2px;font-size:13px;line-height:1;opacity:0.4;transition:opacity 0.2s;}
+.entry-bell.on{opacity:1;}
+.entry-badge{font-size:9px;padding:1px 5px;border-radius:10px;font-family:'Cinzel',serif;white-space:nowrap;}
+.badge-routine{background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3);}
+.badge-note{background:rgba(123,108,238,0.15);color:var(--accent2);border:1px solid rgba(123,108,238,0.3);}
+.entry-delete{background:none;border:none;color:var(--text2);cursor:pointer;padding:0 2px;font-size:16px;line-height:1;transition:color 0.2s;}
+.entry-delete:hover{color:var(--red);}
+.day-card.today .day-name{color:var(--accent2);}
+.day-card.today .day-header{background:#1a1620;}
+.chevron{transition:transform 0.2s;color:var(--text2);font-size:12px;}
+.chevron.open{transform:rotate(90deg);}
+
+/* PERSONA */
+.persona-active-card{background:linear-gradient(135deg,#1a1624 0%,#141020 100%);border:1px solid var(--accent);border-radius:6px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;}
+.persona-active-card::after{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(123,108,238,0.12) 0%,transparent 70%);pointer-events:none;}
+.persona-name{font-family:'Cinzel',serif;font-size:20px;font-weight:600;color:var(--accent2);letter-spacing:0.1em;margin-bottom:4px;}
+.persona-class{font-size:13px;color:var(--text2);font-style:italic;margin-bottom:16px;}
+.stat-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.stat-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;color:var(--text2);min-width:90px;text-transform:uppercase;}
+.stat-bar-bg{flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;}
+.stat-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease;}
+.stat-value{font-family:'Cinzel',serif;font-size:11px;color:var(--text);min-width:28px;text-align:right;}
+.persona-list-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;}
+.pill-active{background:rgba(123,108,238,0.2);color:var(--accent2);border:1px solid rgba(123,108,238,0.4);padding:2px 8px;border-radius:10px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.08em;}
+
+/* PEOPLE */
+.person-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:10px;overflow:hidden;}
+.person-header{display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;}
+.person-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--bg4),var(--bg3));border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:16px;color:var(--gold);flex-shrink:0;}
+.person-body{padding:0 14px 14px;display:none;}
+.person-body.open{display:block;}
+.info-tag{display:inline-block;background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:2px 8px;font-size:12px;color:var(--text);margin:2px;}
+.section-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin:12px 0 6px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.tag-list{display:flex;flex-wrap:wrap;gap:4px;}
+
+/* BOOK */
+.book-meta{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:14px;}
+.book-cover-img{width:100%;max-height:180px;object-fit:cover;border-radius:4px;margin-bottom:12px;border:1px solid var(--border);}
+.chapter-item{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color 0.2s;}
+.chapter-item:hover{border-color:var(--gold);}
+.chapter-num{font-family:'Cinzel',serif;font-size:10px;color:var(--text2);letter-spacing:0.1em;}
+.chapter-title-text{font-family:'Cinzel',serif;font-size:14px;color:var(--text);}
+.book-editor-area{display:none;}
+.book-editor-area.active{display:block;}
+.book-editor-area textarea{min-height:55vh;font-size:16px;line-height:1.9;font-family:'Crimson Pro',serif;}
+.full-view-content{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:20px;line-height:1.9;font-size:17px;white-space:pre-wrap;word-break:break-word;}
+.full-view-content .ch-heading{font-family:'Cinzel',serif;font-size:15px;color:var(--gold);margin:24px 0 12px;letter-spacing:0.1em;border-bottom:1px solid var(--border);padding-bottom:8px;}
+
+/* PASSWORDS */
+.pw-entry{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.pw-entry-header{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;}
+.pw-site-icon{width:36px;height:36px;border-radius:8px;background:var(--bg4);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:15px;color:var(--gold);flex-shrink:0;}
+.pw-body{padding:0 14px 14px;display:none;}
+.pw-body.open{display:block;}
+.pw-field-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.pw-field-label{font-family:'Cinzel',serif;font-size:10px;color:var(--text2);letter-spacing:0.08em;min-width:72px;}
+.pw-field-val{flex:1;font-size:14px;color:var(--text);word-break:break-all;min-width:80px;}
+.pw-copy{background:none;border:1px solid var(--border);border-radius:3px;color:var(--text2);padding:3px 10px;font-size:10px;font-family:'Cinzel',serif;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.pw-copy:hover{border-color:var(--gold);color:var(--gold);}
+.pw-reveal{background:none;border:none;color:var(--text2);cursor:pointer;font-size:15px;padding:2px 4px;}
+
+/* BOARD / KANBAN */
+.board-wrap{overflow-x:auto;padding-bottom:80px;-webkit-overflow-scrolling:touch;}
+.board-wrap::-webkit-scrollbar{height:3px;}
+.board-tabs-row{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;}
+.board-tab{background:var(--bg2);border:1px solid var(--border);border-radius:3px;color:var(--text2);padding:5px 14px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0;}
+.board-tab.active{background:var(--bg3);border-color:var(--gold);color:var(--gold);}
+.kanban-cols{display:flex;gap:10px;min-width:max-content;padding-top:4px;}
+.kanban-col{width:230px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;display:flex;flex-direction:column;max-height:calc(100vh - 200px);}
+.kanban-col-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.kanban-col-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;}
+.kanban-col-count{background:var(--bg4);border-radius:10px;padding:1px 7px;font-size:10px;font-family:'Cinzel',serif;color:var(--text2);}
+.kanban-cards-wrap{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px;}
+.kanban-card{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:10px 12px;cursor:pointer;transition:border-color 0.15s;}
+.kanban-card:active{border-color:var(--gold);}
+.kanban-card-title{font-size:14px;color:var(--text);line-height:1.4;}
+.kanban-card-tags{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;}
+.ktag{font-size:9px;padding:1px 6px;border-radius:10px;font-family:'Cinzel',serif;border:1px solid;}
+.ktag-ngy{color:#e05050;border-color:rgba(224,80,80,0.35);background:rgba(224,80,80,0.08);}
+.ktag-personal{color:var(--accent2);border-color:rgba(123,108,238,0.35);background:rgba(123,108,238,0.08);}
+.ktag-north{color:var(--gold);border-color:rgba(201,168,76,0.35);background:rgba(201,168,76,0.08);}
+.kanban-add{width:100%;background:none;border:none;color:var(--text2);padding:8px 12px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.05em;cursor:pointer;transition:color 0.2s;text-align:left;border-top:1px solid var(--border);flex-shrink:0;}
+.kanban-add:hover{color:var(--gold);}
+.kcol-del{background:none;border:none;color:var(--border2);cursor:pointer;font-size:13px;padding:0 2px;transition:color 0.2s;}
+.kcol-del:hover{color:var(--red);}
+
+/* STUDIO */
+.studio-switcher{display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:14px;}
+.studio-sw-btn{flex:1;background:none;border:none;color:var(--text2);padding:9px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;}
+.studio-sw-btn.active{background:var(--bg4);color:var(--gold);border-bottom:2px solid var(--gold);}
+.studio-pane{display:none;padding-bottom:80px;}
+.studio-pane.active{display:block;}
+
+/* COMIC PLANNER */
+.comic-arc-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:10px;overflow:hidden;}
+.comic-arc-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--bg3);cursor:pointer;}
+.comic-arc-label{font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.1em;color:var(--gold);}
+.comic-arc-body{display:none;padding:10px 14px 14px;}
+.comic-arc-body.open{display:block;}
+.panel-row{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;}
+.panel-num{font-family:'Cinzel',serif;font-size:10px;color:var(--text2);min-width:22px;padding-top:3px;}
+.panel-text{flex:1;font-size:14px;color:var(--text);line-height:1.5;}
+.panel-del{background:none;border:none;color:var(--border2);cursor:pointer;font-size:14px;transition:color 0.2s;padding:0 2px;}
+.panel-del:hover{color:var(--red);}
+
+/* RPG STUDIO */
+.rpg-section{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:14px;margin-bottom:10px;}
+.rpg-section-title{font-family:'Cinzel',serif;font-size:11px;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.rpg-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.rpg-map{display:grid;gap:4px;margin-bottom:10px;user-select:none;}
+.rpg-cell{aspect-ratio:1;border-radius:3px;border:1px solid var(--border2);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.15s;position:relative;overflow:hidden;}
+.rpg-cell.room{background:var(--bg4);border-color:var(--border2);}
+.rpg-cell.room-active{border-color:var(--gold);background:#1e1a10;}
+.rpg-cell.empty{background:var(--bg);border-color:var(--border);}
+.rpg-cell.selected{border-color:var(--gold);box-shadow:0 0 8px rgba(201,168,76,0.3);}
+.rpg-cell-label{font-size:8px;font-family:'Cinzel',serif;color:var(--text2);position:absolute;bottom:1px;left:0;right:0;text-align:center;line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 1px;}
+.rpg-scene-panel{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:12px;margin-top:10px;}
+.rpg-scene-title{font-family:'Cinzel',serif;font-size:12px;color:var(--gold2);margin-bottom:8px;}
+.rpg-choice{background:var(--bg4);border:1px solid var(--border2);border-radius:3px;padding:8px 12px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:14px;transition:border-color 0.15s;}
+.rpg-choice:hover{border-color:var(--gold);}
+.rpg-choice-arrow{color:var(--text2);font-size:12px;}
+.rpg-playtest{background:linear-gradient(135deg,#0f1a0f,#0d1510);border:1px solid #2a4a2a;border-radius:6px;padding:16px;margin-top:10px;}
+.rpg-playtest-title{font-family:'Cinzel',serif;font-size:13px;color:#55cc77;letter-spacing:0.1em;margin-bottom:10px;}
+.rpg-playtest-narr{font-size:15px;line-height:1.7;color:var(--text);margin-bottom:14px;font-style:italic;}
+.rpg-playtest-choices{display:flex;flex-direction:column;gap:6px;}
+.rpg-pt-btn{background:rgba(85,204,119,0.08);border:1px solid rgba(85,204,119,0.3);border-radius:3px;color:#55cc77;padding:9px 14px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.06em;cursor:pointer;text-align:left;transition:all 0.15s;}
+.rpg-pt-btn:hover{background:rgba(85,204,119,0.15);border-color:#55cc77;}
+.rpg-stat-bar{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.rpg-stat-lbl{font-family:'Cinzel',serif;font-size:10px;color:var(--text2);min-width:60px;letter-spacing:0.06em;}
+.rpg-stat-track{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;}
+.rpg-stat-fill{height:100%;border-radius:3px;transition:width 0.4s ease;}
+.rpg-stat-val{font-family:'Cinzel',serif;font-size:10px;color:var(--text);min-width:24px;text-align:right;}
+.ngy-tag{display:inline-block;background:rgba(224,80,80,0.1);border:1px solid rgba(224,80,80,0.3);color:#e07070;border-radius:3px;padding:1px 8px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.08em;margin-right:4px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:8px 8px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:0.1em;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+
+/* MISC */
+input[type="range"]{-webkit-appearance:none;width:100%;height:4px;background:var(--bg4);border-radius:2px;outline:none;cursor:pointer;}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent2);border-radius:50%;box-shadow:0 0 8px rgba(123,108,238,0.5);}
+.row{display:flex;gap:8px;}.row>*{flex:1;}
+.empty-state{text-align:center;padding:32px 16px;color:var(--text2);font-style:italic;font-size:15px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:8px 20px;border-radius:20px;font-family:'Cinzel',serif;font-size:12px;z-index:9000;transition:opacity 0.4s;pointer-events:none;}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOCK SCREEN ═══ -->
+<div id="lockScreen">
+  <h1>CHRONICLE</h1>
+  <p id="lockSubtitle">Enter your PIN</p>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-error" id="pinError"></div>
+  <div class="pin-pad">
+    <button class="pin-btn" onclick="pinPress('1')">1</button>
+    <button class="pin-btn" onclick="pinPress('2')">2</button>
+    <button class="pin-btn" onclick="pinPress('3')">3</button>
+    <button class="pin-btn" onclick="pinPress('4')">4</button>
+    <button class="pin-btn" onclick="pinPress('5')">5</button>
+    <button class="pin-btn" onclick="pinPress('6')">6</button>
+    <button class="pin-btn" onclick="pinPress('7')">7</button>
+    <button class="pin-btn" onclick="pinPress('8')">8</button>
+    <button class="pin-btn" onclick="pinPress('9')">9</button>
+    <button class="pin-btn bio-icon" id="bioPadBtn" onclick="pinPress('bio')" style="display:none;">⬡</button>
+    <button class="pin-btn" onclick="pinPress('0')" id="zeroBtn">0</button>
+    <button class="pin-btn del" onclick="pinPress('del')">⌫</button>
+  </div>
+  <div id="lockSetupMsg"></div>
+</div>
+
+<!-- ═══ APP SHELL ═══ -->
+<div id="appShell" style="display:none;">
+<header>
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <div><h1>CHRONICLE</h1><p id="headerSub">Your personal tome</p></div>
+    <button class="btn" style="font-size:10px;padding:5px 10px;display:flex;align-items:center;gap:5px;" onclick="openModal('modal-backup')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Backup
+    </button>
+  </div>
+</header>
+
+<!-- CALENDAR -->
+<section class="section active" id="sec-calendar">
+  <div class="week-nav">
+    <button class="btn" onclick="changeWeek(-1)">◀</button>
+    <h2 id="weekLabel"></h2>
+    <button class="btn" onclick="changeWeek(1)">▶</button>
+  </div>
+  <button class="btn btn-gold" style="width:100%;margin-bottom:14px;" onclick="openAddEntry()">+ Add Entry</button>
+  <div id="calendarDays"></div>
+</section>
+
+<!-- PERSONA -->
+<section class="section" id="sec-persona">
+  <div id="activePersonaArea"></div>
+  <div class="divider">All Personas</div>
+  <div id="personaList"></div>
+  <button class="btn btn-gold" style="width:100%;margin-top:8px;" onclick="openAddPersona()">+ New Persona</button>
+</section>
+
+<!-- PEOPLE -->
+<section class="section" id="sec-people">
+  <button class="btn btn-gold" style="width:100%;margin-bottom:14px;" onclick="openAddPerson()">+ Add Person</button>
+  <div id="peopleList"></div>
+</section>
+
+<!-- BOOK -->
+<section class="section" id="sec-book">
+  <div id="bookMainView">
+    <div class="book-meta" id="bookMetaCard">
+      <div id="bookCoverWrap"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold);letter-spacing:0.1em;" id="bookTitleDisplay">My Book</div>
+          <div style="font-size:13px;color:var(--text2);font-style:italic;margin-top:2px;" id="bookSubDisplay"></div>
+        </div>
+        <button class="btn" style="font-size:10px;padding:4px 10px;" onclick="openBookSettings()">Edit Info</button>
+      </div>
+      <div style="margin-top:8px;" id="bookStatsDisplay"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-gold" onclick="openAddChapter()" style="flex:1;">+ New Chapter</button>
+      <button class="btn" onclick="toggleFullView()" id="fullViewBtn" style="flex:1;">Full View</button>
+    </div>
+    <div id="chapterListEl"></div>
+    <div id="fullViewArea" style="display:none;">
+      <button class="btn" style="width:100%;margin-bottom:12px;" onclick="toggleFullView()">← Chapter List</button>
+      <div class="full-view-content" id="fullViewContent"></div>
+    </div>
+  </div>
+  <div class="book-editor-area" id="bookEditorEl">
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="btn" onclick="closeEditor()" style="flex:1;">← Back</button>
+      <button class="btn btn-gold" onclick="saveChapter()" style="flex:1;">Save</button>
+    </div>
+    <div class="field"><label>Chapter Title</label><input type="text" id="chapterTitleInput" placeholder="Chapter title..."></div>
+    <div class="field"><label>Write</label><textarea id="chapterContentInput" placeholder="Your story begins here..."></textarea></div>
+    <div id="chapterWordCount" style="font-family:'Cinzel',serif;font-size:10px;color:var(--text2);text-align:right;margin-top:4px;"></div>
+    <button class="btn btn-danger" id="deleteChapterBtn" style="width:100%;margin-top:12px;display:none;" onclick="deleteChapter()">Delete Chapter</button>
+  </div>
+</section>
+
+<!-- PASSWORDS -->
+<section class="section" id="sec-passwords">
+  <div id="pwLockedMsg" style="text-align:center;padding:40px 16px;">
+    <div style="font-size:52px;margin-bottom:16px;">🔐</div>
+    <p style="color:var(--text2);font-style:italic;margin-bottom:20px;line-height:1.6;">Password vault is sealed.<br>Authenticate to enter.</p>
+    <button class="btn btn-gold" style="padding:12px 28px;" onclick="unlockVault()">Unlock Vault</button>
+  </div>
+  <div id="pwVaultEl" style="display:none;">
+    <button class="btn btn-gold" style="width:100%;margin-bottom:14px;" onclick="openAddPassword()">+ Add Password</button>
+    <div id="pwListEl"></div>
+    <button class="btn btn-danger" style="width:100%;margin-top:16px;" onclick="lockVault()">🔒 Lock Vault</button>
+  </div>
+</section>
+
+<!-- BOARD -->
+<section class="section" id="sec-board">
+  <div class="board-tabs-row" id="boardTabsRow"></div>
+  <div style="display:flex;gap:8px;margin-bottom:10px;">
+    <button class="btn btn-gold" style="flex:1;font-size:10px;" onclick="openAddBoard()">+ New Board</button>
+    <button class="btn" style="font-size:10px;padding:6px 12px;" onclick="openAddBoardCard()">+ Card</button>
+  </div>
+  <div class="board-wrap"><div class="kanban-cols" id="kanbanCols"></div></div>
+</section>
+
+<!-- STUDIO -->
+<section class="section" id="sec-studio">
+  <div class="studio-switcher">
+    <button class="studio-sw-btn active" id="sw-comic" onclick="switchStudio('comic')">◈ COMIC</button>
+    <button class="studio-sw-btn" id="sw-rpg" onclick="switchStudio('rpg')">⚔ RPG</button>
+  </div>
+
+  <!-- COMIC PANE -->
+  <div class="studio-pane active" id="pane-comic">
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-gold" style="flex:1;font-size:10px;" onclick="openAddArc()">+ Arc / Chapter</button>
+      <button class="btn" style="font-size:10px;padding:6px 12px;" onclick="openWorldModal()">World Bible</button>
+    </div>
+    <div id="comicArcList"></div>
+  </div>
+
+  <!-- RPG PANE -->
+  <div class="studio-pane" id="pane-rpg">
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-gold" style="flex:1;font-size:10px;" onclick="switchRpgView('map')">🗺 Map</button>
+      <button class="btn" style="flex:1;font-size:10px;" onclick="switchRpgView('scenes')">📜 Scenes</button>
+      <button class="btn" style="flex:1;font-size:10px;" onclick="switchRpgView('play')">▶ Playtest</button>
+    </div>
+    <div id="rpg-view-map" class="rpg-view">
+      <div class="rpg-section">
+        <div class="rpg-section-title">City Map — No Gods Yet</div>
+        <div id="rpgMapGrid" class="rpg-map" style="grid-template-columns:repeat(8,1fr);"></div>
+        <div id="rpgRoomEditor" style="display:none;" class="rpg-scene-panel">
+          <div class="rpg-scene-title" id="rpgRoomEdTitle">Edit Location</div>
+          <div class="field"><label>Location Name</label><input type="text" id="rpgRoomName" placeholder="e.g. Cross's Apartment"></div>
+          <div class="field"><label>District</label><input type="text" id="rpgRoomDistrict" placeholder="e.g. Midstack, Corporate Zone"></div>
+          <div class="field"><label>Description</label><textarea id="rpgRoomDesc" placeholder="What's here? Who's here? Atmosphere..." style="min-height:60px;"></textarea></div>
+          <div class="field"><label>Icon / Emoji</label><input type="text" id="rpgRoomIcon" placeholder="🏠" maxlength="2" style="width:60px;text-align:center;font-size:20px;"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="btn btn-gold" style="flex:1;font-size:10px;" onclick="saveRpgRoom()">Save Location</button>
+            <button class="btn btn-danger" style="font-size:10px;" onclick="deleteRpgRoom()">Remove</button>
+            <button class="btn" style="font-size:10px;" onclick="closeRpgRoomEditor()">Cancel</button>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text2);margin-top:8px;font-style:italic;">Tap an empty cell to add a location. Tap a room to edit or write its scene.</p>
+      </div>
+    </div>
+    <div id="rpg-view-scenes" class="rpg-view" style="display:none;">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="btn btn-gold" style="flex:1;font-size:10px;" onclick="openAddScene()">+ New Scene</button>
+      </div>
+      <div id="rpgSceneList"></div>
+    </div>
+    <div id="rpg-view-play" class="rpg-view" style="display:none;">
+      <div class="rpg-playtest">
+        <div class="rpg-playtest-title">▶ PLAYTEST MODE — NO GODS YET</div>
+        <div style="margin-bottom:12px;">
+          <div class="rpg-stat-bar"><span class="rpg-stat-lbl">ASCENSION</span><div class="rpg-stat-track"><div class="rpg-stat-fill" id="pt-asc" style="width:20%;background:var(--gold);"></div></div><span class="rpg-stat-val" id="pt-asc-v">20</span></div>
+          <div class="rpg-stat-bar"><span class="rpg-stat-lbl">HEALTH</span><div class="rpg-stat-track"><div class="rpg-stat-fill" id="pt-hp" style="width:100%;background:var(--green);"></div></div><span class="rpg-stat-val" id="pt-hp-v">100</span></div>
+          <div class="rpg-stat-bar"><span class="rpg-stat-lbl">TOTEMS</span><div class="rpg-stat-track"><div class="rpg-stat-fill" id="pt-tot" style="width:100%;background:var(--accent2);"></div></div><span class="rpg-stat-val" id="pt-tot-v">3</span></div>
+        </div>
+        <div class="rpg-playtest-narr" id="ptNarr">You're Cross. Courier. Midstack district, 6:47 AM. Twelve deliveries, zero problems — that's the plan. Scratch shifts on your shoulder.<br><br><em>"Shortcut through here smells like piss and death," she says.<br>"Saves three minutes," you say.</em></div>
+        <div class="rpg-playtest-choices" id="ptChoices"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;">
+          <button class="btn" style="flex:1;font-size:10px;" onclick="ptRestart()">↺ Restart</button>
+          <button class="btn" style="flex:1;font-size:10px;" onclick="openAddScene()">+ Add Scene</button>
+        </div>
+      </div>
+      <div id="ptLog" style="margin-top:10px;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- NAV -->
+<nav>
+  <button class="active" onclick="showSection('calendar')" id="nav-calendar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+    Calendar
+  </button>
+  <button onclick="showSection('persona')" id="nav-persona">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    Persona
+  </button>
+  <button onclick="showSection('people')" id="nav-people">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="3"/><path d="M2 19c0-3.3 3.1-6 7-6s7 2.7 7 6"/><circle cx="17" cy="7" r="2"/><path d="M22 19c0-2.2-2.1-4-5-4"/></svg>
+    People
+  </button>
+  <button onclick="showSection('book')" id="nav-book">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    Book
+  </button>
+  <button onclick="showSection('board')" id="nav-board">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="10" rx="1"/><rect x="14" y="17" width="7" height="4" rx="1"/></svg>
+    Board
+  </button>
+  <button onclick="showSection('studio')" id="nav-studio">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    Studio
+  </button>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
+    Vault
+  </button>
+</nav>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- BACKUP -->
+<div class="modal-overlay" id="modal-backup">
+  <div class="modal">
+    <h2>⚔ Backup &amp; Settings</h2>
+    <div class="divider">Export</div>
+    <div class="field">
+      <label>Encryption Password (optional)</label>
+      <div style="position:relative;">
+        <input type="password" id="exportPassword" placeholder="Leave blank for plain JSON" oninput="checkExportStrength()">
+        <button onclick="togglePwVis('exportPassword',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:11px;font-family:'Cinzel',serif;">SHOW</button>
+      </div>
+    </div>
+    <div id="exportStrength" style="font-size:12px;height:16px;margin-top:-8px;margin-bottom:10px;padding-left:2px;"></div>
+    <button class="btn btn-gold" style="width:100%;" onclick="doExport()">↓ Download Backup</button>
+    <div class="divider">Import</div>
+    <p style="font-size:13px;color:var(--amber);margin-bottom:10px;">⚠ Merges with existing data. IDs deduplicated.</p>
+    <div class="field"><label>Backup File</label><input type="file" id="importFile" accept=".json" style="padding:6px;color:var(--text);"></div>
+    <div class="field"><label>Password (if encrypted)</label><input type="password" id="importPassword" placeholder="Leave blank if unencrypted"></div>
+    <button class="btn btn-gold" style="width:100%;" onclick="doImport()">↑ Import</button>
+    <div id="importStatus" style="margin-top:10px;font-size:13px;text-align:center;min-height:18px;font-family:'Cinzel',serif;"></div>
+    <div class="divider">Security</div>
+    <button class="btn" style="width:100%;margin-bottom:10px;" onclick="openPinSetup()">🔑 Change PIN</button>
+    <div class="toggle-row">
+      <span class="toggle-label">Biometric Unlock (fingerprint/face)</span>
+      <label class="toggle"><input type="checkbox" id="bioToggle" onchange="toggleBio()"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="divider">Danger Zone</div>
+    <button class="btn btn-danger" style="width:100%;" onclick="clearAllData()">✕ Clear All Data</button>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('modal-backup')">Close</button></div>
+  </div>
+</div>
+
+<!-- PIN SETUP -->
+<div class="modal-overlay" id="modal-pin-setup">
+  <div class="modal">
+    <h2>Change PIN</h2>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:16px;">Choose a 4-digit PIN to lock Chronicle on startup and when you leave the app.</p>
+    <div class="field"><label>New PIN</label><input type="password" id="newPin1" maxlength="4" inputmode="numeric" placeholder="4 digits"></div>
+    <div class="field"><label>Confirm PIN</label><input type="password" id="newPin2" maxlength="4" inputmode="numeric" placeholder="Same 4 digits"></div>
+    <div id="pinSetupError" style="color:var(--red);font-size:12px;min-height:18px;font-family:'Cinzel',serif;"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-pin-setup')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveNewPin()">Save PIN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ENTRY -->
+<div class="modal-overlay" id="modal-entry">
+  <div class="modal">
+    <h2>Add Calendar Entry</h2>
+    <div class="field"><label>Day</label>
+      <select id="entryDay">
+        <option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>
+        <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
+      </select>
+    </div>
+    <div class="field"><label>Time (optional)</label><input type="text" id="entryTime" placeholder="e.g. 9:00 AM"></div>
+    <div class="field"><label>Entry</label><textarea id="entryText" placeholder="What are you recording?"></textarea></div>
+    <div class="field"><label>Type</label>
+      <select id="entryType">
+        <option value="routine">Routine (repeats weekly)</option>
+        <option value="note">Note (this week only)</option>
+      </select>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">🔔 Push notification reminder</span>
+      <label class="toggle"><input type="checkbox" id="entryNotif" onchange="toggleNotifTime()"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="field" id="notifTimeField" style="display:none;">
+      <label>Remind me at</label><input type="time" id="entryNotifTime" value="09:00">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-entry')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PERSONA -->
+<div class="modal-overlay" id="modal-persona">
+  <div class="modal">
+    <h2>New Persona</h2>
+    <div class="field"><label>Name</label><input type="text" id="pName" placeholder="Persona name"></div>
+    <div class="field"><label>Role / Archetype</label><input type="text" id="pRole" placeholder="e.g. The Strategist, Work Mode..."></div>
+    <div class="divider">Attributes</div>
+    <div id="statFields"></div>
+    <div class="field"><label>Notes</label><textarea id="pNotes" placeholder="Notes about this persona..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-persona')">Cancel</button>
+      <button class="btn btn-gold" onclick="savePersona()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PERSONA -->
+<div class="modal-overlay" id="modal-edit-persona">
+  <div class="modal">
+    <h2 id="editPersonaTitle">Edit Persona</h2>
+    <div id="editStatFields"></div>
+    <div class="field" style="margin-top:12px;"><label>Notes</label><textarea id="editPNotes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="deletePersona()">Delete</button>
+      <button class="btn" onclick="closeModal('modal-edit-persona')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveEditPersona()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PERSON -->
+<div class="modal-overlay" id="modal-person">
+  <div class="modal">
+    <h2 id="personModalTitle">Add Person</h2>
+    <div class="row">
+      <div class="field"><label>Name</label><input type="text" id="personName" placeholder="Full name"></div>
+      <div class="field"><label>Relationship</label><input type="text" id="personRel" placeholder="Friend, colleague..."></div>
+    </div>
+    <div class="field"><label>Likes (comma separated)</label><input type="text" id="personLikes" placeholder="coffee, hiking, jazz"></div>
+    <div class="field"><label>Dislikes (comma separated)</label><input type="text" id="personDislikes" placeholder="crowds, deadlines"></div>
+    <div class="field"><label>Personality (comma separated)</label><input type="text" id="personTraits" placeholder="introverted, analytical"></div>
+    <div class="field"><label>Important Dates (one per line)</label><textarea id="personDates" placeholder="Birthday: Jan 5&#10;Anniversary: March 12"></textarea></div>
+    <div class="field"><label>Notes</label><textarea id="personNotes" placeholder="Anything else worth remembering..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deletePersonBtn" onclick="deletePerson()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-person')">Cancel</button>
+      <button class="btn btn-gold" onclick="savePerson()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOOK SETTINGS -->
+<div class="modal-overlay" id="modal-book-settings">
+  <div class="modal">
+    <h2>Book Info</h2>
+    <div class="field"><label>Title</label><input type="text" id="bookTitleInput" placeholder="My Novel"></div>
+    <div class="field"><label>Author</label><input type="text" id="bookAuthorInput" placeholder="Your name"></div>
+    <div class="field"><label>Genre / Tagline</label><input type="text" id="bookGenreInput" placeholder="Dark fantasy, 2026..."></div>
+    <div class="field"><label>Cover Image URL</label><input type="text" id="bookCoverUrl" placeholder="https://... paste image link"></div>
+    <div class="field"><label>— or upload from device —</label><input type="file" id="bookCoverFile" accept="image/*" style="padding:6px;color:var(--text);" onchange="handleCoverUpload()"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-book-settings')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveBookSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PASSWORD -->
+<div class="modal-overlay" id="modal-password">
+  <div class="modal">
+    <h2 id="pwModalTitle">Add Password</h2>
+    <div class="field"><label>Site / App</label><input type="text" id="pwSite" placeholder="Google, Netflix, Bank..."></div>
+    <div class="field"><label>Username / Email</label><input type="text" id="pwUser" placeholder="you@email.com"></div>
+    <div class="field">
+      <label>Password</label>
+      <div style="position:relative;">
+        <input type="password" id="pwPass" placeholder="Password">
+        <button onclick="togglePwVis('pwPass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:11px;font-family:'Cinzel',serif;">SHOW</button>
+      </div>
+    </div>
+    <button class="btn" style="width:100%;margin-bottom:12px;" onclick="generatePassword()">⚡ Generate Strong Password</button>
+    <div class="field"><label>URL (optional)</label><input type="text" id="pwUrl" placeholder="https://..."></div>
+    <div class="field"><label>Notes</label><textarea id="pwNotes" placeholder="Security questions, backup codes..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deletePwBtn" onclick="deletePassword()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-password')">Cancel</button>
+      <button class="btn btn-gold" onclick="savePassword()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOARD MODALS -->
+<div class="modal-overlay" id="modal-add-board">
+  <div class="modal">
+    <h2>New Board</h2>
+    <div class="field"><label>Board Name</label><input type="text" id="newBoardName" placeholder="e.g. No Gods Yet, Client Work..."></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-add-board')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveNewBoard()">Create</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-board-card">
+  <div class="modal">
+    <h2 id="boardCardModalTitle">Add Card</h2>
+    <div class="field"><label>Title</label><input type="text" id="bcTitle" placeholder="What needs doing?"></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="bcNotes" placeholder="Details, links, ideas..." style="min-height:60px;"></textarea></div>
+    <div class="field"><label>Tag</label>
+      <select id="bcTag">
+        <option value="">None</option>
+        <option value="ngy">No Gods Yet</option>
+        <option value="north">North Eden Studios</option>
+        <option value="personal">Personal</option>
+      </select>
+    </div>
+    <div class="field"><label>Column</label><select id="bcCol"></select></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteBcBtn" onclick="deleteBoardCard()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-board-card')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveBoardCard()">Save</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-add-col">
+  <div class="modal">
+    <h2>New Column</h2>
+    <div class="field"><label>Column Name</label><input type="text" id="newColName" placeholder="e.g. In Progress, Review..."></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-add-col')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveNewCol()">Add Column</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMIC MODALS -->
+<div class="modal-overlay" id="modal-add-arc">
+  <div class="modal">
+    <h2 id="arcModalTitle">New Arc / Chapter</h2>
+    <div class="field"><label>Title</label><input type="text" id="arcTitle" placeholder="e.g. Chapter 1: Rush Hour"></div>
+    <div class="field"><label>Summary</label><textarea id="arcSummary" placeholder="What happens in this arc?" style="min-height:60px;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteArcBtn" onclick="deleteArc()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-add-arc')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveArc()">Save</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-add-panel">
+  <div class="modal">
+    <h2 id="panelModalTitle">Add Panel Note</h2>
+    <div class="field"><label>Panel Description</label><textarea id="panelDesc" placeholder="What's in this panel? Action, dialogue, mood..." style="min-height:100px;"></textarea></div>
+    <div class="field"><label>Dialogue / Caption</label><textarea id="panelDialogue" placeholder="Any dialogue or caption boxes..." style="min-height:60px;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deletePanelBtn" onclick="deletePanel()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-add-panel')">Cancel</button>
+      <button class="btn btn-gold" onclick="savePanel()">Save</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-world">
+  <div class="modal">
+    <h2>⚡ World Bible — No Gods Yet</h2>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:10px;">
+      <span class="ngy-tag">SETTING</span> Post-Singularity city. Society rebuilt, then reality broke.<br><br>
+      <span class="ngy-tag">ASCENSION</span> Win fights → climb toward divinity. Lose → fall toward feral. Nobody truly dies.<br><br>
+      <span class="ngy-tag">FUSION</span> Grab a Beast/Kin/Machina, physically merge for up to 1hr/day. Higher rank = more power.<br><br>
+      <span class="ngy-tag">TOTEMS</span> Defeat something → they concede → you earn their mark. Summon anytime. Marks wipe on ascension.<br><br>
+      <span class="ngy-tag">CROSS</span> Courier. Street-smart. Pragmatic. Can IMPACT FUSE — slam into a target for a chaotic 30min fusion. Hurts him. One-time per target. No one else does this.<br><br>
+      <span class="ngy-tag">COMPANIONS</span> Rat (Scratch) — cynical scout. Crow — aerial intel. Both gave totems freely.<br><br>
+      <span class="ngy-tag">ARC 1</span> Sister's totem stolen by an exec's kid. Cross has to outmaneuver someone higher-ranked.
+    </div>
+    <div class="field"><label>Your Notes</label><textarea id="worldNotes" placeholder="Add your own worldbuilding notes here..." style="min-height:100px;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-world')">Close</button>
+      <button class="btn btn-gold" onclick="saveWorldNotes()">Save Notes</button>
+    </div>
+  </div>
+</div>
+
+<!-- RPG MODALS -->
+<div class="modal-overlay" id="modal-add-scene">
+  <div class="modal">
+    <h2 id="sceneModalTitle">New Scene</h2>
+    <div class="field"><label>Scene Title</label><input type="text" id="sceneTitle" placeholder="e.g. The Alley Shortcut"></div>
+    <div class="field"><label>Narration</label><textarea id="sceneNarr" placeholder="Describe the scene, atmosphere, what the player sees..." style="min-height:80px;"></textarea></div>
+    <div class="divider">Choices (up to 4)</div>
+    <div id="choiceFields"></div>
+    <button class="btn" style="width:100%;margin-bottom:10px;font-size:10px;" onclick="addChoiceField()">+ Add Choice</button>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteSceneBtn" onclick="deleteScene()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-add-scene')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveScene()">Save Scene</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════
+//  DATA
+// ════════════════════════════════════
+let data = {
+  entries:[], personas:[], people:[],
+  book:{ title:'My Book', author:'', genre:'', coverUrl:'', chapters:[] },
+  passwords:[]
+};
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const STATS=['Happiness','Confidence','Energy','Anger','Anxiety','Focus','Creativity','Motivation'];
+const STAT_COLORS={Happiness:'#55aa77',Confidence:'#c9a84c',Energy:'#e8c97a',Anger:'#cc5555',Anxiety:'#cc8844',Focus:'#5588cc',Creativity:'#9955cc',Motivation:'#55aacc'};
+let currentWeekOffset=0, editingPersonaId=null, editingPersonId=null, editingChapterId=null, editingPwId=null;
+let vaultUnlocked=false, vaultKey=null;
+
+function save(){localStorage.setItem('chronicle_data',JSON.stringify(data));}
+function load(){
+  try{const r=localStorage.getItem('chronicle_data');if(r){const d=JSON.parse(r);data={...data,...d,book:{...data.book,...(d.book||{})},passwords:d.passwords||[]};}}catch(e){}
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+
+// ════════════════════════════════════
+//  PIN / BIOMETRIC
+// ════════════════════════════════════
+let pinBuffer='',pinMode='unlock',pinSetupFirst='';
+
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('chronicle_salt_v1_'+str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function getSavedHash(){return localStorage.getItem('chronicle_pin');}
+
+function pinPress(v){
+  if(v==='bio'){tryBiometric();return;}
+  if(v==='del'){pinBuffer=pinBuffer.slice(0,-1);updateDots();return;}
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=v; updateDots();
+  if(pinBuffer.length===4) setTimeout(processPinEntry,80);
+}
+
+function updateDots(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);}
+
+async function processPinEntry(){
+  const saved=getSavedHash();
+  if(pinMode==='setup2'){
+    if(pinBuffer!==pinSetupFirst){
+      showPinErr('PINs did not match — try again');
+      pinBuffer='';pinSetupFirst='';pinMode='setup1';updateDots();
+      document.getElementById('lockSubtitle').textContent='Choose a new PIN';
+      return;
+    }
+    localStorage.setItem('chronicle_pin',await sha256(pinBuffer));
+    pinBuffer='';pinMode='unlock';unlock();return;
+  }
+  if(!saved||pinMode==='setup1'){
+    pinSetupFirst=pinBuffer; pinBuffer=''; updateDots();
+    document.getElementById('lockSubtitle').textContent='Confirm your PIN';
+    document.getElementById('lockSetupMsg').textContent='Enter the same PIN again to confirm.';
+    document.getElementById('lockSetupMsg').style.display='block';
+    pinMode='setup2'; return;
+  }
+  if(await sha256(pinBuffer)===saved){pinBuffer='';updateDots();unlock();}
+  else{showPinErr('Incorrect PIN');pinBuffer='';updateDots();}
+}
+
+function showPinErr(msg){
+  const el=document.getElementById('pinError');el.textContent=msg;
+  setTimeout(()=>{el.textContent='';},2200);
+}
+
+function unlock(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('appShell').style.display='block';
+}
+
+function tryBiometric(){
+  const cid=localStorage.getItem('chronicle_bio_cred');
+  if(!cid||!window.PublicKeyCredential){showPinErr('No biometric enrolled');return;}
+  navigator.credentials.get({publicKey:{
+    challenge:crypto.getRandomValues(new Uint8Array(32)),
+    allowCredentials:[{id:Uint8Array.from(atob(cid),c=>c.charCodeAt(0)),type:'public-key'}],
+    userVerification:'required',timeout:30000
+  }}).then(()=>unlock()).catch(()=>showPinErr('Biometric failed'));
+}
+
+async function enrollBiometric(){
+  if(!window.PublicKeyCredential){alert('WebAuthn not supported on this browser.');return false;}
+  try{
+    const cred=await navigator.credentials.create({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      rp:{name:'Chronicle'},
+      user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'chronicle_user',displayName:'Chronicle User'},
+      pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+      authenticatorSelection:{userVerification:'required',authenticatorAttachment:'platform'},
+      timeout:60000
+    }});
+    localStorage.setItem('chronicle_bio_cred',btoa(String.fromCharCode(...new Uint8Array(cred.rawId))));
+    localStorage.setItem('chronicle_bio_on','1');
+    return true;
+  }catch(e){alert('Biometric enrollment failed: '+e.message);return false;}
+}
+
+async function toggleBio(){
+  const on=document.getElementById('bioToggle').checked;
+  if(on){const ok=await enrollBiometric();if(!ok)document.getElementById('bioToggle').checked=false;}
+  else{localStorage.removeItem('chronicle_bio_cred');localStorage.removeItem('chronicle_bio_on');}
+  document.getElementById('bioPadBtn').style.display=localStorage.getItem('chronicle_bio_on')==='1'?'flex':'none';
+}
+
+function openPinSetup(){
+  closeModal('modal-backup');
+  document.getElementById('newPin1').value='';document.getElementById('newPin2').value='';
+  document.getElementById('pinSetupError').textContent='';
+  openModal('modal-pin-setup');
+}
+async function saveNewPin(){
+  const p1=document.getElementById('newPin1').value,p2=document.getElementById('newPin2').value;
+  if(!/^\d{4}$/.test(p1)){document.getElementById('pinSetupError').textContent='Must be exactly 4 digits.';return;}
+  if(p1!==p2){document.getElementById('pinSetupError').textContent='PINs do not match.';return;}
+  localStorage.setItem('chronicle_pin',await sha256(p1));
+  closeModal('modal-pin-setup');toast('PIN updated ✓');
+}
+
+// Auto-lock when app hidden
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden&&document.getElementById('appShell').style.display!=='none'){
+    document.getElementById('appShell').style.display='none';
+    document.getElementById('lockScreen').style.display='flex';
+    pinBuffer='';updateDots();
+    document.getElementById('pinError').textContent='';
+    document.getElementById('lockSubtitle').textContent='Enter your PIN';
+  }
+});
+
+function initLock(){
+  const hasBio=localStorage.getItem('chronicle_bio_on')==='1';
+  document.getElementById('bioPadBtn').style.display=hasBio?'flex':'none';
+  if(document.getElementById('bioToggle'))document.getElementById('bioToggle').checked=hasBio;
+  if(!getSavedHash()){
+    document.getElementById('lockSubtitle').textContent='Choose a 4-digit PIN';
+    document.getElementById('lockSetupMsg').textContent='First time — pick a PIN to secure Chronicle.';
+    document.getElementById('lockSetupMsg').style.display='block';
+    // Re-arrange zero btn
+    const zeroPad=document.getElementById('zeroBtn');
+    zeroPad.style.gridColumn='2';
+    pinMode='setup1';
+  } else {
+    document.getElementById('lockSubtitle').textContent='Enter your PIN';
+    if(hasBio) setTimeout(tryBiometric,400);
+  }
+}
+
+// ════════════════════════════════════
+//  NAV
+// ════════════════════════════════════
+function showSection(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  const subs={calendar:'Weekly scroll of time',persona:'Who you are today',people:'Those who walk beside you',book:'Your written world',passwords:'The sealed vault',board:'Projects & tasks',studio:'No Gods Yet — comic & RPG'};
+  document.getElementById('headerSub').textContent=subs[name]||'';
+  if(name==='board')renderBoard();
+  if(name==='studio'){renderComicArcs();renderRpgMap();}
+}
+
+// ════════════════════════════════════
+//  NOTIFICATIONS
+// ════════════════════════════════════
+function toggleNotifTime(){
+  document.getElementById('notifTimeField').style.display=document.getElementById('entryNotif').checked?'block':'none';
+}
+async function requestNotif(){
+  if(!('Notification' in window))return false;
+  if(Notification.permission==='granted')return true;
+  return (await Notification.requestPermission())==='granted';
+}
+function scheduleNotif(e){
+  if(!e.notif||!e.notifTime)return;
+  const [h,m]=e.notifTime.split(':').map(Number);
+  const now=new Date(),day=now.getDay();
+  let daysUntil=((parseInt(e.dayOfWeek)-day+7)%7)||7;
+  const next=new Date(now);next.setDate(now.getDate()+daysUntil);next.setHours(h,m,0,0);
+  const ms=next.getTime()-now.getTime();
+  if(ms>0&&ms<7*24*60*60*1000){
+    setTimeout(()=>{
+      if(Notification.permission==='granted')new Notification('Chronicle',{body:e.text,icon:'./icon-192.png'});
+    },ms);
+  }
+}
+
+// ════════════════════════════════════
+//  CALENDAR
+// ════════════════════════════════════
+function changeWeek(d){currentWeekOffset+=d;renderCalendar();}
+function getWeekStart(off){const d=new Date();d.setDate(d.getDate()-d.getDay()+off*7);d.setHours(0,0,0,0);return d;}
+function weekKey(off){return getWeekStart(off).toISOString().slice(0,10);}
+
+function renderCalendar(){
+  const ws=getWeekStart(currentWeekOffset),we=new Date(ws);we.setDate(we.getDate()+6);
+  document.getElementById('weekLabel').textContent=ws.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' – '+we.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const today=new Date();today.setHours(0,0,0,0);
+  const wk=weekKey(currentWeekOffset);
+  const cont=document.getElementById('calendarDays');cont.innerHTML='';
+  for(let i=0;i<7;i++){
+    const dd=new Date(ws);dd.setDate(ws.getDate()+i);
+    const isToday=dd.getTime()===today.getTime();
+    const entries=data.entries.filter(e=>parseInt(e.dayOfWeek)===i&&(e.type==='routine'||(e.type==='note'&&e.weekKey===wk)));
+    const card=document.createElement('div');card.className='day-card'+(isToday?' today':'');
+    const hdr=document.createElement('div');hdr.className='day-header';
+    hdr.innerHTML=`<div class="day-header-left"><span class="day-name">${DAYS[i]}</span><span class="day-date">${dd.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>${entries.length?`<span class="day-badge">${entries.length}</span>`:''}</div><span class="chevron${isToday?' open':''}">▶</span>`;
+    const body=document.createElement('div');body.className='day-body'+(isToday?' open':'');
+    if(!entries.length){body.innerHTML='<div class="empty-state">No entries</div>';}
+    else{
+      entries.sort((a,b)=>(a.time||'').localeCompare(b.time||'')).forEach(e=>{
+        const d2=document.createElement('div');d2.className='entry-item';
+        d2.innerHTML=`<span class="entry-time">${e.time||'—'}</span><span class="entry-text">${escHtml(e.text)}</span><button class="entry-bell${e.notif?' on':''}" onclick="toggleEntryNotif('${e.id}')" title="${e.notif?'Notification on':'Notification off'}">${e.notif?'🔔':'🔕'}</button><span class="entry-badge ${e.type==='routine'?'badge-routine':'badge-note'}">${e.type}</span><button class="entry-delete" onclick="deleteEntry('${e.id}')">×</button>`;
+        body.appendChild(d2);
+      });
+    }
+    hdr.onclick=()=>{body.classList.toggle('open');hdr.querySelector('.chevron').classList.toggle('open',body.classList.contains('open'));};
+    card.appendChild(hdr);card.appendChild(body);cont.appendChild(card);
+  }
+}
+
+async function toggleEntryNotif(id){
+  const e=data.entries.find(x=>x.id===id);if(!e)return;
+  if(!e.notif){
+    const ok=await requestNotif();if(!ok){alert('Enable notifications in browser settings.');return;}
+    const t=prompt('Remind me at (HH:MM):','09:00');if(!t)return;
+    e.notif=true;e.notifTime=t;scheduleNotif(e);
+  }else{e.notif=false;e.notifTime=null;}
+  save();renderCalendar();
+}
+
+function openAddEntry(){
+  document.getElementById('entryDay').value=new Date().getDay();
+  ['entryTime','entryText'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('entryType').value='routine';
+  document.getElementById('entryNotif').checked=false;
+  document.getElementById('notifTimeField').style.display='none';
+  document.getElementById('entryNotifTime').value='09:00';
+  openModal('modal-entry');
+}
+
+async function saveEntry(){
+  const text=document.getElementById('entryText').value.trim();if(!text)return;
+  const notif=document.getElementById('entryNotif').checked;
+  if(notif){const ok=await requestNotif();if(!ok){alert('Notification permission denied.');}}
+  const e={id:uid(),dayOfWeek:parseInt(document.getElementById('entryDay').value),time:document.getElementById('entryTime').value.trim(),text,type:document.getElementById('entryType').value,weekKey:weekKey(currentWeekOffset),notif,notifTime:notif?document.getElementById('entryNotifTime').value:null};
+  data.entries.push(e);if(e.notif)scheduleNotif(e);
+  save();closeModal('modal-entry');renderCalendar();
+}
+
+function deleteEntry(id){data.entries=data.entries.filter(e=>e.id!==id);save();renderCalendar();}
+
+// ════════════════════════════════════
+//  PERSONA
+// ════════════════════════════════════
+function renderPersona(){
+  const active=data.personas.find(p=>p.active);
+  document.getElementById('activePersonaArea').innerHTML=active?buildPersonaCard(active):'<div class="empty-state">No active persona yet.</div>';
+  document.getElementById('personaList').innerHTML=!data.personas.length?'<div class="empty-state">No personas yet.</div>':data.personas.map(p=>`<div class="persona-list-item"><div><div style="font-family:'Cinzel',serif;font-size:13px;">${escHtml(p.name)}</div><div style="font-size:12px;color:var(--text2);font-style:italic;">${escHtml(p.role||'')}</div></div><div style="display:flex;gap:6px;align-items:center;">${p.active?'<span class="pill-active">ACTIVE</span>':`<button class="btn" style="font-size:10px;padding:3px 8px;" onclick="setActivePersona('${p.id}')">Activate</button>`}<button class="btn" style="font-size:10px;padding:3px 8px;" onclick="editPersona('${p.id}')">Edit</button></div></div>`).join('');
+}
+
+function buildPersonaCard(p){
+  return`<div class="persona-active-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div class="persona-name">${escHtml(p.name)}</div><div class="persona-class">${escHtml(p.role||'')}</div></div><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="editPersona('${p.id}')">Edit</button></div>${STATS.map(s=>{const v=p.stats?.[s]??50;return`<div class="stat-row"><span class="stat-label">${s}</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${v}%;background:${STAT_COLORS[s]};"></div></div><span class="stat-value">${v}</span></div>`;}).join('')}${p.notes?`<div style="margin-top:12px;font-size:14px;color:var(--text2);font-style:italic;">${escHtml(p.notes)}</div>`:''}</div>`;
+}
+
+function openAddPersona(){
+  editingPersonaId=null;
+  ['pName','pRole','pNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('statFields').innerHTML=STATS.map(s=>`<div class="field"><label>${s} <span id="sv-${s}" style="color:var(--gold);float:right;">50</span></label><input type="range" min="0" max="100" value="50" id="sr-${s}" oninput="document.getElementById('sv-${s}').textContent=this.value"></div>`).join('');
+  openModal('modal-persona');
+}
+function savePersona(){
+  const name=document.getElementById('pName').value.trim();if(!name)return;
+  const stats={};STATS.forEach(s=>stats[s]=parseInt(document.getElementById('sr-'+s).value));
+  data.personas.push({id:uid(),name,role:document.getElementById('pRole').value.trim(),notes:document.getElementById('pNotes').value.trim(),stats,active:!data.personas.length});
+  save();closeModal('modal-persona');renderPersona();
+}
+function editPersona(id){
+  editingPersonaId=id;const p=data.personas.find(x=>x.id===id);if(!p)return;
+  document.getElementById('editPersonaTitle').textContent=p.name;
+  document.getElementById('editPNotes').value=p.notes||'';
+  document.getElementById('editStatFields').innerHTML=STATS.map(s=>{const v=p.stats?.[s]??50;return`<div class="field"><label>${s} <span id="esv-${s}" style="color:var(--gold);float:right;">${v}</span></label><input type="range" min="0" max="100" value="${v}" id="esr-${s}" oninput="document.getElementById('esv-${s}').textContent=this.value"></div>`;}).join('');
+  openModal('modal-edit-persona');
+}
+function saveEditPersona(){
+  const p=data.personas.find(x=>x.id===editingPersonaId);if(!p)return;
+  STATS.forEach(s=>p.stats[s]=parseInt(document.getElementById('esr-'+s).value));
+  p.notes=document.getElementById('editPNotes').value.trim();
+  save();closeModal('modal-edit-persona');renderPersona();
+}
+function deletePersona(){
+  if(!confirm('Delete this persona?'))return;
+  data.personas=data.personas.filter(x=>x.id!==editingPersonaId);
+  if(data.personas.length&&!data.personas.find(p=>p.active))data.personas[0].active=true;
+  save();closeModal('modal-edit-persona');renderPersona();
+}
+function setActivePersona(id){data.personas.forEach(p=>p.active=p.id===id);save();renderPersona();}
+
+// ════════════════════════════════════
+//  PEOPLE
+// ════════════════════════════════════
+function renderPeople(){
+  const list=document.getElementById('peopleList');
+  if(!data.people.length){list.innerHTML='<div class="empty-state">No people added yet.</div>';return;}
+  list.innerHTML='';
+  data.people.forEach(p=>{
+    const c=document.createElement('div');c.className='person-card';
+    const init=p.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const likes=p.likes?p.likes.split(',').map(x=>x.trim()).filter(Boolean):[];
+    const dislikes=p.dislikes?p.dislikes.split(',').map(x=>x.trim()).filter(Boolean):[];
+    const traits=p.traits?p.traits.split(',').map(x=>x.trim()).filter(Boolean):[];
+    c.innerHTML=`<div class="person-header" onclick="toggleEl('pc-${p.id}','ch-${p.id}')"><div class="person-avatar">${init}</div><div style="flex:1;"><div style="font-family:'Cinzel',serif;font-size:14px;">${escHtml(p.name)}</div><div style="font-size:12px;color:var(--text2);font-style:italic;">${escHtml(p.rel||'')}</div></div><span class="chevron" id="ch-${p.id}">▶</span></div><div class="person-body" id="pc-${p.id}">${traits.length?`<div class="section-label">Traits</div><div class="tag-list">${traits.map(t=>`<span class="info-tag">${escHtml(t)}</span>`).join('')}</div>`:''} ${likes.length?`<div class="section-label">Likes</div><div class="tag-list">${likes.map(t=>`<span class="info-tag" style="border-color:rgba(85,170,119,0.4);color:var(--green);">${escHtml(t)}</span>`).join('')}</div>`:''} ${dislikes.length?`<div class="section-label">Dislikes</div><div class="tag-list">${dislikes.map(t=>`<span class="info-tag" style="border-color:rgba(204,85,85,0.4);color:var(--red);">${escHtml(t)}</span>`).join('')}</div>`:''} ${p.dates?`<div class="section-label">Dates</div><div style="font-size:14px;white-space:pre-wrap;">${escHtml(p.dates)}</div>`:''} ${p.notes?`<div class="section-label">Notes</div><div style="font-size:15px;font-style:italic;white-space:pre-wrap;">${escHtml(p.notes)}</div>`:''}<div style="margin-top:12px;"><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="openEditPerson('${p.id}')">Edit</button></div></div>`;
+    list.appendChild(c);
+  });
+}
+function toggleEl(bodyId,chevId){const b=document.getElementById(bodyId),ch=document.getElementById(chevId);b.classList.toggle('open');ch.classList.toggle('open',b.classList.contains('open'));}
+function openAddPerson(){editingPersonId=null;document.getElementById('personModalTitle').textContent='Add Person';document.getElementById('deletePersonBtn').style.display='none';['personName','personRel','personLikes','personDislikes','personTraits','personDates','personNotes'].forEach(id=>document.getElementById(id).value='');openModal('modal-person');}
+function openEditPerson(id){
+  editingPersonId=id;const p=data.people.find(x=>x.id===id);if(!p)return;
+  document.getElementById('personModalTitle').textContent='Edit '+p.name;document.getElementById('deletePersonBtn').style.display='inline-block';
+  document.getElementById('personName').value=p.name||'';document.getElementById('personRel').value=p.rel||'';document.getElementById('personLikes').value=p.likes||'';document.getElementById('personDislikes').value=p.dislikes||'';document.getElementById('personTraits').value=p.traits||'';document.getElementById('personDates').value=p.dates||'';document.getElementById('personNotes').value=p.notes||'';
+  openModal('modal-person');
+}
+function savePerson(){
+  const name=document.getElementById('personName').value.trim();if(!name)return;
+  const obj={id:editingPersonId||uid(),name,rel:document.getElementById('personRel').value.trim(),likes:document.getElementById('personLikes').value.trim(),dislikes:document.getElementById('personDislikes').value.trim(),traits:document.getElementById('personTraits').value.trim(),dates:document.getElementById('personDates').value.trim(),notes:document.getElementById('personNotes').value.trim()};
+  if(editingPersonId){const i=data.people.findIndex(x=>x.id===editingPersonId);if(i>=0)data.people[i]=obj;}else data.people.push(obj);
+  save();closeModal('modal-person');renderPeople();
+}
+function deletePerson(){if(!confirm('Delete?'))return;data.people=data.people.filter(x=>x.id!==editingPersonId);save();closeModal('modal-person');renderPeople();}
+
+// ════════════════════════════════════
+//  BOOK
+// ════════════════════════════════════
+let fullViewOpen=false;
+
+function renderBook(){
+  const b=data.book;
+  document.getElementById('bookTitleDisplay').textContent=b.title||'My Book';
+  const sub=[b.author?'by '+b.author:'',b.genre].filter(Boolean).join(' · ');
+  document.getElementById('bookSubDisplay').textContent=sub;
+  const wrap=document.getElementById('bookCoverWrap');
+  wrap.innerHTML=b.coverUrl?`<img src="${escHtml(b.coverUrl)}" class="book-cover-img" onerror="this.style.display='none'">` :'';
+  const words=b.chapters.reduce((a,c)=>a+(c.content||'').trim().split(/\s+/).filter(Boolean).length,0);
+  document.getElementById('bookStatsDisplay').innerHTML=`<span style="font-family:'Cinzel',serif;font-size:10px;color:var(--text2);">${b.chapters.length} chapter${b.chapters.length!==1?'s':''} &nbsp;·&nbsp; ~${words.toLocaleString()} words</span>`;
+  const cl=document.getElementById('chapterListEl');
+  cl.innerHTML=!b.chapters.length?'<div class="empty-state">No chapters yet. Start writing!</div>':b.chapters.map((c,i)=>{const w=(c.content||'').trim().split(/\s+/).filter(Boolean).length;return`<div class="chapter-item" onclick="openEditor('${c.id}')"><div><div class="chapter-num">CHAPTER ${i+1}</div><div class="chapter-title-text">${escHtml(c.title||'Untitled')}</div></div><div style="text-align:right;"><div style="font-size:11px;color:var(--text2);">${w} words</div><div style="font-size:10px;color:var(--border2);margin-top:2px;">tap to edit ▶</div></div></div>`;}).join('');
+  if(fullViewOpen)renderFullView();
+}
+
+function openBookSettings(){
+  const b=data.book;
+  document.getElementById('bookTitleInput').value=b.title||'';document.getElementById('bookAuthorInput').value=b.author||'';document.getElementById('bookGenreInput').value=b.genre||'';document.getElementById('bookCoverUrl').value='';
+  openModal('modal-book-settings');
+}
+function handleCoverUpload(){
+  const f=document.getElementById('bookCoverFile').files[0];if(!f)return;
+  const r=new FileReader();r.onload=e=>{document.getElementById('bookCoverUrl').value=e.target.result;};r.readAsDataURL(f);
+}
+function saveBookSettings(){
+  data.book.title=document.getElementById('bookTitleInput').value.trim()||'My Book';
+  data.book.author=document.getElementById('bookAuthorInput').value.trim();
+  data.book.genre=document.getElementById('bookGenreInput').value.trim();
+  const cu=document.getElementById('bookCoverUrl').value.trim();if(cu)data.book.coverUrl=cu;
+  save();closeModal('modal-book-settings');renderBook();
+}
+
+function openAddChapter(){
+  editingChapterId=null;
+  document.getElementById('chapterTitleInput').value='';document.getElementById('chapterContentInput').value='';
+  document.getElementById('deleteChapterBtn').style.display='none';
+  document.getElementById('chapterWordCount').textContent='';
+  document.getElementById('bookMainView').style.display='none';
+  document.getElementById('bookEditorEl').classList.add('active');
+  setupWordCount();
+}
+function openEditor(id){
+  editingChapterId=id;const c=data.book.chapters.find(x=>x.id===id);if(!c)return;
+  document.getElementById('chapterTitleInput').value=c.title||'';document.getElementById('chapterContentInput').value=c.content||'';
+  document.getElementById('deleteChapterBtn').style.display='block';
+  document.getElementById('bookMainView').style.display='none';
+  document.getElementById('bookEditorEl').classList.add('active');
+  setupWordCount();
+}
+function setupWordCount(){
+  const ta=document.getElementById('chapterContentInput'),wc=document.getElementById('chapterWordCount');
+  const update=()=>{const w=ta.value.trim().split(/\s+/).filter(Boolean).length;wc.textContent=w+' words';};
+  update();ta.oninput=update;
+}
+function closeEditor(){
+  document.getElementById('bookEditorEl').classList.remove('active');
+  document.getElementById('bookMainView').style.display='block';
+  editingChapterId=null;renderBook();
+}
+function saveChapter(){
+  const title=document.getElementById('chapterTitleInput').value.trim();
+  const content=document.getElementById('chapterContentInput').value;
+  if(editingChapterId){const c=data.book.chapters.find(x=>x.id===editingChapterId);if(c){c.title=title;c.content=content;c.updated=Date.now();}}
+  else data.book.chapters.push({id:uid(),title,content,created:Date.now(),updated:Date.now()});
+  save();closeEditor();
+}
+function deleteChapter(){if(!confirm('Delete this chapter?'))return;data.book.chapters=data.book.chapters.filter(x=>x.id!==editingChapterId);save();closeEditor();}
+
+function toggleFullView(){
+  fullViewOpen=!fullViewOpen;
+  document.getElementById('chapterListEl').style.display=fullViewOpen?'none':'block';
+  document.getElementById('bookMetaCard').style.display=fullViewOpen?'none':'block';
+  document.getElementById('fullViewArea').style.display=fullViewOpen?'block':'none';
+  document.getElementById('fullViewBtn').textContent=fullViewOpen?'Chapter View':'Full View';
+  if(fullViewOpen)renderFullView();
+}
+function renderFullView(){
+  document.getElementById('fullViewContent').innerHTML=data.book.chapters.map((c,i)=>`<div class="ch-heading">Chapter ${i+1}: ${escHtml(c.title||'Untitled')}</div>${escHtml(c.content||'')}`).join('\n\n');
+}
+
+// ════════════════════════════════════
+//  VAULT (AES-GCM encrypted passwords)
+// ════════════════════════════════════
+async function getVaultSalt(){
+  let s=localStorage.getItem('chronicle_vsalt');
+  if(!s){s=btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));localStorage.setItem('chronicle_vsalt',s);}
+  return Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+}
+async function deriveVaultKey(pw){
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:await getVaultSalt(),iterations:310000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encField(key,pt){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(pt));
+  const b=new Uint8Array(12+ct.byteLength);b.set(iv,0);b.set(new Uint8Array(ct),12);
+  return btoa(String.fromCharCode(...b));
+}
+async function decField(key,b64){
+  const b=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(0,12)},key,b.slice(12)));
+}
+
+async function unlockVault(){
+  const pw=prompt('Enter vault master password:');if(!pw)return;
+  let key;
+  try{key=await deriveVaultKey(pw);}catch(e){alert('Key derivation failed.');return;}
+  // Verify key with token
+  const token=localStorage.getItem('chronicle_vtoken');
+  if(token){
+    try{const t=await decField(key,token);if(t!=='chronicle_vault_ok'){alert('Wrong password.');return;}}
+    catch(e){alert('Wrong password.');return;}
+  } else {
+    // First use — set token
+    localStorage.setItem('chronicle_vtoken',await encField(key,'chronicle_vault_ok'));
+  }
+  vaultKey=key;vaultUnlocked=true;
+  document.getElementById('pwLockedMsg').style.display='none';
+  document.getElementById('pwVaultEl').style.display='block';
+  renderPasswords();
+}
+
+function lockVault(){
+  vaultUnlocked=false;vaultKey=null;
+  document.getElementById('pwVaultEl').style.display='none';
+  document.getElementById('pwLockedMsg').style.display='block';
+}
+
+async function renderPasswords(){
+  const list=document.getElementById('pwListEl');
+  if(!data.passwords.length){list.innerHTML='<div class="empty-state">No passwords saved yet.</div>';return;}
+  list.innerHTML='';
+  for(const pw of data.passwords){
+    let user='[encrypted]';
+    try{user=await decField(vaultKey,pw.encUser);}catch(e){}
+    const c=document.createElement('div');c.className='pw-entry';
+    const init=(pw.site||'?')[0].toUpperCase();
+    c.innerHTML=`<div class="pw-entry-header" onclick="toggleEl('pwb-${pw.id}','pwch-${pw.id}')"><div class="pw-site-icon">${init}</div><div style="flex:1;"><div style="font-family:'Cinzel',serif;font-size:14px;">${escHtml(pw.site||'')}</div><div style="font-size:12px;color:var(--text2);">${escHtml(user)}</div></div><span class="chevron" id="pwch-${pw.id}">▶</span></div><div class="pw-body" id="pwb-${pw.id}"><div class="pw-field-row"><span class="pw-field-label">Username</span><span class="pw-field-val" id="pwu-${pw.id}">${escHtml(user)}</span><button class="pw-copy" onclick="copyText('pwu-${pw.id}')">Copy</button></div><div class="pw-field-row"><span class="pw-field-label">Password</span><span class="pw-field-val" id="pwp-${pw.id}" style="letter-spacing:0.15em;font-size:18px;">••••••••</span><button class="pw-reveal" onclick="toggleReveal('${pw.id}')">👁</button><button class="pw-copy" onclick="copyPw('${pw.id}')">Copy</button></div>${pw.url?`<div class="pw-field-row"><span class="pw-field-label">URL</span><a href="${escHtml(pw.url)}" target="_blank" style="color:var(--accent2);font-size:13px;word-break:break-all;">${escHtml(pw.url)}</a></div>`:''} ${pw.notes?`<div class="pw-field-row" style="align-items:flex-start;"><span class="pw-field-label">Notes</span><span style="font-size:13px;color:var(--text2);white-space:pre-wrap;">${escHtml(pw.notes)}</span></div>`:''}<div style="margin-top:10px;"><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="openEditPw('${pw.id}')">Edit</button></div></div>`;
+    list.appendChild(c);
+  }
+}
+
+async function toggleReveal(id){
+  const el=document.getElementById('pwp-'+id);const pw=data.passwords.find(x=>x.id===id);if(!pw)return;
+  if(el.dataset.revealed){el.textContent='••••••••';el.style.letterSpacing='0.15em';el.style.fontSize='18px';delete el.dataset.revealed;return;}
+  try{el.textContent=await decField(vaultKey,pw.encPass);el.style.letterSpacing='normal';el.style.fontSize='14px';el.dataset.revealed='1';}catch(e){el.textContent='[error]';}
+}
+async function copyPw(id){
+  const pw=data.passwords.find(x=>x.id===id);if(!pw)return;
+  try{await navigator.clipboard.writeText(await decField(vaultKey,pw.encPass));toast('Password copied');}catch(e){}
+}
+async function copyText(elId){
+  try{await navigator.clipboard.writeText(document.getElementById(elId)?.textContent||'');toast('Copied');}catch(e){}
+}
+
+function openAddPassword(){
+  if(!vaultUnlocked){unlockVault();return;}
+  editingPwId=null;document.getElementById('pwModalTitle').textContent='Add Password';document.getElementById('deletePwBtn').style.display='none';
+  ['pwSite','pwUser','pwPass','pwUrl','pwNotes'].forEach(id=>document.getElementById(id).value='');
+  openModal('modal-password');
+}
+async function openEditPw(id){
+  editingPwId=id;const pw=data.passwords.find(x=>x.id===id);if(!pw)return;
+  document.getElementById('pwModalTitle').textContent='Edit '+pw.site;document.getElementById('deletePwBtn').style.display='inline-block';
+  document.getElementById('pwSite').value=pw.site||'';document.getElementById('pwUrl').value=pw.url||'';document.getElementById('pwNotes').value=pw.notes||'';
+  try{document.getElementById('pwUser').value=await decField(vaultKey,pw.encUser);}catch(e){}
+  try{document.getElementById('pwPass').value=await decField(vaultKey,pw.encPass);}catch(e){}
+  openModal('modal-password');
+}
+async function savePassword(){
+  if(!vaultKey){alert('Vault not unlocked.');return;}
+  const site=document.getElementById('pwSite').value.trim(),pass=document.getElementById('pwPass').value;if(!site||!pass)return;
+  if(!localStorage.getItem('chronicle_vtoken'))localStorage.setItem('chronicle_vtoken',await encField(vaultKey,'chronicle_vault_ok'));
+  const obj={id:editingPwId||uid(),site,encUser:await encField(vaultKey,document.getElementById('pwUser').value),encPass:await encField(vaultKey,pass),url:document.getElementById('pwUrl').value.trim(),notes:document.getElementById('pwNotes').value.trim(),updated:Date.now()};
+  if(editingPwId){const i=data.passwords.findIndex(x=>x.id===editingPwId);if(i>=0)data.passwords[i]=obj;}else data.passwords.push(obj);
+  save();closeModal('modal-password');renderPasswords();
+}
+function deletePassword(){if(!confirm('Delete?'))return;data.passwords=data.passwords.filter(x=>x.id!==editingPwId);save();closeModal('modal-password');renderPasswords();}
+function generatePassword(){
+  const c='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*';
+  document.getElementById('pwPass').value=Array.from({length:20},()=>c[Math.floor(Math.random()*c.length)]).join('');
+  document.getElementById('pwPass').type='text';
+}
+
+// ════════════════════════════════════
+//  BACKUP / CRYPTO
+// ════════════════════════════════════
+function togglePwVis(id,btn){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='password'?'SHOW':'HIDE';}
+function checkExportStrength(){
+  const pw=document.getElementById('exportPassword').value,el=document.getElementById('exportStrength');
+  if(!pw){el.textContent='';return;}
+  let s=0;if(pw.length>=8)s++;if(pw.length>=14)s++;if(/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw))s++;if(/[^A-Za-z0-9]/.test(pw))s++;
+  el.textContent='● Strength: '+['','Weak','Fair','Good','Strong','Very Strong'][s];
+  el.style.color=['','var(--red)','var(--amber)','var(--amber)','var(--green)','var(--green)'][s];
+}
+
+async function deriveKey(pw,salt){
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:310000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encData(pt,pw){
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(pw,salt),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(pt));
+  const b=new Uint8Array(28+ct.byteLength);b.set(salt,0);b.set(iv,16);b.set(new Uint8Array(ct),28);
+  return btoa(String.fromCharCode(...b));
+}
+async function decData(b64,pw){
+  const b=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  const key=await deriveKey(pw,b.slice(0,16));
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(16,28)},key,b.slice(28)));
+}
+
+async function doExport(){
+  const pw=document.getElementById('exportPassword').value;
+  const ts=new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  const payload=JSON.stringify({version:2,exported:new Date().toISOString(),data});
+  let fc,fn;
+  if(pw){try{fc=JSON.stringify({chronicle_encrypted:true,version:2,payload:await encData(payload,pw)});fn=`chronicle_${ts}.enc.json`;}catch(e){alert('Encryption failed');return;}}
+  else{fc=payload;fn=`chronicle_${ts}.json`;}
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([fc],{type:'application/json'})),download:fn});
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+async function doImport(){
+  const file=document.getElementById('importFile').files[0];
+  const st=document.getElementById('importStatus');
+  if(!file){st.textContent='No file selected.';st.style.color='var(--amber)';return;}
+  st.textContent='Reading…';st.style.color='var(--text2)';
+  let parsed;try{parsed=JSON.parse(await file.text());}catch(e){st.textContent='✕ Invalid file.';st.style.color='var(--red)';return;}
+  let id2;
+  if(parsed.chronicle_encrypted){
+    const pw=document.getElementById('importPassword').value;if(!pw){st.textContent='✕ Enter password.';st.style.color='var(--amber)';return;}
+    try{id2=JSON.parse(await decData(parsed.payload,pw)).data;}catch(e){st.textContent='✕ Wrong password.';st.style.color='var(--red)';return;}
+  }else if(parsed.data){id2=parsed.data;}else{st.textContent='✕ Unrecognised format.';st.style.color='var(--red)';return;}
+  let a={entries:0,personas:0,people:0,chapters:0,passwords:0};
+  const eI=new Set(data.entries.map(x=>x.id)),pI=new Set(data.personas.map(x=>x.id)),peI=new Set(data.people.map(x=>x.id)),cI=new Set(data.book.chapters.map(x=>x.id)),pwI=new Set(data.passwords.map(x=>x.id));
+  (id2.entries||[]).forEach(e=>{if(!eI.has(e.id)){data.entries.push(e);a.entries++;}});
+  (id2.personas||[]).forEach(e=>{if(!pI.has(e.id)){data.personas.push(e);a.personas++;}});
+  (id2.people||[]).forEach(e=>{if(!peI.has(e.id)){data.people.push(e);a.people++;}});
+  ((id2.book||{}).chapters||[]).forEach(e=>{if(!cI.has(e.id)){data.book.chapters.push(e);a.chapters++;}});
+  (id2.passwords||[]).forEach(e=>{if(!pwI.has(e.id)){data.passwords.push(e);a.passwords++;}});
+  save();renderCalendar();renderPersona();renderPeople();renderBook();if(vaultUnlocked)renderPasswords();
+  st.style.color='var(--green)';st.textContent=`✓ ${a.entries} entries · ${a.personas} personas · ${a.people} people · ${a.chapters} chapters · ${a.passwords} passwords`;
+}
+
+function clearAllData(){
+  if(!confirm('Permanently delete ALL Chronicle data?'))return;
+  if(!confirm('Final warning — cannot be undone!'))return;
+  data={entries:[],personas:[],people:[],book:{title:'My Book',author:'',genre:'',coverUrl:'',chapters:[]},passwords:[],boards:null,comic:null,rpg:null};
+  localStorage.removeItem('chronicle_vtoken');
+  save();closeModal('modal-backup');renderCalendar();renderPersona();renderPeople();renderBook();initBoards();initComic();initRpg();renderBoard();
+}
+
+// ════════════════════════════════════
+//  MODALS + UTILS
+// ════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function toast(msg){
+  const el=document.createElement('div');el.className='toast';el.textContent=msg;
+  document.body.appendChild(el);setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),400);},1400);
+}
+
+// ════════════════════════════════════
+//  INIT
+// ════════════════════════════════════
+
+// ════════════════════════════════════
+//  BOARD (KANBAN)
+// ════════════════════════════════════
+let activeBoardId=null, editingCardId=null, editingColId=null;
+
+function getBoardData(){
+  if(!data.boards) data.boards={boards:[],cards:[]};
+  return data.boards;
+}
+
+function initBoards(){
+  const bd=getBoardData();
+  if(!bd.boards.length){
+    // Seed with NGY board
+    const b1={id:uid(),name:'No Gods Yet'};
+    const b2={id:uid(),name:'Current Projects'};
+    bd.boards.push(b1,b2);
+    const cols1=[
+      {id:uid(),boardId:b1.id,name:'Story',order:0},
+      {id:uid(),boardId:b1.id,name:'Art',order:1},
+      {id:uid(),boardId:b1.id,name:'RPG',order:2},
+      {id:uid(),boardId:b1.id,name:'Done',order:3},
+    ];
+    const cols2=[
+      {id:uid(),boardId:b2.id,name:'To Do',order:0},
+      {id:uid(),boardId:b2.id,name:'In Progress',order:1},
+      {id:uid(),boardId:b2.id,name:'Done',order:2},
+    ];
+    if(!bd.cols) bd.cols=[];
+    bd.cols.push(...cols1,...cols2);
+    const cards=[
+      {id:uid(),boardId:b1.id,colId:cols1[0].id,title:'Chapter 1: Rush Hour — script',notes:'Panel by panel breakdown ready. See Studio tab.',tag:'ngy'},
+      {id:uid(),boardId:b1.id,colId:cols1[0].id,title:'Chapter 2 outline',notes:'Cross goes after the exec\'s kid. First impact fusion reveal.',tag:'ngy'},
+      {id:uid(),boardId:b1.id,colId:cols1[1].id,title:'Cover — Cross confrontational pose',notes:'3 fingers down. Rat + crow. City backdrop. Gachiakuta style.',tag:'ngy'},
+      {id:uid(),boardId:b1.id,colId:cols1[2].id,title:'City map layout',notes:'8 districts. Corporate zone high up. Midstack = Cross home.',tag:'ngy'},
+      {id:uid(),boardId:b1.id,colId:cols1[2].id,title:'Combat system prototype',notes:'Totem cooldowns. Impact fusion mechanic. Ascension tracking.',tag:'ngy'},
+    ];
+    bd.cards.push(...cards);
+    activeBoardId=b1.id;
+    save();
+  } else {
+    activeBoardId=bd.boards[0].id;
+  }
+  renderBoard();
+}
+
+function renderBoard(){
+  const bd=getBoardData();
+  const tabsRow=document.getElementById('boardTabsRow');
+  tabsRow.innerHTML=bd.boards.map(b=>`<button class="board-tab${b.id===activeBoardId?' active':''}" onclick="switchBoard('${b.id}')">${escHtml(b.name)}</button>`).join('')
+    +`<button class="board-tab" onclick="openAddBoard()">+ Board</button>`;
+  const cols=(bd.cols||[]).filter(c=>c.boardId===activeBoardId).sort((a,b)=>a.order-b.order);
+  const container=document.getElementById('kanbanCols');
+  container.innerHTML='';
+  cols.forEach(col=>{
+    const cards=(bd.cards||[]).filter(c=>c.colId===col.id);
+    const colEl=document.createElement('div');colEl.className='kanban-col';
+    colEl.innerHTML=`<div class="kanban-col-hdr"><span class="kanban-col-title">${escHtml(col.name)}</span><div style="display:flex;align-items:center;gap:6px;"><span class="kanban-col-count">${cards.length}</span><button class="kcol-del" onclick="deleteBoardCol('${col.id}')">×</button></div></div><div class="kanban-cards-wrap" id="kc-${col.id}">${cards.map(card=>`<div class="kanban-card" onclick="openEditBoardCard('${card.id}')"><div class="kanban-card-title">${escHtml(card.title)}</div>${card.notes?`<div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.4;">${escHtml(card.notes.slice(0,80))}${card.notes.length>80?'…':''}</div>`:''}${card.tag?`<div class="kanban-card-tags"><span class="ktag ktag-${card.tag}">${card.tag==='ngy'?'NO GODS YET':card.tag==='north'?'NORTH EDEN':'PERSONAL'}</span></div>`:''}</div>`).join('')}</div><button class="kanban-add" onclick="openAddBoardCard('${col.id}')">+ Add card</button>`;
+    container.appendChild(colEl);
+  });
+  // Add col button
+  const addCol=document.createElement('div');
+  addCol.style.cssText='min-width:120px;display:flex;align-items:flex-start;padding-top:4px;';
+  addCol.innerHTML=`<button class="btn" style="font-size:10px;white-space:nowrap;" onclick="openAddCol()">+ Column</button>`;
+  container.appendChild(addCol);
+}
+
+function switchBoard(id){activeBoardId=id;renderBoard();}
+
+function openAddBoard(){closeModal('modal-add-board');document.getElementById('newBoardName').value='';openModal('modal-add-board');}
+function saveNewBoard(){
+  const name=document.getElementById('newBoardName').value.trim();if(!name)return;
+  const bd=getBoardData();
+  const b={id:uid(),name};bd.boards.push(b);
+  const defaultCols=['To Do','In Progress','Done'];
+  if(!bd.cols)bd.cols=[];
+  defaultCols.forEach((n,i)=>bd.cols.push({id:uid(),boardId:b.id,name:n,order:i}));
+  activeBoardId=b.id;save();closeModal('modal-add-board');renderBoard();
+}
+
+function openAddCol(){document.getElementById('newColName').value='';openModal('modal-add-col');}
+function saveNewCol(){
+  const name=document.getElementById('newColName').value.trim();if(!name)return;
+  const bd=getBoardData();if(!bd.cols)bd.cols=[];
+  const maxOrder=Math.max(-1,...bd.cols.filter(c=>c.boardId===activeBoardId).map(c=>c.order));
+  bd.cols.push({id:uid(),boardId:activeBoardId,name,order:maxOrder+1});
+  save();closeModal('modal-add-col');renderBoard();
+}
+function deleteBoardCol(id){
+  if(!confirm('Delete this column and all its cards?'))return;
+  const bd=getBoardData();
+  bd.cols=(bd.cols||[]).filter(c=>c.id!==id);
+  bd.cards=(bd.cards||[]).filter(c=>c.colId!==id);
+  save();renderBoard();
+}
+
+function openAddBoardCard(colId){
+  editingCardId=null;
+  document.getElementById('boardCardModalTitle').textContent='Add Card';
+  document.getElementById('bcTitle').value='';
+  document.getElementById('bcNotes').value='';
+  document.getElementById('bcTag').value='';
+  document.getElementById('deleteBcBtn').style.display='none';
+  populateColSelect(colId||null);
+  openModal('modal-board-card');
+}
+function openEditBoardCard(id){
+  const bd=getBoardData();const card=(bd.cards||[]).find(c=>c.id===id);if(!card)return;
+  editingCardId=id;
+  document.getElementById('boardCardModalTitle').textContent='Edit Card';
+  document.getElementById('bcTitle').value=card.title;
+  document.getElementById('bcNotes').value=card.notes||'';
+  document.getElementById('bcTag').value=card.tag||'';
+  document.getElementById('deleteBcBtn').style.display='inline-block';
+  populateColSelect(card.colId);
+  openModal('modal-board-card');
+}
+function populateColSelect(selectedColId){
+  const bd=getBoardData();
+  const cols=(bd.cols||[]).filter(c=>c.boardId===activeBoardId).sort((a,b)=>a.order-b.order);
+  const sel=document.getElementById('bcCol');
+  sel.innerHTML=cols.map(c=>`<option value="${c.id}"${c.id===selectedColId?' selected':''}>${escHtml(c.name)}</option>`).join('');
+}
+function saveBoardCard(){
+  const title=document.getElementById('bcTitle').value.trim();if(!title)return;
+  const bd=getBoardData();if(!bd.cards)bd.cards=[];
+  const colId=document.getElementById('bcCol').value;
+  const card={id:editingCardId||uid(),boardId:activeBoardId,colId,title,notes:document.getElementById('bcNotes').value.trim(),tag:document.getElementById('bcTag').value};
+  if(editingCardId){const i=bd.cards.findIndex(c=>c.id===editingCardId);if(i>=0)bd.cards[i]=card;}
+  else bd.cards.push(card);
+  save();closeModal('modal-board-card');renderBoard();
+}
+function deleteBoardCard(){
+  if(!confirm('Delete this card?'))return;
+  const bd=getBoardData();bd.cards=(bd.cards||[]).filter(c=>c.id!==editingCardId);
+  save();closeModal('modal-board-card');renderBoard();
+}
+
+// ════════════════════════════════════
+//  COMIC PLANNER
+// ════════════════════════════════════
+let editingArcId=null, editingPanelId=null, editingPanelArcId=null;
+
+function getComicData(){
+  if(!data.comic)data.comic={arcs:[],worldNotes:''};
+  return data.comic;
+}
+
+function initComic(){
+  const cd=getComicData();
+  if(!cd.arcs.length){
+    const a1={id:uid(),title:'Chapter 1: Rush Hour',summary:'Establish Cross, the world, his companions. Sister calls — her Totem has been taken.',panels:[
+      {id:uid(),desc:'Wide shot — cityscape at dawn. Delivery drones, people on rooftops. Sky has a strange quality.',dialogue:'Caption: "6:47 AM. Another day in the grind."'},
+      {id:uid(),desc:'Street level. Cross parkours over a barrier. Lean, courier bag across chest. Totem marks faintly visible on fingers.',dialogue:'Caption: "Twelve deliveries. Medical supplies, data chips, groceries. Don\'t ask, don\'t care."'},
+      {id:uid(),desc:'Close-up of his courier Machina device. Route and timer on screen.',dialogue:'"DELIVERY 1/12 — 14 MINUTES REMAINING"'},
+      {id:uid(),desc:'He vaults a fence. Background: two people fused for manual labour.',dialogue:'Caption: "People fuse for work. For life. It\'s just how things are now."'},
+      {id:uid(),desc:'Lands in an alley. Scratch pokes head out of jacket pocket.',dialogue:'Scratch: "Shortcut smells like piss and death." Cross: "Saves three minutes."'},
+      {id:uid(),desc:'Rooftop run. Scratch on shoulder. City spread behind them.',dialogue:'Scratch: "You got juice if something goes wrong?" Cross: "Used my hour yesterday. Naked till tonight."'},
+      {id:uid(),desc:'Delivery to older person with partial Beast features (feathers, scales).',dialogue:'Customer: "Careful out there. Westside Collective recruiting aggressive today."'},
+      {id:uid(),desc:'Cross passes a café — worker fused with a Machina coffee machine, arm replaced, making drinks.',dialogue:'Caption: "Everyone adapted. Corporate loves it."'},
+      {id:uid(),desc:'Billboard: ASCEND HIGHER — TITAN CORP TOTEM INSURANCE. Cross\'s phone buzzes.',dialogue:'Text from SIS: "Can you stop by after work? Need to talk."'},
+      {id:uid(),desc:'Corporate building. A beaten Kin flickers, fades — respawning. Antagonist steps out, brushing off suit. Eye contact with Cross.',dialogue:'Antagonist: "Should\'ve thought before spilling coffee on me." Scratch: "Not our problem. Keep moving."'},
+      {id:uid(),desc:'Evening. Home. Scratch on counter. Cross on phone — video call with sister.',dialogue:'Sister: "I had an incident at work today. They took my Totem. Just... because they could."'},
+      {id:uid(),desc:'Close on Cross. Controlled. Quiet.',dialogue:'Cross: "I\'ll get it back." Scratch: "This is stupid." Cross: "Didn\'t ask."'},
+      {id:uid(),desc:'Cross at window. City lights below. Silhouette.',dialogue:'Caption: "I always do."'},
+    ]};
+    cd.arcs.push(a1);
+    save();
+  }
+  renderComicArcs();
+}
+
+function renderComicArcs(){
+  const cd=getComicData();
+  const list=document.getElementById('comicArcList');
+  if(!cd.arcs.length){list.innerHTML='<div class="empty-state">No arcs yet. Start building your story.</div>';return;}
+  list.innerHTML=cd.arcs.map((arc,ai)=>{
+    const panels=arc.panels||[];
+    return`<div class="comic-arc-card"><div class="comic-arc-hdr" onclick="toggleEl('cab-${arc.id}','cach-${arc.id}')"><div><span class="comic-arc-label">${escHtml(arc.title)}</span><span style="font-size:11px;color:var(--text2);margin-left:8px;">${panels.length} panel${panels.length!==1?'s':''}</span></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" style="font-size:9px;padding:2px 8px;" onclick="event.stopPropagation();editArc('${arc.id}')">Edit</button><span class="chevron" id="cach-${arc.id}">▶</span></div></div><div class="comic-arc-body" id="cab-${arc.id}">${arc.summary?`<div style="font-size:13px;color:var(--text2);font-style:italic;margin-bottom:10px;">${escHtml(arc.summary)}</div>`:''}${panels.map((p,pi)=>`<div class="panel-row"><span class="panel-num">P${pi+1}</span><div class="panel-text"><div>${escHtml(p.desc)}</div>${p.dialogue?`<div style="font-size:13px;color:var(--gold2);margin-top:3px;font-style:italic;">${escHtml(p.dialogue)}</div>`:''}</div><button class="panel-del" onclick="editPanel('${arc.id}','${p.id}')">✎</button></div>`).join('')}<button class="btn" style="width:100%;margin-top:8px;font-size:10px;" onclick="openAddPanel('${arc.id}')">+ Add Panel</button></div></div>`;
+  }).join('');
+}
+
+function openAddArc(){editingArcId=null;document.getElementById('arcModalTitle').textContent='New Arc / Chapter';document.getElementById('arcTitle').value='';document.getElementById('arcSummary').value='';document.getElementById('deleteArcBtn').style.display='none';openModal('modal-add-arc');}
+function editArc(id){
+  editingArcId=id;const cd=getComicData();const arc=cd.arcs.find(a=>a.id===id);if(!arc)return;
+  document.getElementById('arcModalTitle').textContent='Edit Arc';
+  document.getElementById('arcTitle').value=arc.title;document.getElementById('arcSummary').value=arc.summary||'';
+  document.getElementById('deleteArcBtn').style.display='inline-block';openModal('modal-add-arc');
+}
+function saveArc(){
+  const title=document.getElementById('arcTitle').value.trim();if(!title)return;
+  const cd=getComicData();
+  const arc={id:editingArcId||uid(),title,summary:document.getElementById('arcSummary').value.trim(),panels:[]};
+  if(editingArcId){const i=cd.arcs.findIndex(a=>a.id===editingArcId);if(i>=0){arc.panels=cd.arcs[i].panels;cd.arcs[i]=arc;}else cd.arcs.push(arc);}
+  else cd.arcs.push(arc);
+  save();closeModal('modal-add-arc');renderComicArcs();
+}
+function deleteArc(){
+  if(!confirm('Delete this arc and all panels?'))return;
+  const cd=getComicData();cd.arcs=cd.arcs.filter(a=>a.id!==editingArcId);
+  save();closeModal('modal-add-arc');renderComicArcs();
+}
+
+function openAddPanel(arcId){
+  editingPanelId=null;editingPanelArcId=arcId;
+  document.getElementById('panelModalTitle').textContent='Add Panel';
+  document.getElementById('panelDesc').value='';document.getElementById('panelDialogue').value='';
+  document.getElementById('deletePanelBtn').style.display='none';openModal('modal-add-panel');
+}
+function editPanel(arcId,panelId){
+  editingPanelArcId=arcId;editingPanelId=panelId;
+  const cd=getComicData();const arc=cd.arcs.find(a=>a.id===arcId);if(!arc)return;
+  const p=arc.panels.find(p=>p.id===panelId);if(!p)return;
+  document.getElementById('panelModalTitle').textContent='Edit Panel';
+  document.getElementById('panelDesc').value=p.desc||'';document.getElementById('panelDialogue').value=p.dialogue||'';
+  document.getElementById('deletePanelBtn').style.display='inline-block';openModal('modal-add-panel');
+}
+function savePanel(){
+  const desc=document.getElementById('panelDesc').value.trim();if(!desc)return;
+  const cd=getComicData();const arc=cd.arcs.find(a=>a.id===editingPanelArcId);if(!arc)return;
+  const panel={id:editingPanelId||uid(),desc,dialogue:document.getElementById('panelDialogue').value.trim()};
+  if(editingPanelId){const i=arc.panels.findIndex(p=>p.id===editingPanelId);if(i>=0)arc.panels[i]=panel;}
+  else arc.panels.push(panel);
+  save();closeModal('modal-add-panel');renderComicArcs();
+}
+function deletePanel(){
+  if(!confirm('Delete this panel?'))return;
+  const cd=getComicData();const arc=cd.arcs.find(a=>a.id===editingPanelArcId);if(!arc)return;
+  arc.panels=arc.panels.filter(p=>p.id!==editingPanelId);
+  save();closeModal('modal-add-panel');renderComicArcs();
+}
+
+function openWorldModal(){
+  const cd=getComicData();
+  document.getElementById('worldNotes').value=cd.worldNotes||'';
+  openModal('modal-world');
+}
+function saveWorldNotes(){
+  const cd=getComicData();cd.worldNotes=document.getElementById('worldNotes').value;
+  save();closeModal('modal-world');toast('World bible saved ✓');
+}
+
+// ════════════════════════════════════
+//  RPG STUDIO
+// ════════════════════════════════════
+let selectedRpgCell=null, editingSceneId=null, ptState=null;
+const RPG_ROWS=6, RPG_COLS=8;
+
+function getRpgData(){
+  if(!data.rpg)data.rpg={rooms:{},scenes:[],ptHistory:[]};
+  return data.rpg;
+}
+
+function switchStudio(tab){
+  document.querySelectorAll('.studio-sw-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.studio-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('sw-'+tab).classList.add('active');
+  document.getElementById('pane-'+tab).classList.add('active');
+  if(tab==='rpg')renderRpgMap();
+}
+
+function switchRpgView(view){
+  document.querySelectorAll('.rpg-view').forEach(v=>v.style.display='none');
+  document.getElementById('rpg-view-'+view).style.display='block';
+  if(view==='map')renderRpgMap();
+  if(view==='scenes')renderRpgScenes();
+  if(view==='play')initPlaytest();
+}
+
+function initRpg(){
+  const rd=getRpgData();
+  if(!Object.keys(rd.rooms).length){
+    // Seed the city map with key locations
+    const seed={
+      '0,0':{name:'Lowstack',district:'Feral District',icon:'🐀',desc:'Bottom rung. Feral humans, strong animals. Most avoid it.',active:true},
+      '1,1':{name:'Sewer Run',district:'Underground',icon:'🕳',desc:'Cross uses this shortcut on his deliveries.',active:true},
+      '2,3':{name:'Midstack',district:'Residential',icon:'🏠',desc:'Cross\' home district. Mix of normal people and low-mid ladder folks.',active:true},
+      '2,4':{name:'Cross\' Apt',district:'Midstack',icon:'🚪',desc:'Small, lived in. Scratch\'s corner of the counter. Window faces the city.',active:true},
+      '3,4':{name:'Dispatch Hub',district:'Midstack',icon:'📦',desc:'Where Cross picks up his deliveries. Machina sorting systems.',active:true},
+      '3,6':{name:'Market Row',district:'Midstack',icon:'🛒',desc:'Street market. Fused workers everywhere. Normal life, such as it is.',active:true},
+      '4,5':{name:'The Climb',district:'Mid-Upper',icon:'🪜',desc:'Transition zone. Ladder competition here is constant.',active:true},
+      '4,2':{name:'Titan Corp',district:'Corporate',icon:'🏢',desc:'One of the major corps. Lobby requires totem surrender contracts.',active:true},
+      '5,3':{name:'Exec Quarter',district:'Upper',icon:'💼',desc:'Where the antagonist lives and works. High-ranked security.',active:true},
+      '5,6':{name:'The Ascended',district:'High Spire',icon:'✨',desc:'Those close to the top live here. Barely visible from below.',active:true},
+    };
+    Object.assign(rd.rooms,seed);
+    // Seed scenes
+    rd.scenes=[
+      {id:uid(),title:'The Alley Shortcut',narr:'The shortcut reeks. Scratch shifts on your shoulder.\n\n"Smells like piss and death."\n\nYou check your Machina. Timer\'s running. Three minutes saved or three minutes of running clean streets.',choices:[
+        {text:'Take the shortcut',outcome:'You move fast through the dark. Something moves in the shadows — but you\'re gone before it resolves.',effect:{hp:-5,asc:0}},
+        {text:'Go the long way',outcome:'Clean route. Slower. Your timer is tighter now, but you arrive intact.',effect:{hp:0,asc:0}},
+        {text:'Stop and check what\'s in the shadows',outcome:'Bold. A feral mid-rank Beast watches you from a drainpipe. You lock eyes. It decides you\'re not worth it. Today.',effect:{hp:0,asc:5}},
+      ]},
+      {id:uid(),title:'The Delivery',narr:'The customer has partial Beast features — feathers at the collar, a scaled hand. Mid-ladder. They take the package and pause.\n\n"You heard about the Westside Collective? They\'re recruiting aggressive."',choices:[
+        {text:'"Not my problem."',outcome:'"Sure." They close the window. Job done.',effect:{hp:0,asc:0}},
+        {text:'"What kind of aggressive?"',outcome:'They glance past you. "Totem-collecting aggressive. Watch your marks." They close the window.',effect:{hp:0,asc:0}},
+        {text:'"Good to know. Thanks."',outcome:'They nod. A small slip of paper lands in your palm with the payment. A contact, maybe.',effect:{hp:0,asc:5}},
+      ]},
+      {id:uid(),title:'The Encounter',narr:'You see it happen. The Kin flickers and fades — defeated, respawning elsewhere. The antagonist brushes their suit.\n\n"Should\'ve thought about that before spilling coffee on me."\n\nThey notice you watching.',choices:[
+        {text:'Break eye contact. Keep moving.',outcome:'"Not my problem." You were right. Scratch relaxes on your shoulder. For now.',effect:{hp:0,asc:-5}},
+        {text:'Hold eye contact.',outcome:'A long second. They smile — not warmly. Then look away. You\'ve been noticed.',effect:{hp:0,asc:5}},
+        {text:'Say something.',outcome:'"Rough day?" The words leave your mouth before the smart part of your brain catches up. Scratch goes very still.',effect:{hp:-10,asc:10}},
+      ]},
+    ];
+    save();
+  }
+}
+
+function renderRpgMap(){
+  const rd=getRpgData();
+  const grid=document.getElementById('rpgMapGrid');
+  grid.innerHTML='';
+  for(let r=0;r<RPG_ROWS;r++){
+    for(let c=0;c<RPG_COLS;c++){
+      const key=`${r},${c}`;
+      const room=rd.rooms[key];
+      const cell=document.createElement('div');
+      cell.className='rpg-cell'+(room?' room':' empty')+(key===selectedRpgCell?' selected':'');
+      if(room){
+        cell.innerHTML=`<span style="font-size:${window.innerWidth<400?'13':'16'}px">${room.icon||'📍'}</span><span class="rpg-cell-label">${escHtml((room.name||'').slice(0,8))}</span>`;
+      }
+      cell.onclick=()=>selectRpgCell(key);
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function selectRpgCell(key){
+  selectedRpgCell=key;
+  renderRpgMap();
+  const rd=getRpgData();
+  const room=rd.rooms[key];
+  const editor=document.getElementById('rpgRoomEditor');
+  editor.style.display='block';
+  document.getElementById('rpgRoomEdTitle').textContent=room?'Edit Location':'Add Location';
+  document.getElementById('rpgRoomName').value=room?room.name:'';
+  document.getElementById('rpgRoomDistrict').value=room?room.district:'';
+  document.getElementById('rpgRoomDesc').value=room?room.desc:'';
+  document.getElementById('rpgRoomIcon').value=room?room.icon:'📍';
+}
+function saveRpgRoom(){
+  const name=document.getElementById('rpgRoomName').value.trim();
+  if(!name||!selectedRpgCell)return;
+  const rd=getRpgData();
+  rd.rooms[selectedRpgCell]={name,district:document.getElementById('rpgRoomDistrict').value.trim(),desc:document.getElementById('rpgRoomDesc').value.trim(),icon:document.getElementById('rpgRoomIcon').value||'📍',active:true};
+  save();closeRpgRoomEditor();renderRpgMap();toast('Location saved ✓');
+}
+function deleteRpgRoom(){
+  if(!selectedRpgCell||!confirm('Remove this location?'))return;
+  const rd=getRpgData();delete rd.rooms[selectedRpgCell];
+  save();closeRpgRoomEditor();renderRpgMap();
+}
+function closeRpgRoomEditor(){selectedRpgCell=null;document.getElementById('rpgRoomEditor').style.display='none';renderRpgMap();}
+
+// SCENES
+function renderRpgScenes(){
+  const rd=getRpgData();
+  const list=document.getElementById('rpgSceneList');
+  if(!rd.scenes||!rd.scenes.length){list.innerHTML='<div class="empty-state">No scenes yet. Add your first scene to start building.</div>';return;}
+  list.innerHTML=rd.scenes.map(s=>`<div class="rpg-section"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><span class="rpg-section-title" style="margin-bottom:0;">${escHtml(s.title)}</span><button class="btn" style="font-size:9px;padding:2px 8px;" onclick="editScene('${s.id}')">Edit</button></div><div style="font-size:14px;color:var(--text2);white-space:pre-wrap;margin-bottom:10px;">${escHtml(s.narr)}</div>${(s.choices||[]).map((ch,i)=>`<div class="rpg-choice" style="cursor:default;"><span style="font-size:12px;color:var(--text2);">▸ ${escHtml(ch.text)}</span></div>`).join('')}</div>`).join('');
+}
+
+function openAddScene(){
+  editingSceneId=null;
+  document.getElementById('sceneModalTitle').textContent='New Scene';
+  document.getElementById('sceneTitle').value='';document.getElementById('sceneNarr').value='';
+  document.getElementById('deleteSceneBtn').style.display='none';
+  document.getElementById('choiceFields').innerHTML='';
+  addChoiceField();addChoiceField();
+  openModal('modal-add-scene');
+}
+function editScene(id){
+  const rd=getRpgData();const s=rd.scenes.find(x=>x.id===id);if(!s)return;
+  editingSceneId=id;
+  document.getElementById('sceneModalTitle').textContent='Edit Scene';
+  document.getElementById('sceneTitle').value=s.title;document.getElementById('sceneNarr').value=s.narr||'';
+  document.getElementById('deleteSceneBtn').style.display='inline-block';
+  document.getElementById('choiceFields').innerHTML='';
+  (s.choices||[]).forEach(ch=>addChoiceField(ch.text,ch.outcome,ch.effect));
+  if(!(s.choices||[]).length)addChoiceField();
+  openModal('modal-add-scene');
+}
+function addChoiceField(text='',outcome='',effect=null){
+  const fields=document.getElementById('choiceFields');
+  if(fields.children.length>=4)return;
+  const i=fields.children.length;
+  const d=document.createElement('div');d.style.marginBottom='10px';
+  d.innerHTML=`<div class="field" style="margin-bottom:4px;"><label>Choice ${i+1}</label><input type="text" class="choice-text" placeholder="What the player does..." value="${escHtml(text)}"></div><div class="field"><label>Outcome</label><textarea class="choice-outcome" placeholder="What happens..." style="min-height:50px;">${escHtml(outcome)}</textarea></div>`;
+  fields.appendChild(d);
+}
+function saveScene(){
+  const title=document.getElementById('sceneTitle').value.trim();if(!title)return;
+  const choices=[];
+  document.querySelectorAll('#choiceFields>div').forEach(div=>{
+    const t=div.querySelector('.choice-text').value.trim();
+    const o=div.querySelector('.choice-outcome').value.trim();
+    if(t)choices.push({text:t,outcome:o,effect:{hp:0,asc:0}});
+  });
+  const rd=getRpgData();
+  const scene={id:editingSceneId||uid(),title,narr:document.getElementById('sceneNarr').value.trim(),choices};
+  if(editingSceneId){const i=rd.scenes.findIndex(s=>s.id===editingSceneId);if(i>=0)rd.scenes[i]=scene;}
+  else rd.scenes.push(scene);
+  save();closeModal('modal-add-scene');renderRpgScenes();
+}
+function deleteScene(){
+  if(!confirm('Delete this scene?'))return;
+  const rd=getRpgData();rd.scenes=rd.scenes.filter(s=>s.id!==editingSceneId);
+  save();closeModal('modal-add-scene');renderRpgScenes();
+}
+
+// PLAYTEST ENGINE
+const PT_START={sceneIdx:0,hp:100,asc:20,totems:3,log:[]};
+
+function initPlaytest(){
+  const rd=getRpgData();
+  if(!rd.scenes||!rd.scenes.length){
+    document.getElementById('ptNarr').innerHTML='<em>No scenes yet — go to the Scenes tab and add some to start playtesting.</em>';
+    document.getElementById('ptChoices').innerHTML='';return;
+  }
+  if(!ptState){ptState={...PT_START,log:[]};}
+  renderPlaytest();
+}
+function renderPlaytest(){
+  if(!ptState)return;
+  const rd=getRpgData();
+  updatePtStats();
+  const scene=rd.scenes[ptState.sceneIdx];
+  if(!scene){
+    document.getElementById('ptNarr').innerHTML='<em>End of scenes. Add more in the Scenes tab or restart.</em>';
+    document.getElementById('ptChoices').innerHTML='';return;
+  }
+  document.getElementById('ptNarr').innerHTML=scene.narr.replace(/\n/g,'<br>');
+  const choicesEl=document.getElementById('ptChoices');
+  choicesEl.innerHTML=(scene.choices||[]).map((ch,i)=>`<button class="rpg-pt-btn" onclick="ptChoose(${i})">▸ ${escHtml(ch.text)}</button>`).join('');
+  if(!scene.choices||!scene.choices.length){
+    choicesEl.innerHTML=`<button class="rpg-pt-btn" onclick="ptNext()">▸ Continue →</button>`;
+  }
+  renderPtLog();
+}
+function ptChoose(i){
+  const rd=getRpgData();const scene=rd.scenes[ptState.sceneIdx];
+  const ch=scene.choices[i];
+  ptState.hp=Math.max(0,Math.min(100,ptState.hp+(ch.effect?.hp||0)));
+  ptState.asc=Math.max(0,Math.min(100,ptState.asc+(ch.effect?.asc||0)));
+  ptState.log.push({scene:scene.title,choice:ch.text,outcome:ch.outcome});
+  ptState.sceneIdx=Math.min(ptState.sceneIdx+1,rd.scenes.length-1);
+  updatePtStats();
+  // Show outcome briefly then advance
+  document.getElementById('ptNarr').innerHTML=`<span style="color:var(--gold2);">${escHtml(ch.outcome)}</span>`;
+  document.getElementById('ptChoices').innerHTML=`<button class="rpg-pt-btn" onclick="renderPlaytest()">▸ Continue →</button>`;
+  renderPtLog();
+}
+function ptNext(){ptState.sceneIdx=Math.min(ptState.sceneIdx+1,(getRpgData().scenes||[]).length-1);renderPlaytest();}
+function ptRestart(){ptState={...PT_START,log:[]};renderPlaytest();}
+function updatePtStats(){
+  if(!ptState)return;
+  ['asc','hp'].forEach(k=>{
+    document.getElementById('pt-'+k).style.width=ptState[k]+'%';
+    document.getElementById('pt-'+k+'-v').textContent=ptState[k];
+  });
+  document.getElementById('pt-tot').style.width=(ptState.totems/3*100)+'%';
+  document.getElementById('pt-tot-v').textContent=ptState.totems;
+}
+function renderPtLog(){
+  const log=document.getElementById('ptLog');
+  if(!ptState||!ptState.log.length){log.innerHTML='';return;}
+  log.innerHTML=ptState.log.slice(-3).reverse().map(e=>`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:8px 12px;margin-bottom:6px;"><div style="font-family:'Cinzel',serif;font-size:10px;color:var(--text2);margin-bottom:3px;">${escHtml(e.scene)}</div><div style="font-size:12px;color:var(--text2);font-style:italic;">▸ ${escHtml(e.choice)}</div><div style="font-size:13px;color:var(--text);margin-top:4px;">${escHtml(e.outcome)}</div></div>`).join('');
+}
+
+load();
+initLock();
+initBoards();
+initComic();
+initRpg();
+renderCalendar();renderPersona();renderPeople();renderBook();
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(r=>{console.log('Chronicle SW:',r.scope);r.addEventListener('updatefound',()=>{const nw=r.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){if(confirm('Chronicle has been updated. Reload now?'))window.location.reload();}});});}).catch(e=>console.warn('SW:',e));});}
+</script>
+</body>
+</html>
