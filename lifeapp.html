@@ -1,0 +1,3316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0d0f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Chronicle</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;--border:#2e2e42;--border2:#3d3d58;--gold:#c9a84c;--gold2:#e8c97a;--text:#d4d4e8;--text2:#9090aa;--accent:#7b6cee;--accent2:#a99bff;--red:#cc5555;--green:#55aa77;--amber:#cc8844;--font-heading:'Cinzel',serif;}
+.swatch{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform 0.15s,border-color 0.15s;padding:0;}
+.swatch:hover{transform:scale(1.15);}
+.swatch.active{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,0.4);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4;}
+
+/* LOCK SCREEN */
+#lockScreen{position:fixed;inset:0;background:var(--bg);z-index:5000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px;}
+#lockScreen h1{font-family:var(--font-heading);font-size:28px;color:var(--gold);letter-spacing:0.2em;text-shadow:0 0 40px rgba(201,168,76,0.4);}
+#lockSubtitle{font-size:13px;color:var(--text2);letter-spacing:0.05em;}
+.pin-dots{display:flex;gap:14px;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:all 0.15s;}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold);box-shadow:0 0 10px rgba(201,168,76,0.5);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px;}
+.pin-btn{width:72px;height:72px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:var(--font-heading);font-size:20px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;}
+.pin-btn:active{background:var(--bg4);border-color:var(--gold);color:var(--gold);transform:scale(0.95);}
+.pin-btn.del{font-size:16px;color:var(--text2);}
+.pin-btn.bio-icon{font-size:22px;}
+.pin-error{color:var(--red);font-family:var(--font-heading);font-size:12px;letter-spacing:0.1em;min-height:18px;text-align:center;}
+#lockSetupMsg{font-size:12px;color:var(--text2);text-align:center;max-width:240px;line-height:1.6;display:none;}
+
+/* NAV */
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0);overflow-x:auto;}
+nav button{flex:0 0 auto;min-width:52px;background:none;border:none;color:var(--text2);padding:10px 6px 8px;font-family:var(--font-heading);font-size:7px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;transition:color 0.2s;display:flex;flex-direction:column;align-items:center;gap:3px;}
+nav button svg{width:18px;height:18px;}
+nav button.active{color:var(--gold);}
+
+/* HEADER */
+header{background:linear-gradient(180deg,#0d0d0f 0%,var(--bg2) 100%);border-bottom:1px solid var(--border);padding:14px 16px 10px;position:sticky;top:0;z-index:50;}
+header h1{font-family:var(--font-heading);font-size:20px;font-weight:600;color:var(--gold);letter-spacing:0.15em;text-shadow:0 0 30px rgba(201,168,76,0.3);}
+header p{font-size:11px;color:var(--text2);letter-spacing:0.05em;margin-top:1px;}
+
+/* SECTIONS */
+.section{display:none;padding:16px 14px 100px;}
+.section.active{display:block;}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:12px;position:relative;}
+.card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--gold),transparent);border-radius:4px 0 0 4px;}
+
+/* BUTTONS */
+.btn{background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:8px 14px;border-radius:3px;font-family:var(--font-heading);font-size:11px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;}
+.btn:hover,.btn:active{background:var(--bg4);border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,#8a6a20,var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.btn-gold:hover{filter:brightness(1.1);color:#1a1200;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+
+/* INPUTS */
+input[type="text"],input[type="date"],input[type="password"],input[type="time"],textarea,select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;transition:border-color 0.2s;}
+input:focus,textarea:focus,select:focus{border-color:var(--gold);}
+select option{background:var(--bg3);}
+textarea{resize:vertical;min-height:80px;}
+label{display:block;font-size:11px;letter-spacing:0.08em;color:var(--text2);font-family:var(--font-heading);text-transform:uppercase;margin-bottom:4px;}
+.field{margin-bottom:12px;}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text2);font-family:var(--font-heading);font-size:11px;letter-spacing:0.15em;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;}
+.toggle-label{font-family:var(--font-heading);font-size:11px;color:var(--text2);letter-spacing:0.06em;}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--bg4);border-radius:12px;cursor:pointer;transition:0.2s;border:1px solid var(--border2);}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:2px;top:2px;background:var(--text2);border-radius:50%;transition:0.2s;}
+.toggle input:checked+.toggle-slider{background:var(--gold);border-color:var(--gold2);}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px);background:#1a1200;}
+
+/* CALENDAR */
+.week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.week-nav h2{font-family:var(--font-heading);font-size:13px;color:var(--gold);letter-spacing:0.08em;text-align:center;flex:1;}
+.day-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.day-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg3);cursor:pointer;user-select:none;}
+.day-header-left{display:flex;align-items:center;gap:10px;}
+.day-name{font-family:var(--font-heading);font-size:12px;letter-spacing:0.1em;color:var(--gold2);}
+.day-date{font-size:12px;color:var(--text2);}
+.day-badge{background:var(--accent);color:white;border-radius:10px;padding:1px 7px;font-size:10px;font-family:var(--font-heading);}
+.day-body{padding:12px 14px;display:none;}
+.day-body.open{display:block;}
+.entry-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}
+.entry-item:last-child{border-bottom:none;}
+.entry-time{font-family:var(--font-heading);font-size:10px;color:var(--text2);min-width:40px;padding-top:3px;}
+.entry-text{flex:1;font-size:15px;color:var(--text);line-height:1.4;}
+.entry-bell{background:none;border:none;cursor:pointer;padding:0 2px;font-size:13px;line-height:1;opacity:0.4;transition:opacity 0.2s;}
+.entry-bell.on{opacity:1;}
+.entry-badge{font-size:9px;padding:1px 5px;border-radius:10px;font-family:var(--font-heading);white-space:nowrap;}
+.badge-routine{background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3);}
+.badge-note{background:rgba(123,108,238,0.15);color:var(--accent2);border:1px solid rgba(123,108,238,0.3);}
+.entry-delete{background:none;border:none;color:var(--text2);cursor:pointer;padding:0 2px;font-size:16px;line-height:1;transition:color 0.2s;}
+.entry-delete:hover{color:var(--red);}
+.day-card.today .day-name{color:var(--accent2);}
+.day-card.today .day-header{background:#1a1620;}
+.chevron{transition:transform 0.2s;color:var(--text2);font-size:12px;}
+.chevron.open{transform:rotate(90deg);}
+
+/* PERSONA */
+.persona-active-card{background:linear-gradient(135deg,#1a1624 0%,#141020 100%);border:1px solid var(--accent);border-radius:6px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;}
+.persona-active-card::after{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(123,108,238,0.12) 0%,transparent 70%);pointer-events:none;}
+.persona-name{font-family:var(--font-heading);font-size:20px;font-weight:600;color:var(--accent2);letter-spacing:0.1em;margin-bottom:4px;}
+.persona-class{font-size:13px;color:var(--text2);font-style:italic;margin-bottom:16px;}
+.stat-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.stat-label{font-family:var(--font-heading);font-size:10px;letter-spacing:0.08em;color:var(--text2);min-width:90px;text-transform:uppercase;}
+.stat-bar-bg{flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;}
+.stat-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease;}
+.stat-value{font-family:var(--font-heading);font-size:11px;color:var(--text);min-width:28px;text-align:right;}
+.persona-list-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;}
+.pill-active{background:rgba(123,108,238,0.2);color:var(--accent2);border:1px solid rgba(123,108,238,0.4);padding:2px 8px;border-radius:10px;font-family:var(--font-heading);font-size:9px;letter-spacing:0.08em;}
+
+/* PEOPLE */
+.person-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:10px;overflow:hidden;}
+.person-header{display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;}
+.person-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--bg4),var(--bg3));border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:16px;color:var(--gold);flex-shrink:0;}
+.person-body{padding:0 14px 14px;display:none;}
+.person-body.open{display:block;}
+.info-tag{display:inline-block;background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:2px 8px;font-size:12px;color:var(--text);margin:2px;}
+.section-label{font-family:var(--font-heading);font-size:10px;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin:12px 0 6px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.tag-list{display:flex;flex-wrap:wrap;gap:4px;}
+
+/* BOOK */
+.book-meta{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:14px;}
+.book-cover-img{width:100%;max-height:180px;object-fit:cover;border-radius:4px;margin-bottom:12px;border:1px solid var(--border);}
+.chapter-item{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color 0.2s;}
+.chapter-item:hover{border-color:var(--gold);}
+.chapter-num{font-family:var(--font-heading);font-size:10px;color:var(--text2);letter-spacing:0.1em;}
+.chapter-title-text{font-family:var(--font-heading);font-size:14px;color:var(--text);}
+.book-editor-area{display:none;}
+.book-editor-area.active{display:block;}
+.book-editor-area textarea{min-height:55vh;font-size:16px;line-height:1.9;font-family:'Crimson Pro',serif;}
+.full-view-content{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:20px;line-height:1.9;font-size:17px;white-space:pre-wrap;word-break:break-word;}
+.full-view-content .ch-heading{font-family:var(--font-heading);font-size:15px;color:var(--gold);margin:24px 0 12px;letter-spacing:0.1em;border-bottom:1px solid var(--border);padding-bottom:8px;}
+
+/* BOOK SELECTOR */
+.book-selector-row{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;}
+.book-sel-tab{background:var(--bg2);border:1px solid var(--border);border-radius:3px;color:var(--text2);padding:5px 12px;font-family:var(--font-heading);font-size:10px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0;}
+.book-sel-tab.active{background:var(--bg3);border-color:var(--gold);color:var(--gold);}
+
+/* SCENE TREE */
+.tree-container{overflow-y:auto;padding-bottom:80px;}
+.tree-node{position:relative;margin-bottom:6px;}
+.tree-card{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;cursor:pointer;transition:border-color 0.15s;position:relative;}
+.tree-card:hover{border-color:var(--gold);}
+.tree-card.tree-start{border-color:var(--green);background:#0d1a10;}
+.tree-card.tree-end{border-color:var(--red);background:#1a0d0d;}
+.tree-card.tree-active{border-color:var(--gold);background:#1e1a0d;box-shadow:0 0 12px rgba(201,168,76,0.2);}
+.tree-card-title{font-family:var(--font-heading);font-size:12px;color:var(--gold2);letter-spacing:0.08em;margin-bottom:4px;}
+.tree-card-narr{font-size:12px;color:var(--text2);line-height:1.4;max-height:36px;overflow:hidden;}
+.tree-children{margin-left:20px;padding-left:14px;border-left:2px solid var(--border);margin-top:6px;}
+.tree-branch-label{font-size:11px;color:var(--accent2);font-family:var(--font-heading);letter-spacing:0.06em;margin-bottom:4px;margin-top:8px;}
+.tree-add-child{background:none;border:1px dashed var(--border2);border-radius:4px;color:var(--text2);padding:6px 10px;font-family:var(--font-heading);font-size:10px;cursor:pointer;width:100%;text-align:left;transition:all 0.15s;margin-top:4px;}
+.tree-add-child:hover{border-color:var(--gold);color:var(--gold);}
+.tree-badge{font-size:9px;padding:1px 6px;border-radius:10px;font-family:var(--font-heading);margin-left:6px;}
+.tree-badge-start{background:rgba(85,170,119,0.15);color:var(--green);border:1px solid rgba(85,170,119,0.3);}
+.tree-badge-end{background:rgba(204,85,85,0.15);color:var(--red);border:1px solid rgba(204,85,85,0.3);}
+
+/* TAG MANAGER */
+.tag-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px 3px 10px;border-radius:12px;font-family:var(--font-heading);font-size:10px;border:1px solid;cursor:default;margin:2px;}
+.tag-chip-del{background:none;border:none;cursor:pointer;color:inherit;opacity:0.6;font-size:12px;padding:0;line-height:1;}
+.tag-chip-del:hover{opacity:1;}
+
+/* WORLD BIBLE ENTRIES */
+.wb-entry{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px 12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;}
+.wb-entry-body{flex:1;}
+.wb-entry-tag{font-size:9px;padding:1px 7px;border-radius:10px;font-family:var(--font-heading);margin-bottom:5px;display:inline-block;background:rgba(224,80,80,0.1);border:1px solid rgba(224,80,80,0.3);color:#e07070;}
+.wb-entry-text{font-size:14px;color:var(--text);line-height:1.5;}
+.wb-entry-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
+
+/* PASSWORDS */
+.pw-entry{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.pw-entry-header{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;}
+.pw-site-icon{width:36px;height:36px;border-radius:8px;background:var(--bg4);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:15px;color:var(--gold);flex-shrink:0;}
+.pw-body{padding:0 14px 14px;display:none;}
+.pw-body.open{display:block;}
+.pw-field-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.pw-field-label{font-family:var(--font-heading);font-size:10px;color:var(--text2);letter-spacing:0.08em;min-width:72px;}
+.pw-field-val{flex:1;font-size:14px;color:var(--text);word-break:break-all;min-width:80px;}
+.pw-copy{background:none;border:1px solid var(--border);border-radius:3px;color:var(--text2);padding:3px 10px;font-size:10px;font-family:var(--font-heading);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.pw-copy:hover{border-color:var(--gold);color:var(--gold);}
+.pw-reveal{background:none;border:none;color:var(--text2);cursor:pointer;font-size:15px;padding:2px 4px;}
+
+/* BOARD / KANBAN */
+.board-wrap{overflow-x:auto;padding-bottom:80px;-webkit-overflow-scrolling:touch;}
+.board-wrap::-webkit-scrollbar{height:3px;}
+.board-tabs-row{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;}
+.board-tab{background:var(--bg2);border:1px solid var(--border);border-radius:3px;color:var(--text2);padding:5px 14px;font-family:var(--font-heading);font-size:10px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0;}
+.board-tab.active{background:var(--bg3);border-color:var(--gold);color:var(--gold);}
+.kanban-cols{display:flex;gap:10px;min-width:max-content;padding-top:4px;}
+.kanban-col{width:230px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;display:flex;flex-direction:column;max-height:calc(100vh - 200px);}
+.kanban-col-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.kanban-col-title{font-family:var(--font-heading);font-size:10px;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;}
+.kanban-col-count{background:var(--bg4);border-radius:10px;padding:1px 7px;font-size:10px;font-family:var(--font-heading);color:var(--text2);}
+.kanban-cards-wrap{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px;}
+.kanban-card{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:10px 12px;cursor:pointer;transition:border-color 0.15s;}
+.kanban-card:active{border-color:var(--gold);}
+.kanban-card-title{font-size:14px;color:var(--text);line-height:1.4;}
+.kanban-card-tags{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;}
+.ktag{font-size:9px;padding:1px 6px;border-radius:10px;font-family:var(--font-heading);border:1px solid;}
+.ktag-ngy{color:#e05050;border-color:rgba(224,80,80,0.35);background:rgba(224,80,80,0.08);}
+.ktag-personal{color:var(--accent2);border-color:rgba(123,108,238,0.35);background:rgba(123,108,238,0.08);}
+.ktag-north{color:var(--gold);border-color:rgba(201,168,76,0.35);background:rgba(201,168,76,0.08);}
+.kanban-add{width:100%;background:none;border:none;color:var(--text2);padding:8px 12px;font-family:var(--font-heading);font-size:11px;letter-spacing:0.05em;cursor:pointer;transition:color 0.2s;text-align:left;border-top:1px solid var(--border);flex-shrink:0;}
+.kanban-add:hover{color:var(--gold);}
+.kcol-del{background:none;border:none;color:var(--border2);cursor:pointer;font-size:13px;padding:0 2px;transition:color 0.2s;}
+.kcol-del:hover{color:var(--red);}
+
+/* STUDIO */
+.studio-switcher{display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:14px;}
+.studio-sw-btn{flex:1;background:none;border:none;color:var(--text2);padding:9px;font-family:var(--font-heading);font-size:10px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;}
+.studio-sw-btn.active{background:var(--bg4);color:var(--gold);border-bottom:2px solid var(--gold);}
+.studio-pane{display:none;padding-bottom:80px;}
+.studio-pane.active{display:block;}
+
+/* COMIC PLANNER */
+.comic-arc-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:10px;overflow:hidden;}
+.comic-arc-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--bg3);cursor:pointer;}
+.comic-arc-label{font-family:var(--font-heading);font-size:11px;letter-spacing:0.1em;color:var(--gold);}
+.comic-arc-body{display:none;padding:10px 14px 14px;}
+.comic-arc-body.open{display:block;}
+.panel-row{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;}
+.panel-num{font-family:var(--font-heading);font-size:10px;color:var(--text2);min-width:22px;padding-top:3px;}
+.panel-text{flex:1;font-size:14px;color:var(--text);line-height:1.5;}
+.panel-del{background:none;border:none;color:var(--border2);cursor:pointer;font-size:14px;transition:color 0.2s;padding:0 2px;}
+.panel-del:hover{color:var(--red);}
+
+/* RPG STUDIO */
+.rpg-section{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:14px;margin-bottom:10px;}
+.rpg-section-title{font-family:var(--font-heading);font-size:11px;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.rpg-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.rpg-map{display:grid;gap:4px;margin-bottom:10px;user-select:none;}
+.rpg-cell{aspect-ratio:1;border-radius:3px;border:1px solid var(--border2);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.15s;position:relative;overflow:hidden;}
+.rpg-cell.room{background:var(--bg4);border-color:var(--border2);}
+.rpg-cell.room-active{border-color:var(--gold);background:#1e1a10;}
+.rpg-cell.empty{background:var(--bg);border-color:var(--border);}
+.rpg-cell.selected{border-color:var(--gold);box-shadow:0 0 8px rgba(201,168,76,0.3);}
+.rpg-cell-label{font-size:8px;font-family:var(--font-heading);color:var(--text2);position:absolute;bottom:1px;left:0;right:0;text-align:center;line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 1px;}
+.rpg-scene-panel{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:12px;margin-top:10px;}
+.rpg-scene-title{font-family:var(--font-heading);font-size:12px;color:var(--gold2);margin-bottom:8px;}
+.rpg-choice{background:var(--bg4);border:1px solid var(--border2);border-radius:3px;padding:8px 12px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:14px;transition:border-color 0.15s;}
+.rpg-choice:hover{border-color:var(--gold);}
+.rpg-choice-arrow{color:var(--text2);font-size:12px;}
+.rpg-playtest{background:linear-gradient(135deg,#0f1a0f,#0d1510);border:1px solid #2a4a2a;border-radius:6px;padding:16px;margin-top:10px;}
+.rpg-playtest-title{font-family:var(--font-heading);font-size:13px;color:#55cc77;letter-spacing:0.1em;margin-bottom:10px;}
+.rpg-playtest-narr{font-size:15px;line-height:1.7;color:var(--text);margin-bottom:14px;font-style:italic;}
+.rpg-playtest-choices{display:flex;flex-direction:column;gap:6px;}
+.rpg-pt-btn{background:rgba(85,204,119,0.08);border:1px solid rgba(85,204,119,0.3);border-radius:3px;color:#55cc77;padding:9px 14px;font-family:var(--font-heading);font-size:11px;letter-spacing:0.06em;cursor:pointer;text-align:left;transition:all 0.15s;}
+.rpg-pt-btn:hover{background:rgba(85,204,119,0.15);border-color:#55cc77;}
+.rpg-stat-bar{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.rpg-stat-lbl{font-family:var(--font-heading);font-size:10px;color:var(--text2);min-width:60px;letter-spacing:0.06em;}
+.rpg-stat-track{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;}
+.rpg-stat-fill{height:100%;border-radius:3px;transition:width 0.4s ease;}
+.rpg-stat-val{font-family:var(--font-heading);font-size:10px;color:var(--text);min-width:24px;text-align:right;}
+.ngy-tag{display:inline-block;background:rgba(224,80,80,0.1);border:1px solid rgba(224,80,80,0.3);color:#e07070;border-radius:3px;padding:1px 8px;font-family:var(--font-heading);font-size:9px;letter-spacing:0.08em;margin-right:4px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:8px 8px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:var(--font-heading);font-size:16px;color:var(--gold);letter-spacing:0.1em;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+
+/* MISC */
+input[type="range"]{-webkit-appearance:none;width:100%;height:4px;background:var(--bg4);border-radius:2px;outline:none;cursor:pointer;}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent2);border-radius:50%;box-shadow:0 0 8px rgba(123,108,238,0.5);}
+.row{display:flex;gap:8px;}.row>*{flex:1;}
+.empty-state{text-align:center;padding:32px 16px;color:var(--text2);font-style:italic;font-size:15px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:8px 20px;border-radius:20px;font-family:var(--font-heading);font-size:12px;z-index:9000;transition:opacity 0.4s;pointer-events:none;}
+/* ════ CARD GAME ════ */
+.cg-card-tile{background:var(--bg2);border:2px solid var(--border);border-radius:6px;padding:8px 6px;cursor:pointer;transition:all 0.15s;position:relative;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.cg-card-tile:active{transform:scale(0.96);}
+.cg-card-tile .cg-card-name{font-family:var(--font-heading);font-size:9px;letter-spacing:0.06em;color:var(--text);margin-top:4px;word-break:break-word;line-height:1.3;}
+.cg-card-tile .cg-card-type{font-size:9px;color:var(--text2);margin-top:2px;}
+.cg-card-tile .cg-card-cost{position:absolute;top:4px;right:5px;font-family:var(--font-heading);font-size:10px;color:var(--gold);}
+.cg-play-card{background:var(--bg3);border:2px solid var(--border2);border-radius:6px;padding:6px 5px;min-width:70px;max-width:80px;cursor:pointer;transition:all 0.2s;position:relative;flex-shrink:0;text-align:center;}
+.cg-play-card:active{transform:scale(0.94);}
+.cg-play-card.selected{border-color:var(--gold);box-shadow:0 0 10px rgba(201,168,76,0.4);}
+.cg-play-card.tapped{opacity:0.5;transform:rotate(5deg);}
+.cg-play-card .cpn{font-family:var(--font-heading);font-size:9px;color:var(--text);line-height:1.2;margin-bottom:3px;}
+.cg-play-card .cps{font-size:9px;color:var(--text2);display:flex;flex-wrap:wrap;justify-content:center;gap:2px;}
+.cg-play-card .cps span{background:var(--bg4);border-radius:2px;padding:1px 3px;}
+.cg-opp-card{background:var(--bg4);border:2px solid var(--border);border-radius:6px;padding:5px;min-width:60px;max-width:70px;cursor:pointer;flex-shrink:0;text-align:center;font-family:var(--font-heading);font-size:9px;color:var(--text);}
+.cg-opp-card:active{border-color:var(--red);}
+.cg-hand-row{display:flex;gap:6px;overflow-x:auto;padding:6px 2px;min-height:90px;}
+.cg-field-row{display:flex;gap:6px;overflow-x:auto;padding:4px 2px;min-height:80px;align-items:flex-start;}
+.cg-health-bar-wrap{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.cg-health-label{font-family:var(--font-heading);font-size:10px;color:var(--text2);min-width:40px;}
+.cg-health-track{flex:1;height:8px;background:var(--bg4);border-radius:4px;overflow:hidden;}
+.cg-health-fill{height:100%;border-radius:4px;transition:width 0.4s;}
+.cg-res-label{font-family:var(--font-heading);font-size:11px;color:var(--gold);min-width:28px;}
+.cg-field-label{font-family:var(--font-heading);font-size:10px;color:var(--text2);letter-spacing:0.08em;margin-bottom:4px;}
+.cg-zone-label{font-family:var(--font-heading);font-size:11px;color:var(--red);letter-spacing:0.12em;margin-bottom:4px;}
+.cg-pile-box{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:8px;text-align:center;font-family:var(--font-heading);font-size:9px;color:var(--text2);cursor:pointer;transition:border-color 0.2s;letter-spacing:0.06em;}
+.cg-pile-box:hover{border-color:var(--gold);}
+.cg-field-slot-box{flex:1;background:var(--bg3);border:1px dashed var(--border2);border-radius:4px;padding:6px 10px;font-family:var(--font-heading);font-size:10px;color:var(--text2);cursor:pointer;text-align:center;}
+.cg-field-slot-box.active{border-color:var(--accent);color:var(--accent2);}
+.cg-game-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:14px;margin-bottom:10px;}
+.cg-game-card h3{font-family:var(--font-heading);font-size:14px;color:var(--gold2);margin-bottom:6px;}
+.cg-attack-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;}
+.cg-attack-row input,.cg-attack-row select{flex:1;min-width:60px;}
+.cg-attack-tag{display:inline-flex;align-items:center;gap:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:3px;padding:2px 8px;font-size:11px;margin:2px;}
+.cg-log-entry{padding:3px 0;border-bottom:1px solid var(--border);}
+.cg-log-entry:last-child{border-bottom:none;}
+
+</style>
+</head>
+<body>
+
+<!-- ═══ LOCK SCREEN ═══ -->
+<div id="lockScreen">
+  <h1>CHRONICLE</h1>
+  <p id="lockSubtitle">Enter your PIN</p>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-error" id="pinError"></div>
+  <div class="pin-pad">
+    <button class="pin-btn" onclick="pinPress('1')">1</button>
+    <button class="pin-btn" onclick="pinPress('2')">2</button>
+    <button class="pin-btn" onclick="pinPress('3')">3</button>
+    <button class="pin-btn" onclick="pinPress('4')">4</button>
+    <button class="pin-btn" onclick="pinPress('5')">5</button>
+    <button class="pin-btn" onclick="pinPress('6')">6</button>
+    <button class="pin-btn" onclick="pinPress('7')">7</button>
+    <button class="pin-btn" onclick="pinPress('8')">8</button>
+    <button class="pin-btn" onclick="pinPress('9')">9</button>
+    <button class="pin-btn bio-icon" id="bioPadBtn" onclick="pinPress('bio')" style="display:none;">⬡</button>
+    <button class="pin-btn" onclick="pinPress('0')" id="zeroBtn">0</button>
+    <button class="pin-btn del" onclick="pinPress('del')">⌫</button>
+  </div>
+  <div id="lockSetupMsg"></div>
+</div>
+
+<!-- ═══ APP SHELL ═══ -->
+<div id="appShell" style="display:none;">
+<header>
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <div><h1>CHRONICLE</h1><p id="headerSub">Your personal tome</p></div>
+    <button class="btn" style="font-size:10px;padding:5px 10px;display:flex;align-items:center;gap:5px;" onclick="openModal('modal-backup')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Backup
+    </button>
+  </div>
+</header>
+
+<!-- CALENDAR -->
+<section class="section active" id="sec-calendar">
+  <div class="week-nav">
+    <button class="btn" onclick="changeWeek(-1)">◀</button>
+    <h2 id="weekLabel"></h2>
+    <button class="btn" onclick="changeWeek(1)">▶</button>
+  </div>
+  <button class="btn btn-gold" style="width:100%;margin-bottom:14px;" onclick="openAddEntry()">+ Add Entry</button>
+  <div id="calendarDays"></div>
+</section>
+
+<!-- PERSONA -->
+<section class="section" id="sec-persona">
+  <div id="activePersonaArea"></div>
+  <div class="divider">All Personas</div>
+  <div id="personaList"></div>
+  <button class="btn btn-gold" style="width:100%;margin-top:8px;" onclick="openAddPersona()">+ New Persona</button>
+</section>
+
+<!-- PEOPLE -->
+<section class="section" id="sec-people">
+  <button class="btn btn-gold" style="width:100%;margin-bottom:14px;" onclick="openAddPerson()">+ Add Person</button>
+  <div id="peopleList"></div>
+</section>
+
+<!-- BOOK -->
+<section class="section" id="sec-book">
+  <div id="bookMainView">
+    <div class="book-selector-row" id="bookSelectorRow"></div>
+    <div class="book-meta" id="bookMetaCard">
+      <div id="bookCoverWrap"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold);letter-spacing:0.1em;" id="bookTitleDisplay">My Book</div>
+          <div style="font-size:13px;color:var(--text2);font-style:italic;margin-top:2px;" id="bookSubDisplay"></div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn" style="font-size:10px;padding:4px 10px;" onclick="openBookSettings()">Edit</button>
+          <button class="btn btn-danger" style="font-size:10px;padding:4px 8px;" onclick="deleteCurrentBook()">✕</button>
+        </div>
+      </div>
+      <div style="margin-top:8px;" id="bookStatsDisplay"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-gold" onclick="openAddChapter()" style="flex:1;">+ New Chapter</button>
+      <button class="btn" onclick="toggleFullView()" id="fullViewBtn" style="flex:1;">Full View</button>
+    </div>
+    <div id="chapterListEl"></div>
+    <div id="fullViewArea" style="display:none;">
+      <button class="btn" style="width:100%;margin-bottom:12px;" onclick="toggleFullView()">← Chapter List</button>
+      <div class="full-view-content" id="fullViewContent"></div>
+    </div>
+  </div>
+  <div class="book-editor-area" id="bookEditorEl">
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="btn" onclick="closeEditor()" style="flex:1;">← Back</button>
+      <button class="btn btn-gold" onclick="saveChapter()" style="flex:1;">Save</button>
+    </div>
+    <div class="field"><label>Chapter Title</label><input type="text" id="chapterTitleInput" placeholder="Chapter title..."></div>
+    <div class="field"><label>Write</label><textarea id="chapterContentInput" placeholder="Your story begins here..."></textarea></div>
+    <div id="chapterWordCount" style="font-family:'Cinzel',serif;font-size:10px;color:var(--text2);text-align:right;margin-top:4px;"></div>
+    <button class="btn btn-danger" id="deleteChapterBtn" style="width:100%;margin-top:12px;display:none;" onclick="deleteChapter()">Delete Chapter</button>
+  </div>
+</section>
+
+<!-- PASSWORDS -->
+<section class="section" id="sec-passwords">
+  <div id="pwLockedMsg" style="text-align:center;padding:40px 16px;">
+    <div style="font-size:52px;margin-bottom:16px;">🔐</div>
+    <p style="color:var(--text2);font-style:italic;margin-bottom:20px;line-height:1.6;">Password vault is sealed.<br>Authenticate to enter.</p>
+    <button class="btn btn-gold" style="padding:12px 28px;" onclick="unlockVault()">Unlock Vault</button>
+  </div>
+  <div id="pwVaultEl" style="display:none;">
+    <button class="btn btn-gold" style="width:100%;margin-bottom:14px;" onclick="openAddPassword()">+ Add Password</button>
+    <div id="pwListEl"></div>
+    <button class="btn btn-danger" style="width:100%;margin-top:16px;" onclick="lockVault()">🔒 Lock Vault</button>
+  </div>
+</section>
+
+<!-- BOARD -->
+<section class="section" id="sec-board">
+  <div class="board-tabs-row" id="boardTabsRow"></div>
+  <div style="display:flex;gap:8px;margin-bottom:10px;">
+    <button class="btn btn-gold" style="flex:1;font-size:10px;" onclick="openAddBoard()">+ New Board</button>
+    <button class="btn" style="font-size:10px;padding:6px 12px;" onclick="openAddBoardCard()">+ Card</button>
+    <button class="btn" style="font-size:10px;padding:6px 10px;" onclick="openTagManager()">🏷 Tags</button>
+  </div>
+  <div class="board-wrap"><div class="kanban-cols" id="kanbanCols"></div></div>
+</section>
+
+<!-- COMIC -->
+<section class="section" id="sec-comic">
+  <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;" id="comicSelectorRow"></div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <button class="btn btn-gold" style="flex:1;font-size:10px;" onclick="openAddArc()">+ Arc / Chapter</button>
+    <button class="btn" style="font-size:10px;padding:6px 12px;" onclick="openWorldModal()">World Bible</button>
+  </div>
+  <div id="comicArcList"></div>
+</section>
+
+<!-- RPG -->
+<section class="section" id="sec-rpg">
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <button class="btn btn-gold" style="flex:1;font-size:10px;" id="rpgMapBtn" onclick="switchRpgView('map')">🗺 Map</button>
+    <button class="btn" style="flex:1;font-size:10px;" id="rpgScenesBtn" onclick="switchRpgView('scenes')">📜 Scenes</button>
+    <button class="btn" style="flex:1;font-size:10px;" id="rpgPlayBtn" onclick="switchRpgView('play')">▶ Playtest</button>
+  </div>
+  <div id="rpg-view-map" class="rpg-view">
+    <div class="rpg-section">
+      <div class="rpg-section-title">City Map — No Gods Yet</div>
+      <div id="rpgMapGrid" class="rpg-map" style="grid-template-columns:repeat(8,1fr);"></div>
+      <div id="rpgRoomEditor" style="display:none;" class="rpg-scene-panel">
+        <div class="rpg-scene-title" id="rpgRoomEdTitle">Edit Location</div>
+        <div class="field"><label>Location Name</label><input type="text" id="rpgRoomName" placeholder="e.g. Cross's Apartment"></div>
+        <div class="field"><label>District</label><input type="text" id="rpgRoomDistrict" placeholder="e.g. Midstack, Corporate Zone"></div>
+        <div class="field"><label>Description</label><textarea id="rpgRoomDesc" placeholder="What's here? Who's here? Atmosphere..." style="min-height:60px;"></textarea></div>
+        <div class="field"><label>Icon / Emoji</label><input type="text" id="rpgRoomIcon" placeholder="🏠" maxlength="2" style="width:60px;text-align:center;font-size:20px;"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn btn-gold" style="flex:1;font-size:10px;" onclick="saveRpgRoom()">Save Location</button>
+          <button class="btn btn-danger" style="font-size:10px;" onclick="deleteRpgRoom()">Remove</button>
+          <button class="btn" style="font-size:10px;" onclick="closeRpgRoomEditor()">Cancel</button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text2);margin-top:8px;font-style:italic;">Tap an empty cell to add a location. Tap a room to edit.</p>
+    </div>
+  </div>
+  <div id="rpg-view-scenes" class="rpg-view" style="display:none;">
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="btn btn-gold" style="flex:1;font-size:10px;" onclick="openAddScene()">+ New Scene</button>
+    </div>
+    <div class="tree-container" id="rpgSceneTree"></div>
+  </div>
+  <div id="rpg-view-play" class="rpg-view" style="display:none;">
+    <div class="rpg-playtest">
+      <div class="rpg-playtest-title">▶ PLAYTEST — NO GODS YET</div>
+      <div style="margin-bottom:12px;">
+        <div class="rpg-stat-bar"><span class="rpg-stat-lbl">ASCENSION</span><div class="rpg-stat-track"><div class="rpg-stat-fill" id="pt-asc" style="width:20%;background:var(--gold);"></div></div><span class="rpg-stat-val" id="pt-asc-v">20</span></div>
+        <div class="rpg-stat-bar"><span class="rpg-stat-lbl">HEALTH</span><div class="rpg-stat-track"><div class="rpg-stat-fill" id="pt-hp" style="width:100%;background:var(--green);"></div></div><span class="rpg-stat-val" id="pt-hp-v">100</span></div>
+        <div class="rpg-stat-bar"><span class="rpg-stat-lbl">TOTEMS</span><div class="rpg-stat-track"><div class="rpg-stat-fill" id="pt-tot" style="width:100%;background:var(--accent2);"></div></div><span class="rpg-stat-val" id="pt-tot-v">3</span></div>
+      </div>
+      <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--text2);margin-bottom:6px;" id="ptSceneLabel">— SCENE —</div>
+      <div class="rpg-playtest-narr" id="ptNarr">You are Cross. Midstack district, 6:47 AM. Twelve deliveries, zero problems — that's the plan.</div>
+      <div class="rpg-playtest-choices" id="ptChoices"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn" style="flex:1;font-size:10px;" onclick="ptRestart()">↺ Restart</button>
+        <button class="btn" style="flex:1;font-size:10px;" onclick="openAddScene()">+ Add Scene</button>
+      </div>
+    </div>
+    <div id="ptLog" style="margin-top:10px;"></div>
+  </div>
+</section>
+
+
+<!-- CARD GAME SECTION -->
+<section class="section" id="sec-cardgame">
+  <!-- Sub-nav -->
+  <div style="display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:10px;overflow-x:auto;">
+    <button class="btn btn-gold" id="cg-tab-builder" onclick="cgTab('builder')" style="font-size:10px;white-space:nowrap;">🃏 Card Builder</button>
+    <button class="btn" id="cg-tab-games" onclick="cgTab('games')" style="font-size:10px;white-space:nowrap;">⚙ Game Setup</button>
+    <button class="btn" id="cg-tab-play" onclick="cgTab('play')" style="font-size:10px;white-space:nowrap;">▶ Playtest</button>
+  </div>
+
+  <!-- BUILDER VIEW -->
+  <div id="cg-view-builder">
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="btn btn-gold" style="flex:1;font-size:10px;" onclick="openAddCard()">+ New Card</button>
+      <select id="cgGameFilter" onchange="renderCardGrid()" style="flex:1;font-size:12px;padding:6px 8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:3px;">
+        <option value="">All Games</option>
+      </select>
+      <select id="cgTypeFilter" onchange="renderCardGrid()" style="flex:1;font-size:12px;padding:6px 8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:3px;">
+        <option value="">All Types</option>
+      </select>
+    </div>
+    <div id="cgCardGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+  </div>
+
+  <!-- GAME SETUP VIEW -->
+  <div id="cg-view-games" style="display:none;">
+    <button class="btn btn-gold" style="width:100%;margin-bottom:12px;" onclick="openAddGame()">+ New Game Config</button>
+    <div id="cgGameList"></div>
+  </div>
+
+  <!-- PLAYTEST VIEW -->
+  <div id="cg-view-play" style="display:none;">
+    <div id="cgPlaySelect">
+      <p style="color:var(--text2);font-style:italic;margin-bottom:12px;font-size:14px;">Select a game to playtest:</p>
+      <div id="cgPlayGameBtns"></div>
+    </div>
+    <div id="cgPlayArea" style="display:none;">
+      <!-- Opponent zone -->
+      <div class="cg-zone-label">⚔ OPPONENT</div>
+      <div class="cg-health-bar-wrap">
+        <div class="cg-health-label">HP <span id="cgOppHpVal">20</span></div>
+        <div class="cg-health-track"><div id="cgOppHpBar" class="cg-health-fill" style="background:var(--red);width:100%;"></div></div>
+        <div class="cg-res-label">⚡<span id="cgOppRes">3</span></div>
+      </div>
+      <div class="cg-field-label">Opp Field</div>
+      <div id="cgOppField" class="cg-field-row"></div>
+      <div class="cg-field-label" style="margin-top:4px;">Opp Hand <span id="cgOppHandCount" style="color:var(--text2);">(0)</span></div>
+      <div id="cgOppHandRow" class="cg-hand-row"></div>
+
+      <!-- Field effect slot -->
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
+        <div class="cg-field-label" style="margin:0;">🌐 Field</div>
+        <div id="cgFieldSlot" class="cg-field-slot-box" onclick="cgPlayFieldSlotClick()">Empty</div>
+      </div>
+
+      <!-- Divider -->
+      <div style="border-top:1px solid var(--border2);margin:8px 0;"></div>
+
+      <!-- Player zone -->
+      <div class="cg-field-label">Your Field</div>
+      <div id="cgPlayerField" class="cg-field-row"></div>
+      <div class="cg-health-bar-wrap" style="margin-top:8px;">
+        <div class="cg-health-label">HP <span id="cgPlayerHpVal">20</span></div>
+        <div class="cg-health-track"><div id="cgPlayerHpBar" class="cg-health-fill" style="background:var(--green);width:100%;"></div></div>
+        <div class="cg-res-label">⚡<span id="cgPlayerRes">3</span></div>
+      </div>
+
+      <!-- Hand -->
+      <div class="cg-field-label" style="margin-top:8px;">Your Hand (<span id="cgHandCount">0</span>/7)
+        <button class="btn" style="font-size:9px;padding:2px 8px;margin-left:6px;" onclick="cgDrawBtn()">Draw</button>
+      </div>
+      <div id="cgHandRow" class="cg-hand-row"></div>
+
+      <!-- Graveyard + Deck -->
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <div class="cg-pile-box" onclick="cgViewGrave('player')">
+          ⚰ Graveyard<br><span id="cgPlayerGraveCount">0</span>
+        </div>
+        <div class="cg-pile-box">
+          📚 Deck<br><span id="cgDeckCount">0</span>
+        </div>
+        <div class="cg-pile-box" onclick="cgViewGrave('opp')">
+          ⚰ Opp Grave<br><span id="cgOppGraveCount">0</span>
+        </div>
+      </div>
+
+      <!-- Log -->
+      <div style="margin-top:10px;">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--text2);margin-bottom:4px;letter-spacing:0.08em;">BATTLE LOG</div>
+        <div id="cgBattleLog" style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:8px;max-height:100px;overflow-y:auto;font-size:12px;color:var(--text2);"></div>
+      </div>
+
+      <!-- End turn -->
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-gold" style="flex:2;font-size:12px;" onclick="cgEndTurn()">END TURN ▶</button>
+        <button class="btn" style="flex:1;font-size:11px;border-color:var(--red);color:var(--red);" onclick="cgAttackPlayer()">⚔ Direct</button>
+        <button class="btn btn-danger" style="flex:1;font-size:11px;" onclick="cgResign()">Resign</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NAV -->
+<nav>
+  <button class="active" onclick="showSection('calendar')" id="nav-calendar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+    Calendar
+  </button>
+  <button onclick="showSection('persona')" id="nav-persona">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    Persona
+  </button>
+  <button onclick="showSection('people')" id="nav-people">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="3"/><path d="M2 19c0-3.3 3.1-6 7-6s7 2.7 7 6"/><circle cx="17" cy="7" r="2"/><path d="M22 19c0-2.2-2.1-4-5-4"/></svg>
+    People
+  </button>
+  <button onclick="showSection('book')" id="nav-book">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    Book
+  </button>
+  <button onclick="showSection('board')" id="nav-board">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="10" rx="1"/><rect x="14" y="17" width="7" height="4" rx="1"/></svg>
+    Board
+  </button>
+  <button onclick="showSection('comic')" id="nav-comic">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="9" y2="15"/></svg>
+    Comic
+  </button>
+  <button onclick="showSection('rpg')" id="nav-rpg">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+    RPG
+  </button>
+  <button onclick="showSection('passwords')" id="nav-passwords">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
+    Vault
+  </button>
+  <button onclick="showSection('cardgame')" id="nav-cardgame">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 2v4M8 2v4M2 10h20"/><circle cx="8" cy="15" r="1.5" fill="currentColor"/><path d="M16 13h3M16 16.5h2"/></svg>
+    Cards
+  </button>
+</nav>
+</div>
+
+
+<!-- CARD EDIT MODAL -->
+<div class="modal-overlay" id="modal-card-edit">
+  <div class="modal">
+    <h2 id="cgCardModalTitle">New Card</h2>
+    <div class="row">
+      <div class="field"><label>Card Name</label><input type="text" id="cgCName" placeholder="e.g. Fire Drake"></div>
+      <div class="field"><label>Emoji Icon</label><input type="text" id="cgCEmoji" placeholder="🐉" maxlength="2" style="text-align:center;font-size:20px;"></div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Type</label>
+        <select id="cgCType">
+          <option>Creature</option><option>Spell</option><option>Resource</option>
+          <option>Field</option><option>Equipment</option><option>Hero</option>
+          <option>Trap</option><option>Support</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Game</label>
+        <select id="cgCGameSel"><option value="">No Game</option></select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+      <div class="field"><label>❤ HP</label><input type="number" id="cgCHp" value="0" min="0"></div>
+      <div class="field"><label>⚔ ATK</label><input type="number" id="cgCAtk" value="0" min="0"></div>
+      <div class="field"><label>🛡 DEF</label><input type="number" id="cgCDef" value="0" min="0"></div>
+      <div class="field"><label>💨 STA</label><input type="number" id="cgCSta" value="0" min="0"></div>
+      <div class="field"><label>⚡ Cost</label><input type="number" id="cgCCost" value="0" min="0"></div>
+      <div class="field"><label>👟 MOV</label><input type="number" id="cgCMov" value="0" min="0"></div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="cgCDesc" placeholder="Card flavour text or effect description..." style="min-height:60px;"></textarea></div>
+    <div class="field"><label>Rule Tags (comma separated, e.g. flying, haste)</label><input type="text" id="cgCRules" placeholder="flying, first strike, haste..."></div>
+    <div class="divider">Attacks / Abilities</div>
+    <div id="cgAttacksList" data-attacks="[]"></div>
+    <button class="btn" style="width:100%;margin-top:4px;font-size:11px;" onclick="cgAddAttack()">+ Add Attack / Ability</button>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="cgDeleteCardBtn" onclick="deleteCard()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-card-edit')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveCard()">Save Card</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME EDIT MODAL -->
+<div class="modal-overlay" id="modal-game-edit">
+  <div class="modal">
+    <h2 id="cgGameModalTitle">New Game Config</h2>
+    <div class="field"><label>Game Name</label><input type="text" id="cgGName" placeholder="e.g. Dragon Wars"></div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+      <div class="field"><label>Start HP</label><input type="number" id="cgGStartHp" value="20" min="1"></div>
+      <div class="field"><label>Hand Size</label><input type="number" id="cgGHandSize" value="5" min="1" max="7"></div>
+      <div class="field"><label>Resources/Turn</label><input type="number" id="cgGResPerTurn" value="3" min="1"></div>
+      <div class="field"><label>Max Field Cards</label><input type="number" id="cgGMaxField" value="5" min="1" max="10"></div>
+    </div>
+    <div class="field"><label>Description / Notes</label><textarea id="cgGDesc" placeholder="Game rules summary, win conditions..." style="min-height:60px;"></textarea></div>
+    <div class="divider">Card Type Rules</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">Define how each card type behaves on the field.</p>
+    <div id="cgGTypeRulesList" data-rules="[]"></div>
+    <button class="btn" style="width:100%;margin-top:4px;font-size:11px;" onclick="cgAddTypeRule()">+ Add Type Rule</button>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="cgDeleteGameBtn" onclick="deleteGame()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-game-edit')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveGame()">Save Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- BACKUP -->
+<div class="modal-overlay" id="modal-backup">
+  <div class="modal">
+    <h2>⚔ Backup &amp; Settings</h2>
+    <div class="divider">Export</div>
+    <div class="field">
+      <label>Encryption Password (optional)</label>
+      <div style="position:relative;">
+        <input type="password" id="exportPassword" placeholder="Leave blank for plain JSON" oninput="checkExportStrength()">
+        <button onclick="togglePwVis('exportPassword',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:11px;font-family:'Cinzel',serif;">SHOW</button>
+      </div>
+    </div>
+    <div id="exportStrength" style="font-size:12px;height:16px;margin-top:-8px;margin-bottom:10px;padding-left:2px;"></div>
+    <button class="btn btn-gold" style="width:100%;" onclick="doExport()">↓ Download Backup</button>
+    <div class="divider">Import</div>
+    <p style="font-size:13px;color:var(--amber);margin-bottom:10px;">⚠ Merges with existing data. IDs deduplicated.</p>
+    <div class="field"><label>Backup File</label><input type="file" id="importFile" accept=".json" style="padding:6px;color:var(--text);"></div>
+    <div class="field"><label>Password (if encrypted)</label><input type="password" id="importPassword" placeholder="Leave blank if unencrypted"></div>
+    <button class="btn btn-gold" style="width:100%;" onclick="doImport()">↑ Import</button>
+    <div id="importStatus" style="margin-top:10px;font-size:13px;text-align:center;min-height:18px;font-family:'Cinzel',serif;"></div>
+    <div class="divider">Appearance</div>
+    <div class="field"><label>Accent Colour</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="accentSwatches">
+        <button class="swatch" data-accent="#c9a84c" style="background:#c9a84c;" title="Gold" onclick="setAccent(this)"></button>
+        <button class="swatch" data-accent="#7b6cee" style="background:#7b6cee;" title="Violet" onclick="setAccent(this)"></button>
+        <button class="swatch" data-accent="#5588cc" style="background:#5588cc;" title="Steel Blue" onclick="setAccent(this)"></button>
+        <button class="swatch" data-accent="#55aa77" style="background:#55aa77;" title="Forest" onclick="setAccent(this)"></button>
+        <button class="swatch" data-accent="#cc5577" style="background:#cc5577;" title="Crimson" onclick="setAccent(this)"></button>
+        <button class="swatch" data-accent="#cc8844" style="background:#cc8844;" title="Amber" onclick="setAccent(this)"></button>
+        <button class="swatch" data-accent="#9955cc" style="background:#9955cc;" title="Purple" onclick="setAccent(this)"></button>
+        <button class="swatch" data-accent="#44aacc" style="background:#44aacc;" title="Cyan" onclick="setAccent(this)"></button>
+      </div>
+    </div>
+    <div class="field"><label>Theme</label>
+      <div style="display:flex;gap:6px;">
+        <button class="btn" id="theme-dark" onclick="setTheme('dark')" style="flex:1;font-size:10px;">◼ Dark</button>
+        <button class="btn" id="theme-darker" onclick="setTheme('darker')" style="flex:1;font-size:10px;">◼◼ Darker</button>
+        <button class="btn" id="theme-dim" onclick="setTheme('dim')" style="flex:1;font-size:10px;">◑ Dim</button>
+      </div>
+    </div>
+    <div class="field"><label>Font Size</label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="btn" onclick="adjustFontSize(-1)" style="padding:6px 14px;font-size:14px;">−</button>
+        <span id="fontSizeLabel" style="font-family:'Cinzel',serif;font-size:11px;color:var(--text2);flex:1;text-align:center;">16px</span>
+        <button class="btn" onclick="adjustFontSize(1)" style="padding:6px 14px;font-size:14px;">+</button>
+      </div>
+    </div>
+    <div class="field"><label>Heading Font</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn" onclick="setHeadingFont('Cinzel')" style="font-family:'Cinzel',serif;font-size:11px;">Cinzel</button>
+        <button class="btn" onclick="setHeadingFont('Crimson Pro')" style="font-family:'Crimson Pro',serif;font-size:13px;">Crimson</button>
+        <button class="btn" onclick="setHeadingFont('Georgia')" style="font-family:Georgia,serif;font-size:11px;">Georgia</button>
+        <button class="btn" onclick="setHeadingFont('monospace')" style="font-family:monospace;font-size:11px;">Mono</button>
+      </div>
+    </div>
+    <div class="divider">Security</div>
+    <button class="btn" style="width:100%;margin-bottom:10px;" onclick="openPinSetup()">🔑 Change PIN</button>
+    <div class="toggle-row">
+      <span class="toggle-label">Biometric Unlock (fingerprint/face)</span>
+      <label class="toggle"><input type="checkbox" id="bioToggle" onchange="toggleBio()"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="divider">Danger Zone</div>
+    <button class="btn btn-danger" style="width:100%;" onclick="clearAllData()">✕ Clear All Data</button>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('modal-backup')">Close</button></div>
+  </div>
+</div>
+
+<!-- PIN SETUP -->
+<div class="modal-overlay" id="modal-pin-setup">
+  <div class="modal">
+    <h2>Change PIN</h2>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:16px;">Choose a 4-digit PIN to lock Chronicle on startup and when you leave the app.</p>
+    <div class="field"><label>New PIN</label><input type="password" id="newPin1" maxlength="4" inputmode="numeric" placeholder="4 digits"></div>
+    <div class="field"><label>Confirm PIN</label><input type="password" id="newPin2" maxlength="4" inputmode="numeric" placeholder="Same 4 digits"></div>
+    <div id="pinSetupError" style="color:var(--red);font-size:12px;min-height:18px;font-family:'Cinzel',serif;"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-pin-setup')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveNewPin()">Save PIN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ENTRY -->
+<div class="modal-overlay" id="modal-entry">
+  <div class="modal">
+    <h2>Add Calendar Entry</h2>
+    <div class="field"><label>Day</label>
+      <select id="entryDay">
+        <option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>
+        <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
+      </select>
+    </div>
+    <div class="field"><label>Time (optional)</label><input type="text" id="entryTime" placeholder="e.g. 9:00 AM"></div>
+    <div class="field"><label>Entry</label><textarea id="entryText" placeholder="What are you recording?"></textarea></div>
+    <div class="field"><label>Type</label>
+      <select id="entryType">
+        <option value="routine">Routine (repeats weekly)</option>
+        <option value="note">Note (this week only)</option>
+      </select>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">🔔 Push notification reminder</span>
+      <label class="toggle"><input type="checkbox" id="entryNotif" onchange="toggleNotifTime()"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="field" id="notifTimeField" style="display:none;">
+      <label>Remind me at</label><input type="time" id="entryNotifTime" value="09:00">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-entry')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PERSONA -->
+<div class="modal-overlay" id="modal-persona">
+  <div class="modal">
+    <h2>New Persona</h2>
+    <div class="field"><label>Name</label><input type="text" id="pName" placeholder="Persona name"></div>
+    <div class="field"><label>Role / Archetype</label><input type="text" id="pRole" placeholder="e.g. The Strategist, Work Mode..."></div>
+    <div class="divider">Attributes</div>
+    <div id="statFields"></div>
+    <div class="field"><label>Notes</label><textarea id="pNotes" placeholder="Notes about this persona..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-persona')">Cancel</button>
+      <button class="btn btn-gold" onclick="savePersona()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PERSONA -->
+<div class="modal-overlay" id="modal-edit-persona">
+  <div class="modal">
+    <h2 id="editPersonaTitle">Edit Persona</h2>
+    <div id="editStatFields"></div>
+    <div class="field" style="margin-top:12px;"><label>Notes</label><textarea id="editPNotes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="deletePersona()">Delete</button>
+      <button class="btn" onclick="closeModal('modal-edit-persona')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveEditPersona()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PERSON -->
+<div class="modal-overlay" id="modal-person">
+  <div class="modal">
+    <h2 id="personModalTitle">Add Person</h2>
+    <div class="row">
+      <div class="field"><label>Name</label><input type="text" id="personName" placeholder="Full name"></div>
+      <div class="field"><label>Relationship</label><input type="text" id="personRel" placeholder="Friend, colleague..."></div>
+    </div>
+    <div class="field"><label>Likes (comma separated)</label><input type="text" id="personLikes" placeholder="coffee, hiking, jazz"></div>
+    <div class="field"><label>Dislikes (comma separated)</label><input type="text" id="personDislikes" placeholder="crowds, deadlines"></div>
+    <div class="field"><label>Personality (comma separated)</label><input type="text" id="personTraits" placeholder="introverted, analytical"></div>
+    <div class="field"><label>Important Dates (one per line)</label><textarea id="personDates" placeholder="Birthday: Jan 5&#10;Anniversary: March 12"></textarea></div>
+    <div class="field"><label>Notes</label><textarea id="personNotes" placeholder="Anything else worth remembering..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deletePersonBtn" onclick="deletePerson()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-person')">Cancel</button>
+      <button class="btn btn-gold" onclick="savePerson()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOOK SETTINGS -->
+<div class="modal-overlay" id="modal-book-settings">
+  <div class="modal">
+    <h2 id="bookSettingsTitle">Book Info</h2>
+    <div class="field"><label>Title</label><input type="text" id="bookTitleInput" placeholder="My Novel"></div>
+    <div class="field"><label>Author</label><input type="text" id="bookAuthorInput" placeholder="Your name"></div>
+    <div class="field"><label>Genre / Tagline</label><input type="text" id="bookGenreInput" placeholder="Dark fantasy, 2026..."></div>
+    <div class="field"><label>Cover Image URL</label><input type="text" id="bookCoverUrl" placeholder="https://... paste image link"></div>
+    <div class="field"><label>— or upload from device —</label><input type="file" id="bookCoverFile" accept="image/*" style="padding:6px;color:var(--text);" onchange="handleCoverUpload()"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteBookBtn" onclick="deleteCurrentBook()" style="display:none;">Delete Book</button>
+      <button class="btn" onclick="closeModal('modal-book-settings')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveBookSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PASSWORD -->
+<div class="modal-overlay" id="modal-password">
+  <div class="modal">
+    <h2 id="pwModalTitle">Add Password</h2>
+    <div class="field"><label>Site / App</label><input type="text" id="pwSite" placeholder="Google, Netflix, Bank..."></div>
+    <div class="field"><label>Username / Email</label><input type="text" id="pwUser" placeholder="you@email.com"></div>
+    <div class="field">
+      <label>Password</label>
+      <div style="position:relative;">
+        <input type="password" id="pwPass" placeholder="Password">
+        <button onclick="togglePwVis('pwPass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:11px;font-family:'Cinzel',serif;">SHOW</button>
+      </div>
+    </div>
+    <button class="btn" style="width:100%;margin-bottom:12px;" onclick="generatePassword()">⚡ Generate Strong Password</button>
+    <div class="field"><label>URL (optional)</label><input type="text" id="pwUrl" placeholder="https://..."></div>
+    <div class="field"><label>Notes</label><textarea id="pwNotes" placeholder="Security questions, backup codes..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deletePwBtn" onclick="deletePassword()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-password')">Cancel</button>
+      <button class="btn btn-gold" onclick="savePassword()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOARD MODALS -->
+<div class="modal-overlay" id="modal-add-board">
+  <div class="modal">
+    <h2>New Board</h2>
+    <div class="field"><label>Board Name</label><input type="text" id="newBoardName" placeholder="e.g. No Gods Yet, Client Work..."></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-add-board')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveNewBoard()">Create</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-board-card">
+  <div class="modal">
+    <h2 id="boardCardModalTitle">Add Card</h2>
+    <div class="field"><label>Title</label><input type="text" id="bcTitle" placeholder="What needs doing?"></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="bcNotes" placeholder="Details, links, ideas..." style="min-height:60px;"></textarea></div>
+    <div class="field"><label>Tag</label>
+      <select id="bcTag">
+        <option value="">None</option>
+        <option value="ngy">No Gods Yet</option>
+        <option value="north">North Eden Studios</option>
+        <option value="personal">Personal</option>
+      </select>
+    </div>
+    <div class="field"><label>Column</label><select id="bcCol"></select></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteBcBtn" onclick="deleteBoardCard()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-board-card')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveBoardCard()">Save</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-add-col">
+  <div class="modal">
+    <h2>New Column</h2>
+    <div class="field"><label>Column Name</label><input type="text" id="newColName" placeholder="e.g. In Progress, Review..."></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-add-col')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveNewCol()">Add Column</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMIC MODALS -->
+<div class="modal-overlay" id="modal-add-arc">
+  <div class="modal">
+    <h2 id="arcModalTitle">New Arc / Chapter</h2>
+    <div class="field"><label>Title</label><input type="text" id="arcTitle" placeholder="e.g. Chapter 1: Rush Hour"></div>
+    <div class="field"><label>Summary</label><textarea id="arcSummary" placeholder="What happens in this arc?" style="min-height:60px;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteArcBtn" onclick="deleteArc()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-add-arc')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveArc()">Save</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-add-panel">
+  <div class="modal">
+    <h2 id="panelModalTitle">Add Panel Note</h2>
+    <div class="field"><label>Panel Description</label><textarea id="panelDesc" placeholder="What's in this panel? Action, dialogue, mood..." style="min-height:100px;"></textarea></div>
+    <div class="field"><label>Dialogue / Caption</label><textarea id="panelDialogue" placeholder="Any dialogue or caption boxes..." style="min-height:60px;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deletePanelBtn" onclick="deletePanel()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-add-panel')">Cancel</button>
+      <button class="btn btn-gold" onclick="savePanel()">Save</button>
+    </div>
+  </div>
+</div>
+<!-- WORLD BIBLE -->
+<div class="modal-overlay" id="modal-world">
+  <div class="modal">
+    <h2>⚡ World Bible</h2>
+    <button class="btn btn-gold" style="width:100%;margin-bottom:12px;font-size:10px;" onclick="openWbEntry()">+ New Entry</button>
+    <div id="wbEntriesList"></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('modal-world')">Close</button></div>
+  </div>
+</div>
+
+<!-- COMIC SELECTOR MODAL -->
+<div class="modal-overlay" id="modal-add-comic">
+  <div class="modal">
+    <h2 id="comicModalTitle">New Comic</h2>
+    <div class="field"><label>Title</label><input type="text" id="comicTitle" placeholder="e.g. No Gods Yet"></div>
+    <div class="field"><label>Tagline / Genre</label><input type="text" id="comicTagline" placeholder="e.g. Street-level action, post-singularity"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteComicBtn" onclick="deleteComic()" style="display:none;">Delete Comic</button>
+      <button class="btn" onclick="closeModal('modal-add-comic')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveComic()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOARD TAG MANAGER -->
+<div class="modal-overlay" id="modal-tag-manager">
+  <div class="modal">
+    <h2>Manage Tags</h2>
+    <div id="tagManagerList" style="margin-bottom:14px;"></div>
+    <div class="divider">Add New Tag</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <input type="text" id="newTagName" placeholder="Tag name" style="flex:1;">
+      <input type="color" id="newTagColor" value="#c9a84c" style="width:44px;padding:4px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;cursor:pointer;">
+    </div>
+    <button class="btn btn-gold" style="width:100%;" onclick="saveNewTag()">+ Add Tag</button>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('modal-tag-manager')">Done</button></div>
+  </div>
+</div>
+
+<!-- WORLD BIBLE ENTRY MODAL -->
+<div class="modal-overlay" id="modal-wb-entry">
+  <div class="modal">
+    <h2 id="wbEntryTitle">New World Bible Entry</h2>
+    <div class="field"><label>Tag / Category</label><input type="text" id="wbEntryTag" placeholder="e.g. CROSS, SETTING, MECHANIC"></div>
+    <div class="field"><label>Content</label><textarea id="wbEntryText" placeholder="Describe this element of the world..." style="min-height:100px;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteWbBtn" onclick="deleteWbEntry()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-wb-entry')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveWbEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- RPG SCENE MODAL (updated with branching) -->
+<div class="modal-overlay" id="modal-add-scene">
+  <div class="modal">
+    <h2 id="sceneModalTitle">New Scene</h2>
+    <div class="field"><label>Scene Title</label><input type="text" id="sceneTitle" placeholder="e.g. The Alley Shortcut"></div>
+    <div class="field"><label>Narration</label><textarea id="sceneNarr" placeholder="Describe the scene, atmosphere, what the player sees..." style="min-height:80px;"></textarea></div>
+    <div class="row">
+      <div class="field">
+        <label>Scene Type</label>
+        <select id="sceneType">
+          <option value="normal">Normal</option>
+          <option value="start">Start (Entry point)</option>
+          <option value="end">End (Terminal)</option>
+        </select>
+      </div>
+    </div>
+    <div class="divider">Choices & Branches</div>
+    <div id="choiceFields"></div>
+    <button class="btn" style="width:100%;margin-bottom:10px;font-size:10px;" onclick="addChoiceField()">+ Add Choice</button>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteSceneBtn" onclick="deleteScene()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-add-scene')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveScene()">Save Scene</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════
+//  DATA
+// ════════════════════════════════════
+let data = {
+  entries:[], personas:[], people:[],
+  books:[], activeBookId:null,
+  book:{ title:'My Book', author:'', genre:'', coverUrl:'', chapters:[] }, // legacy, migrated on load
+  passwords:[]
+};
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const STATS=['Happiness','Confidence','Energy','Anger','Anxiety','Focus','Creativity','Motivation'];
+const STAT_COLORS={Happiness:'#55aa77',Confidence:'#c9a84c',Energy:'#e8c97a',Anger:'#cc5555',Anxiety:'#cc8844',Focus:'#5588cc',Creativity:'#9955cc',Motivation:'#55aacc'};
+let currentWeekOffset=0, editingPersonaId=null, editingPersonId=null, editingChapterId=null, editingPwId=null, cgEditCardId=null, cgEditGameId=null, cgs=null;
+let vaultUnlocked=false, vaultKey=null;
+
+function save(){localStorage.setItem('chronicle_data',JSON.stringify(data));}
+function load(){
+  try{
+    const r=localStorage.getItem('chronicle_data');
+    if(r){
+      const d=JSON.parse(r);
+      data={...data,...d,passwords:d.passwords||[]};
+      // Migrate legacy single book to books array
+      if(!data.books||!data.books.length){
+        const legacy=d.book||{title:'My Book',author:'',genre:'',coverUrl:'',chapters:[]};
+        if(!legacy.id)legacy.id=uid();
+        data.books=[legacy];
+        data.activeBookId=legacy.id;
+      }
+    }
+  }catch(e){}
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+
+// ════════════════════════════════════
+//  PIN / BIOMETRIC
+// ════════════════════════════════════
+let pinBuffer='',pinMode='unlock',pinSetupFirst='';
+
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('chronicle_salt_v1_'+str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function getSavedHash(){return localStorage.getItem('chronicle_pin');}
+
+function pinPress(v){
+  if(v==='bio'){tryBiometric();return;}
+  if(v==='del'){pinBuffer=pinBuffer.slice(0,-1);updateDots();return;}
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=v; updateDots();
+  if(pinBuffer.length===4) setTimeout(processPinEntry,80);
+}
+
+function updateDots(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);}
+
+async function processPinEntry(){
+  const saved=getSavedHash();
+  if(pinMode==='setup2'){
+    if(pinBuffer!==pinSetupFirst){
+      showPinErr('PINs did not match — try again');
+      pinBuffer='';pinSetupFirst='';pinMode='setup1';updateDots();
+      document.getElementById('lockSubtitle').textContent='Choose a new PIN';
+      return;
+    }
+    localStorage.setItem('chronicle_pin',await sha256(pinBuffer));
+    pinBuffer='';pinMode='unlock';unlock();return;
+  }
+  if(!saved||pinMode==='setup1'){
+    pinSetupFirst=pinBuffer; pinBuffer=''; updateDots();
+    document.getElementById('lockSubtitle').textContent='Confirm your PIN';
+    document.getElementById('lockSetupMsg').textContent='Enter the same PIN again to confirm.';
+    document.getElementById('lockSetupMsg').style.display='block';
+    pinMode='setup2'; return;
+  }
+  if(await sha256(pinBuffer)===saved){pinBuffer='';updateDots();unlock();}
+  else{showPinErr('Incorrect PIN');pinBuffer='';updateDots();}
+}
+
+function showPinErr(msg){
+  const el=document.getElementById('pinError');el.textContent=msg;
+  setTimeout(()=>{el.textContent='';},2200);
+}
+
+function unlock(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('appShell').style.display='block';
+}
+
+function tryBiometric(){
+  const cid=localStorage.getItem('chronicle_bio_cred');
+  if(!cid||!window.PublicKeyCredential){showPinErr('No biometric enrolled');return;}
+  navigator.credentials.get({publicKey:{
+    challenge:crypto.getRandomValues(new Uint8Array(32)),
+    allowCredentials:[{id:Uint8Array.from(atob(cid),c=>c.charCodeAt(0)),type:'public-key'}],
+    userVerification:'required',timeout:30000
+  }}).then(()=>unlock()).catch(()=>showPinErr('Biometric failed'));
+}
+
+async function enrollBiometric(){
+  if(!window.PublicKeyCredential){alert('WebAuthn not supported on this browser.');return false;}
+  try{
+    const cred=await navigator.credentials.create({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      rp:{name:'Chronicle'},
+      user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'chronicle_user',displayName:'Chronicle User'},
+      pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+      authenticatorSelection:{userVerification:'required',authenticatorAttachment:'platform'},
+      timeout:60000
+    }});
+    localStorage.setItem('chronicle_bio_cred',btoa(String.fromCharCode(...new Uint8Array(cred.rawId))));
+    localStorage.setItem('chronicle_bio_on','1');
+    return true;
+  }catch(e){alert('Biometric enrollment failed: '+e.message);return false;}
+}
+
+async function toggleBio(){
+  const on=document.getElementById('bioToggle').checked;
+  if(on){const ok=await enrollBiometric();if(!ok)document.getElementById('bioToggle').checked=false;}
+  else{localStorage.removeItem('chronicle_bio_cred');localStorage.removeItem('chronicle_bio_on');}
+  document.getElementById('bioPadBtn').style.display=localStorage.getItem('chronicle_bio_on')==='1'?'flex':'none';
+}
+
+function openPinSetup(){
+  closeModal('modal-backup');
+  document.getElementById('newPin1').value='';document.getElementById('newPin2').value='';
+  document.getElementById('pinSetupError').textContent='';
+  openModal('modal-pin-setup');
+}
+async function saveNewPin(){
+  const p1=document.getElementById('newPin1').value,p2=document.getElementById('newPin2').value;
+  if(!/^\d{4}$/.test(p1)){document.getElementById('pinSetupError').textContent='Must be exactly 4 digits.';return;}
+  if(p1!==p2){document.getElementById('pinSetupError').textContent='PINs do not match.';return;}
+  localStorage.setItem('chronicle_pin',await sha256(p1));
+  closeModal('modal-pin-setup');toast('PIN updated ✓');
+}
+
+// Auto-lock when app hidden
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden&&document.getElementById('appShell').style.display!=='none'){
+    document.getElementById('appShell').style.display='none';
+    document.getElementById('lockScreen').style.display='flex';
+    pinBuffer='';updateDots();
+    document.getElementById('pinError').textContent='';
+    document.getElementById('lockSubtitle').textContent='Enter your PIN';
+  }
+});
+
+function initLock(){
+  const hasBio=localStorage.getItem('chronicle_bio_on')==='1';
+  document.getElementById('bioPadBtn').style.display=hasBio?'flex':'none';
+  if(document.getElementById('bioToggle'))document.getElementById('bioToggle').checked=hasBio;
+  if(!getSavedHash()){
+    document.getElementById('lockSubtitle').textContent='Choose a 4-digit PIN';
+    document.getElementById('lockSetupMsg').textContent='First time — pick a PIN to secure Chronicle.';
+    document.getElementById('lockSetupMsg').style.display='block';
+    // Re-arrange zero btn
+    const zeroPad=document.getElementById('zeroBtn');
+    zeroPad.style.gridColumn='2';
+    pinMode='setup1';
+  } else {
+    document.getElementById('lockSubtitle').textContent='Enter your PIN';
+    if(hasBio) setTimeout(tryBiometric,400);
+  }
+}
+
+// ════════════════════════════════════
+//  NAV
+// ════════════════════════════════════
+function showSection(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  const subs={calendar:'Weekly scroll of time',persona:'Who you are today',people:'Those who walk beside you',book:'Your written world',passwords:'The sealed vault',board:'Projects & tasks',comic:'Comics & story panels',rpg:'RPG world & playtest'};
+  document.getElementById('headerSub').textContent=subs[name]||'';
+  if(name==='board')renderBoard();
+  if(name==='comic'){renderComicSelector();renderComicArcs();}
+  if(name==='rpg')renderRpgMap();
+  if(name==='cardgame'){populateCgFilters();renderCardGrid();}
+}
+
+// ════════════════════════════════════
+//  NOTIFICATIONS
+// ════════════════════════════════════
+function toggleNotifTime(){
+  document.getElementById('notifTimeField').style.display=document.getElementById('entryNotif').checked?'block':'none';
+}
+async function requestNotif(){
+  if(!('Notification' in window))return false;
+  if(Notification.permission==='granted')return true;
+  return (await Notification.requestPermission())==='granted';
+}
+function scheduleNotif(e){
+  if(!e.notif||!e.notifTime)return;
+  const [h,m]=e.notifTime.split(':').map(Number);
+  const now=new Date(),day=now.getDay();
+  let daysUntil=((parseInt(e.dayOfWeek)-day+7)%7)||7;
+  const next=new Date(now);next.setDate(now.getDate()+daysUntil);next.setHours(h,m,0,0);
+  const ms=next.getTime()-now.getTime();
+  if(ms>0&&ms<7*24*60*60*1000){
+    setTimeout(()=>{
+      if(Notification.permission==='granted')new Notification('Chronicle',{body:e.text,icon:'./icon-192.png'});
+    },ms);
+  }
+}
+
+// ════════════════════════════════════
+//  CALENDAR
+// ════════════════════════════════════
+function changeWeek(d){currentWeekOffset+=d;renderCalendar();}
+function getWeekStart(off){const d=new Date();d.setDate(d.getDate()-d.getDay()+off*7);d.setHours(0,0,0,0);return d;}
+function weekKey(off){return getWeekStart(off).toISOString().slice(0,10);}
+
+function renderCalendar(){
+  const ws=getWeekStart(currentWeekOffset),we=new Date(ws);we.setDate(we.getDate()+6);
+  document.getElementById('weekLabel').textContent=ws.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' – '+we.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const today=new Date();today.setHours(0,0,0,0);
+  const wk=weekKey(currentWeekOffset);
+  const cont=document.getElementById('calendarDays');cont.innerHTML='';
+  for(let i=0;i<7;i++){
+    const dd=new Date(ws);dd.setDate(ws.getDate()+i);
+    const isToday=dd.getTime()===today.getTime();
+    const entries=data.entries.filter(e=>parseInt(e.dayOfWeek)===i&&(e.type==='routine'||(e.type==='note'&&e.weekKey===wk)));
+    const card=document.createElement('div');card.className='day-card'+(isToday?' today':'');
+    const hdr=document.createElement('div');hdr.className='day-header';
+    hdr.innerHTML=`<div class="day-header-left"><span class="day-name">${DAYS[i]}</span><span class="day-date">${dd.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>${entries.length?`<span class="day-badge">${entries.length}</span>`:''}</div><span class="chevron${isToday?' open':''}">▶</span>`;
+    const body=document.createElement('div');body.className='day-body'+(isToday?' open':'');
+    if(!entries.length){body.innerHTML='<div class="empty-state">No entries</div>';}
+    else{
+      entries.sort((a,b)=>(a.time||'').localeCompare(b.time||'')).forEach(e=>{
+        const d2=document.createElement('div');d2.className='entry-item';
+        d2.innerHTML=`<span class="entry-time">${e.time||'—'}</span><span class="entry-text">${escHtml(e.text)}</span><button class="entry-bell${e.notif?' on':''}" onclick="toggleEntryNotif('${e.id}')" title="${e.notif?'Notification on':'Notification off'}">${e.notif?'🔔':'🔕'}</button><span class="entry-badge ${e.type==='routine'?'badge-routine':'badge-note'}">${e.type}</span><button class="entry-delete" onclick="deleteEntry('${e.id}')">×</button>`;
+        body.appendChild(d2);
+      });
+    }
+    hdr.onclick=()=>{body.classList.toggle('open');hdr.querySelector('.chevron').classList.toggle('open',body.classList.contains('open'));};
+    card.appendChild(hdr);card.appendChild(body);cont.appendChild(card);
+  }
+}
+
+async function toggleEntryNotif(id){
+  const e=data.entries.find(x=>x.id===id);if(!e)return;
+  if(!e.notif){
+    const ok=await requestNotif();if(!ok){alert('Enable notifications in browser settings.');return;}
+    const t=prompt('Remind me at (HH:MM):','09:00');if(!t)return;
+    e.notif=true;e.notifTime=t;scheduleNotif(e);
+  }else{e.notif=false;e.notifTime=null;}
+  save();renderCalendar();
+}
+
+function openAddEntry(){
+  document.getElementById('entryDay').value=new Date().getDay();
+  ['entryTime','entryText'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('entryType').value='routine';
+  document.getElementById('entryNotif').checked=false;
+  document.getElementById('notifTimeField').style.display='none';
+  document.getElementById('entryNotifTime').value='09:00';
+  openModal('modal-entry');
+}
+
+async function saveEntry(){
+  const text=document.getElementById('entryText').value.trim();if(!text)return;
+  const notif=document.getElementById('entryNotif').checked;
+  if(notif){const ok=await requestNotif();if(!ok){alert('Notification permission denied.');}}
+  const e={id:uid(),dayOfWeek:parseInt(document.getElementById('entryDay').value),time:document.getElementById('entryTime').value.trim(),text,type:document.getElementById('entryType').value,weekKey:weekKey(currentWeekOffset),notif,notifTime:notif?document.getElementById('entryNotifTime').value:null};
+  data.entries.push(e);if(e.notif)scheduleNotif(e);
+  save();closeModal('modal-entry');renderCalendar();
+}
+
+function deleteEntry(id){data.entries=data.entries.filter(e=>e.id!==id);save();renderCalendar();}
+
+// ════════════════════════════════════
+//  PERSONA
+// ════════════════════════════════════
+function renderPersona(){
+  const active=data.personas.find(p=>p.active);
+  document.getElementById('activePersonaArea').innerHTML=active?buildPersonaCard(active):'<div class="empty-state">No active persona yet.</div>';
+  document.getElementById('personaList').innerHTML=!data.personas.length?'<div class="empty-state">No personas yet.</div>':data.personas.map(p=>`<div class="persona-list-item"><div><div style="font-family:'Cinzel',serif;font-size:13px;">${escHtml(p.name)}</div><div style="font-size:12px;color:var(--text2);font-style:italic;">${escHtml(p.role||'')}</div></div><div style="display:flex;gap:6px;align-items:center;">${p.active?'<span class="pill-active">ACTIVE</span>':`<button class="btn" style="font-size:10px;padding:3px 8px;" onclick="setActivePersona('${p.id}')">Activate</button>`}<button class="btn" style="font-size:10px;padding:3px 8px;" onclick="editPersona('${p.id}')">Edit</button></div></div>`).join('');
+}
+
+function buildPersonaCard(p){
+  return`<div class="persona-active-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div class="persona-name">${escHtml(p.name)}</div><div class="persona-class">${escHtml(p.role||'')}</div></div><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="editPersona('${p.id}')">Edit</button></div>${STATS.map(s=>{const v=p.stats?.[s]??50;return`<div class="stat-row"><span class="stat-label">${s}</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${v}%;background:${STAT_COLORS[s]};"></div></div><span class="stat-value">${v}</span></div>`;}).join('')}${p.notes?`<div style="margin-top:12px;font-size:14px;color:var(--text2);font-style:italic;">${escHtml(p.notes)}</div>`:''}</div>`;
+}
+
+function openAddPersona(){
+  editingPersonaId=null;
+  ['pName','pRole','pNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('statFields').innerHTML=STATS.map(s=>`<div class="field"><label>${s} <span id="sv-${s}" style="color:var(--gold);float:right;">50</span></label><input type="range" min="0" max="100" value="50" id="sr-${s}" oninput="document.getElementById('sv-${s}').textContent=this.value"></div>`).join('');
+  openModal('modal-persona');
+}
+function savePersona(){
+  const name=document.getElementById('pName').value.trim();if(!name)return;
+  const stats={};STATS.forEach(s=>stats[s]=parseInt(document.getElementById('sr-'+s).value));
+  data.personas.push({id:uid(),name,role:document.getElementById('pRole').value.trim(),notes:document.getElementById('pNotes').value.trim(),stats,active:!data.personas.length});
+  save();closeModal('modal-persona');renderPersona();
+}
+function editPersona(id){
+  editingPersonaId=id;const p=data.personas.find(x=>x.id===id);if(!p)return;
+  document.getElementById('editPersonaTitle').textContent=p.name;
+  document.getElementById('editPNotes').value=p.notes||'';
+  document.getElementById('editStatFields').innerHTML=STATS.map(s=>{const v=p.stats?.[s]??50;return`<div class="field"><label>${s} <span id="esv-${s}" style="color:var(--gold);float:right;">${v}</span></label><input type="range" min="0" max="100" value="${v}" id="esr-${s}" oninput="document.getElementById('esv-${s}').textContent=this.value"></div>`;}).join('');
+  openModal('modal-edit-persona');
+}
+function saveEditPersona(){
+  const p=data.personas.find(x=>x.id===editingPersonaId);if(!p)return;
+  STATS.forEach(s=>p.stats[s]=parseInt(document.getElementById('esr-'+s).value));
+  p.notes=document.getElementById('editPNotes').value.trim();
+  save();closeModal('modal-edit-persona');renderPersona();
+}
+function deletePersona(){
+  if(!confirm('Delete this persona?'))return;
+  data.personas=data.personas.filter(x=>x.id!==editingPersonaId);
+  if(data.personas.length&&!data.personas.find(p=>p.active))data.personas[0].active=true;
+  save();closeModal('modal-edit-persona');renderPersona();
+}
+function setActivePersona(id){data.personas.forEach(p=>p.active=p.id===id);save();renderPersona();}
+
+// ════════════════════════════════════
+//  PEOPLE
+// ════════════════════════════════════
+function renderPeople(){
+  const list=document.getElementById('peopleList');
+  if(!data.people.length){list.innerHTML='<div class="empty-state">No people added yet.</div>';return;}
+  list.innerHTML='';
+  data.people.forEach(p=>{
+    const c=document.createElement('div');c.className='person-card';
+    const init=p.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const likes=p.likes?p.likes.split(',').map(x=>x.trim()).filter(Boolean):[];
+    const dislikes=p.dislikes?p.dislikes.split(',').map(x=>x.trim()).filter(Boolean):[];
+    const traits=p.traits?p.traits.split(',').map(x=>x.trim()).filter(Boolean):[];
+    c.innerHTML=`<div class="person-header" onclick="toggleEl('pc-${p.id}','ch-${p.id}')"><div class="person-avatar">${init}</div><div style="flex:1;"><div style="font-family:'Cinzel',serif;font-size:14px;">${escHtml(p.name)}</div><div style="font-size:12px;color:var(--text2);font-style:italic;">${escHtml(p.rel||'')}</div></div><span class="chevron" id="ch-${p.id}">▶</span></div><div class="person-body" id="pc-${p.id}">${traits.length?`<div class="section-label">Traits</div><div class="tag-list">${traits.map(t=>`<span class="info-tag">${escHtml(t)}</span>`).join('')}</div>`:''} ${likes.length?`<div class="section-label">Likes</div><div class="tag-list">${likes.map(t=>`<span class="info-tag" style="border-color:rgba(85,170,119,0.4);color:var(--green);">${escHtml(t)}</span>`).join('')}</div>`:''} ${dislikes.length?`<div class="section-label">Dislikes</div><div class="tag-list">${dislikes.map(t=>`<span class="info-tag" style="border-color:rgba(204,85,85,0.4);color:var(--red);">${escHtml(t)}</span>`).join('')}</div>`:''} ${p.dates?`<div class="section-label">Dates</div><div style="font-size:14px;white-space:pre-wrap;">${escHtml(p.dates)}</div>`:''} ${p.notes?`<div class="section-label">Notes</div><div style="font-size:15px;font-style:italic;white-space:pre-wrap;">${escHtml(p.notes)}</div>`:''}<div style="margin-top:12px;"><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="openEditPerson('${p.id}')">Edit</button></div></div>`;
+    list.appendChild(c);
+  });
+}
+function toggleEl(bodyId,chevId){const b=document.getElementById(bodyId),ch=document.getElementById(chevId);b.classList.toggle('open');ch.classList.toggle('open',b.classList.contains('open'));}
+function openAddPerson(){editingPersonId=null;document.getElementById('personModalTitle').textContent='Add Person';document.getElementById('deletePersonBtn').style.display='none';['personName','personRel','personLikes','personDislikes','personTraits','personDates','personNotes'].forEach(id=>document.getElementById(id).value='');openModal('modal-person');}
+function openEditPerson(id){
+  editingPersonId=id;const p=data.people.find(x=>x.id===id);if(!p)return;
+  document.getElementById('personModalTitle').textContent='Edit '+p.name;document.getElementById('deletePersonBtn').style.display='inline-block';
+  document.getElementById('personName').value=p.name||'';document.getElementById('personRel').value=p.rel||'';document.getElementById('personLikes').value=p.likes||'';document.getElementById('personDislikes').value=p.dislikes||'';document.getElementById('personTraits').value=p.traits||'';document.getElementById('personDates').value=p.dates||'';document.getElementById('personNotes').value=p.notes||'';
+  openModal('modal-person');
+}
+function savePerson(){
+  const name=document.getElementById('personName').value.trim();if(!name)return;
+  const obj={id:editingPersonId||uid(),name,rel:document.getElementById('personRel').value.trim(),likes:document.getElementById('personLikes').value.trim(),dislikes:document.getElementById('personDislikes').value.trim(),traits:document.getElementById('personTraits').value.trim(),dates:document.getElementById('personDates').value.trim(),notes:document.getElementById('personNotes').value.trim()};
+  if(editingPersonId){const i=data.people.findIndex(x=>x.id===editingPersonId);if(i>=0)data.people[i]=obj;}else data.people.push(obj);
+  save();closeModal('modal-person');renderPeople();
+}
+function deletePerson(){if(!confirm('Delete?'))return;data.people=data.people.filter(x=>x.id!==editingPersonId);save();closeModal('modal-person');renderPeople();}
+
+// ════════════════════════════════════
+//  BOOK (MULTI)
+// ════════════════════════════════════
+let fullViewOpen=false;
+
+function getActiveBook(){
+  if(!data.books||!data.books.length){
+    const b={id:uid(),title:'My Book',author:'',genre:'',coverUrl:'',chapters:[]};
+    data.books=[b];data.activeBookId=b.id;save();
+  }
+  return data.books.find(b=>b.id===data.activeBookId)||data.books[0];
+}
+
+function renderBookSelector(){
+  const row=document.getElementById('bookSelectorRow');
+  if(!row)return;
+  row.innerHTML=data.books.map(b=>`<button class="book-sel-tab${b.id===data.activeBookId?' active':''}" onclick="switchBook('${b.id}')">${escHtml(b.title)}</button>`).join('')
+    +`<button class="book-sel-tab" onclick="openAddBook()">+ Book</button>`;
+}
+
+function switchBook(id){data.activeBookId=id;save();renderBook();}
+
+function openAddBook(){
+  document.getElementById('bookTitleInput').value='';
+  document.getElementById('bookAuthorInput').value='';
+  document.getElementById('bookGenreInput').value='';
+  document.getElementById('bookCoverUrl').value='';
+  document.getElementById('deleteBookBtn').style.display='none';
+  document.getElementById('bookSettingsTitle').textContent='New Book';
+  openModal('modal-book-settings');
+}
+
+function deleteCurrentBook(){
+  if(data.books.length<=1){alert('You need at least one book.');return;}
+  if(!confirm('Delete this book and all its chapters?'))return;
+  data.books=data.books.filter(b=>b.id!==data.activeBookId);
+  data.activeBookId=data.books[0].id;
+  save();renderBook();
+}
+
+function renderBook(){
+  renderBookSelector();
+  const b=getActiveBook();
+  document.getElementById('bookTitleDisplay').textContent=b.title||'My Book';
+  const sub=[b.author?'by '+b.author:'',b.genre].filter(Boolean).join(' · ');
+  document.getElementById('bookSubDisplay').textContent=sub;
+  const wrap=document.getElementById('bookCoverWrap');
+  wrap.innerHTML=b.coverUrl?`<img src="${escHtml(b.coverUrl)}" class="book-cover-img" onerror="this.style.display='none'">` :'';
+  const words=(b.chapters||[]).reduce((a,c)=>a+(c.content||'').trim().split(/\s+/).filter(Boolean).length,0);
+  document.getElementById('bookStatsDisplay').innerHTML=`<span style="font-family:'Cinzel',serif;font-size:10px;color:var(--text2);">${(b.chapters||[]).length} chapter${(b.chapters||[]).length!==1?'s':''} &nbsp;·&nbsp; ~${words.toLocaleString()} words</span>`;
+  const cl=document.getElementById('chapterListEl');
+  cl.innerHTML=!(b.chapters||[]).length?'<div class="empty-state">No chapters yet. Start writing!</div>':(b.chapters||[]).map((c,i)=>{const w=(c.content||'').trim().split(/\s+/).filter(Boolean).length;return`<div class="chapter-item" onclick="openEditor('${c.id}')"><div><div class="chapter-num">CHAPTER ${i+1}</div><div class="chapter-title-text">${escHtml(c.title||'Untitled')}</div></div><div style="text-align:right;"><div style="font-size:11px;color:var(--text2);">${w} words</div><div style="font-size:10px;color:var(--border2);margin-top:2px;">tap to edit ▶</div></div></div>`;}).join('');
+  if(fullViewOpen)renderFullView();
+}
+
+function openBookSettings(){
+  const b=getActiveBook();
+  document.getElementById('bookTitleInput').value=b.title||'';
+  document.getElementById('bookAuthorInput').value=b.author||'';
+  document.getElementById('bookGenreInput').value=b.genre||'';
+  document.getElementById('bookCoverUrl').value='';
+  document.getElementById('deleteBookBtn').style.display='inline-block';
+  document.getElementById('bookSettingsTitle').textContent='Edit Book';
+  openModal('modal-book-settings');
+}
+function handleCoverUpload(){
+  const f=document.getElementById('bookCoverFile').files[0];if(!f)return;
+  const r=new FileReader();r.onload=e=>{document.getElementById('bookCoverUrl').value=e.target.result;};r.readAsDataURL(f);
+}
+function saveBookSettings(){
+  const title=document.getElementById('bookTitleInput').value.trim()||'My Book';
+  const isNew=document.getElementById('bookSettingsTitle').textContent==='New Book';
+  if(isNew){
+    const b={id:uid(),title,author:document.getElementById('bookAuthorInput').value.trim(),genre:document.getElementById('bookGenreInput').value.trim(),coverUrl:document.getElementById('bookCoverUrl').value.trim(),chapters:[]};
+    data.books.push(b);data.activeBookId=b.id;
+  } else {
+    const b=getActiveBook();
+    b.title=title;b.author=document.getElementById('bookAuthorInput').value.trim();
+    b.genre=document.getElementById('bookGenreInput').value.trim();
+    const cu=document.getElementById('bookCoverUrl').value.trim();if(cu)b.coverUrl=cu;
+  }
+  save();closeModal('modal-book-settings');renderBook();
+}
+
+function openAddChapter(){
+  editingChapterId=null;
+  document.getElementById('chapterTitleInput').value='';document.getElementById('chapterContentInput').value='';
+  document.getElementById('deleteChapterBtn').style.display='none';
+  document.getElementById('chapterWordCount').textContent='';
+  document.getElementById('bookMainView').style.display='none';
+  document.getElementById('bookEditorEl').classList.add('active');
+  setupWordCount();
+}
+function openEditor(id){
+  const b=getActiveBook();
+  editingChapterId=id;const c=(b.chapters||[]).find(x=>x.id===id);if(!c)return;
+  document.getElementById('chapterTitleInput').value=c.title||'';document.getElementById('chapterContentInput').value=c.content||'';
+  document.getElementById('deleteChapterBtn').style.display='block';
+  document.getElementById('bookMainView').style.display='none';
+  document.getElementById('bookEditorEl').classList.add('active');
+  setupWordCount();
+}
+function setupWordCount(){
+  const ta=document.getElementById('chapterContentInput'),wc=document.getElementById('chapterWordCount');
+  const update=()=>{const w=ta.value.trim().split(/\s+/).filter(Boolean).length;wc.textContent=w+' words';};
+  update();ta.oninput=update;
+}
+function closeEditor(){
+  document.getElementById('bookEditorEl').classList.remove('active');
+  document.getElementById('bookMainView').style.display='block';
+  editingChapterId=null;renderBook();
+}
+function saveChapter(){
+  const b=getActiveBook();if(!b.chapters)b.chapters=[];
+  const title=document.getElementById('chapterTitleInput').value.trim();
+  const content=document.getElementById('chapterContentInput').value;
+  if(editingChapterId){const c=b.chapters.find(x=>x.id===editingChapterId);if(c){c.title=title;c.content=content;c.updated=Date.now();}}
+  else b.chapters.push({id:uid(),title,content,created:Date.now(),updated:Date.now()});
+  save();closeEditor();
+}
+function deleteChapter(){
+  if(!confirm('Delete this chapter?'))return;
+  const b=getActiveBook();b.chapters=(b.chapters||[]).filter(x=>x.id!==editingChapterId);
+  save();closeEditor();
+}
+
+function toggleFullView(){
+  fullViewOpen=!fullViewOpen;
+  document.getElementById('chapterListEl').style.display=fullViewOpen?'none':'block';
+  document.getElementById('bookMetaCard').style.display=fullViewOpen?'none':'block';
+  document.getElementById('fullViewArea').style.display=fullViewOpen?'block':'none';
+  document.getElementById('fullViewBtn').textContent=fullViewOpen?'Chapter View':'Full View';
+  if(fullViewOpen)renderFullView();
+}
+function renderFullView(){
+  const b=getActiveBook();
+  document.getElementById('fullViewContent').innerHTML=(b.chapters||[]).map((c,i)=>`<div class="ch-heading">Chapter ${i+1}: ${escHtml(c.title||'Untitled')}</div>${escHtml(c.content||'')}`).join('\n\n');
+}
+
+// ════════════════════════════════════
+//  VAULT (AES-GCM encrypted passwords)
+// ════════════════════════════════════
+async function getVaultSalt(){
+  let s=localStorage.getItem('chronicle_vsalt');
+  if(!s){s=btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));localStorage.setItem('chronicle_vsalt',s);}
+  return Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+}
+async function deriveVaultKey(pw){
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:await getVaultSalt(),iterations:310000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encField(key,pt){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(pt));
+  const b=new Uint8Array(12+ct.byteLength);b.set(iv,0);b.set(new Uint8Array(ct),12);
+  return btoa(String.fromCharCode(...b));
+}
+async function decField(key,b64){
+  const b=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(0,12)},key,b.slice(12)));
+}
+
+async function unlockVault(){
+  const pw=prompt('Enter vault master password:');if(!pw)return;
+  let key;
+  try{key=await deriveVaultKey(pw);}catch(e){alert('Key derivation failed.');return;}
+  // Verify key with token
+  const token=localStorage.getItem('chronicle_vtoken');
+  if(token){
+    try{const t=await decField(key,token);if(t!=='chronicle_vault_ok'){alert('Wrong password.');return;}}
+    catch(e){alert('Wrong password.');return;}
+  } else {
+    // First use — set token
+    localStorage.setItem('chronicle_vtoken',await encField(key,'chronicle_vault_ok'));
+  }
+  vaultKey=key;vaultUnlocked=true;
+  document.getElementById('pwLockedMsg').style.display='none';
+  document.getElementById('pwVaultEl').style.display='block';
+  renderPasswords();
+}
+
+function lockVault(){
+  vaultUnlocked=false;vaultKey=null;
+  document.getElementById('pwVaultEl').style.display='none';
+  document.getElementById('pwLockedMsg').style.display='block';
+}
+
+async function renderPasswords(){
+  const list=document.getElementById('pwListEl');
+  if(!data.passwords.length){list.innerHTML='<div class="empty-state">No passwords saved yet.</div>';return;}
+  list.innerHTML='';
+  for(const pw of data.passwords){
+    let user='[encrypted]';
+    try{user=await decField(vaultKey,pw.encUser);}catch(e){}
+    const c=document.createElement('div');c.className='pw-entry';
+    const init=(pw.site||'?')[0].toUpperCase();
+    c.innerHTML=`<div class="pw-entry-header" onclick="toggleEl('pwb-${pw.id}','pwch-${pw.id}')"><div class="pw-site-icon">${init}</div><div style="flex:1;"><div style="font-family:'Cinzel',serif;font-size:14px;">${escHtml(pw.site||'')}</div><div style="font-size:12px;color:var(--text2);">${escHtml(user)}</div></div><span class="chevron" id="pwch-${pw.id}">▶</span></div><div class="pw-body" id="pwb-${pw.id}"><div class="pw-field-row"><span class="pw-field-label">Username</span><span class="pw-field-val" id="pwu-${pw.id}">${escHtml(user)}</span><button class="pw-copy" onclick="copyText('pwu-${pw.id}')">Copy</button></div><div class="pw-field-row"><span class="pw-field-label">Password</span><span class="pw-field-val" id="pwp-${pw.id}" style="letter-spacing:0.15em;font-size:18px;">••••••••</span><button class="pw-reveal" onclick="toggleReveal('${pw.id}')">👁</button><button class="pw-copy" onclick="copyPw('${pw.id}')">Copy</button></div>${pw.url?`<div class="pw-field-row"><span class="pw-field-label">URL</span><a href="${escHtml(pw.url)}" target="_blank" style="color:var(--accent2);font-size:13px;word-break:break-all;">${escHtml(pw.url)}</a></div>`:''} ${pw.notes?`<div class="pw-field-row" style="align-items:flex-start;"><span class="pw-field-label">Notes</span><span style="font-size:13px;color:var(--text2);white-space:pre-wrap;">${escHtml(pw.notes)}</span></div>`:''}<div style="margin-top:10px;"><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="openEditPw('${pw.id}')">Edit</button></div></div>`;
+    list.appendChild(c);
+  }
+}
+
+async function toggleReveal(id){
+  const el=document.getElementById('pwp-'+id);const pw=data.passwords.find(x=>x.id===id);if(!pw)return;
+  if(el.dataset.revealed){el.textContent='••••••••';el.style.letterSpacing='0.15em';el.style.fontSize='18px';delete el.dataset.revealed;return;}
+  try{el.textContent=await decField(vaultKey,pw.encPass);el.style.letterSpacing='normal';el.style.fontSize='14px';el.dataset.revealed='1';}catch(e){el.textContent='[error]';}
+}
+async function copyPw(id){
+  const pw=data.passwords.find(x=>x.id===id);if(!pw)return;
+  try{await navigator.clipboard.writeText(await decField(vaultKey,pw.encPass));toast('Password copied');}catch(e){}
+}
+async function copyText(elId){
+  try{await navigator.clipboard.writeText(document.getElementById(elId)?.textContent||'');toast('Copied');}catch(e){}
+}
+
+function openAddPassword(){
+  if(!vaultUnlocked){unlockVault();return;}
+  editingPwId=null;document.getElementById('pwModalTitle').textContent='Add Password';document.getElementById('deletePwBtn').style.display='none';
+  ['pwSite','pwUser','pwPass','pwUrl','pwNotes'].forEach(id=>document.getElementById(id).value='');
+  openModal('modal-password');
+}
+async function openEditPw(id){
+  editingPwId=id;const pw=data.passwords.find(x=>x.id===id);if(!pw)return;
+  document.getElementById('pwModalTitle').textContent='Edit '+pw.site;document.getElementById('deletePwBtn').style.display='inline-block';
+  document.getElementById('pwSite').value=pw.site||'';document.getElementById('pwUrl').value=pw.url||'';document.getElementById('pwNotes').value=pw.notes||'';
+  try{document.getElementById('pwUser').value=await decField(vaultKey,pw.encUser);}catch(e){}
+  try{document.getElementById('pwPass').value=await decField(vaultKey,pw.encPass);}catch(e){}
+  openModal('modal-password');
+}
+async function savePassword(){
+  if(!vaultKey){alert('Vault not unlocked.');return;}
+  const site=document.getElementById('pwSite').value.trim(),pass=document.getElementById('pwPass').value;if(!site||!pass)return;
+  if(!localStorage.getItem('chronicle_vtoken'))localStorage.setItem('chronicle_vtoken',await encField(vaultKey,'chronicle_vault_ok'));
+  const obj={id:editingPwId||uid(),site,encUser:await encField(vaultKey,document.getElementById('pwUser').value),encPass:await encField(vaultKey,pass),url:document.getElementById('pwUrl').value.trim(),notes:document.getElementById('pwNotes').value.trim(),updated:Date.now()};
+  if(editingPwId){const i=data.passwords.findIndex(x=>x.id===editingPwId);if(i>=0)data.passwords[i]=obj;}else data.passwords.push(obj);
+  save();closeModal('modal-password');renderPasswords();
+}
+function deletePassword(){if(!confirm('Delete?'))return;data.passwords=data.passwords.filter(x=>x.id!==editingPwId);save();closeModal('modal-password');renderPasswords();}
+function generatePassword(){
+  const c='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*';
+  document.getElementById('pwPass').value=Array.from({length:20},()=>c[Math.floor(Math.random()*c.length)]).join('');
+  document.getElementById('pwPass').type='text';
+}
+
+// ════════════════════════════════════
+//  BACKUP / CRYPTO
+// ════════════════════════════════════
+function togglePwVis(id,btn){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='password'?'SHOW':'HIDE';}
+function checkExportStrength(){
+  const pw=document.getElementById('exportPassword').value,el=document.getElementById('exportStrength');
+  if(!pw){el.textContent='';return;}
+  let s=0;if(pw.length>=8)s++;if(pw.length>=14)s++;if(/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw))s++;if(/[^A-Za-z0-9]/.test(pw))s++;
+  el.textContent='● Strength: '+['','Weak','Fair','Good','Strong','Very Strong'][s];
+  el.style.color=['','var(--red)','var(--amber)','var(--amber)','var(--green)','var(--green)'][s];
+}
+
+async function deriveKey(pw,salt){
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:310000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encData(pt,pw){
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(pw,salt),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(pt));
+  const b=new Uint8Array(28+ct.byteLength);b.set(salt,0);b.set(iv,16);b.set(new Uint8Array(ct),28);
+  return btoa(String.fromCharCode(...b));
+}
+async function decData(b64,pw){
+  const b=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  const key=await deriveKey(pw,b.slice(0,16));
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(16,28)},key,b.slice(28)));
+}
+
+async function doExport(){
+  const pw=document.getElementById('exportPassword').value;
+  const ts=new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  const vtoken=localStorage.getItem('chronicle_vtoken')||null;
+  const vsalt=localStorage.getItem('chronicle_vsalt')||null;
+  const payload=JSON.stringify({version:2,exported:new Date().toISOString(),vtoken,vsalt,data});
+  let fc,fn;
+  if(pw){try{fc=JSON.stringify({chronicle_encrypted:true,version:2,payload:await encData(payload,pw)});fn=`chronicle_${ts}.enc.json`;}catch(e){alert('Encryption failed');return;}}
+  else{fc=payload;fn=`chronicle_${ts}.json`;}
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([fc],{type:'application/json'})),download:fn});
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+async function doImport(){
+  const file=document.getElementById('importFile').files[0];
+  const st=document.getElementById('importStatus');
+  if(!file){st.textContent='No file selected.';st.style.color='var(--amber)';return;}
+  st.textContent='Reading…';st.style.color='var(--text2)';
+  let parsed;try{parsed=JSON.parse(await file.text());}catch(e){st.textContent='✕ Invalid file.';st.style.color='var(--red)';return;}
+  let id2,vtoken=null,vsalt=null;
+  if(parsed.chronicle_encrypted){
+    const pw=document.getElementById('importPassword').value;if(!pw){st.textContent='✕ Enter password.';st.style.color='var(--amber)';return;}
+    try{const dec=JSON.parse(await decData(parsed.payload,pw));id2=dec.data;vtoken=dec.vtoken||null;vsalt=dec.vsalt||null;}catch(e){st.textContent='✕ Wrong password.';st.style.color='var(--red)';return;}
+  }else if(parsed.data){id2=parsed.data;vtoken=parsed.vtoken||null;vsalt=parsed.vsalt||null;}else{st.textContent='✕ Unrecognised format.';st.style.color='var(--red)';return;}
+  // Restore vault salt FIRST so key derivation works with same password
+  if(vsalt&&!localStorage.getItem('chronicle_vsalt')){
+    localStorage.setItem('chronicle_vsalt',vsalt);
+  }
+  if(vtoken&&!localStorage.getItem('chronicle_vtoken')){
+    localStorage.setItem('chronicle_vtoken',vtoken);
+  }
+  // Merge all sections
+  let a={entries:0,personas:0,people:0,chapters:0,passwords:0,cards:0,scenes:0};
+  const eI=new Set(data.entries.map(x=>x.id)),pI=new Set(data.personas.map(x=>x.id)),peI=new Set(data.people.map(x=>x.id));
+  const pwI=new Set(data.passwords.map(x=>x.id));
+  (id2.entries||[]).forEach(e=>{if(!eI.has(e.id)){data.entries.push(e);a.entries++;}});
+  (id2.personas||[]).forEach(e=>{if(!pI.has(e.id)){data.personas.push(e);a.personas++;}});
+  (id2.people||[]).forEach(e=>{if(!peI.has(e.id)){data.people.push(e);a.people++;}});
+  (id2.passwords||[]).forEach(e=>{if(!pwI.has(e.id)){data.passwords.push(e);a.passwords++;}});
+  // Books — replace entirely if backup has books, else legacy merge
+  if(id2.books&&id2.books.length){
+    data.books=id2.books;data.activeBookId=id2.activeBookId||id2.books[0].id;
+  } else if(id2.book&&id2.book.chapters){
+    const b=getActiveBook();
+    const cI=new Set((b.chapters||[]).map(x=>x.id));
+    (id2.book.chapters||[]).forEach(e=>{if(!cI.has(e.id)){b.chapters.push(e);a.chapters++;}});
+  }
+  // Boards — replace entirely (col/card IDs are internal references)
+  if(id2.boards){data.boards=id2.boards;a.cards=(id2.boards.cards||[]).length;}
+  // Comic — replace entirely
+  if(id2.comic){data.comic=id2.comic;}
+  // RPG — replace entirely
+  if(id2.rpg){data.rpg=id2.rpg;a.scenes=(id2.rpg.scenes||[]).length;}
+  // Card game
+  if(!data.cardgame)data.cardgame={cards:[],games:[]};
+  const cgCI=new Set(data.cardgame.cards.map(x=>x.id)),cgGI=new Set(data.cardgame.games.map(x=>x.id));
+  ((id2.cardgame||{}).cards||[]).forEach(e=>{if(!cgCI.has(e.id)){data.cardgame.cards.push(e);}});
+  ((id2.cardgame||{}).games||[]).forEach(e=>{if(!cgGI.has(e.id)){data.cardgame.games.push(e);}});
+  save();
+  // Re-init everything
+  initBoards();
+  getActiveComic();
+  initRpg();
+  renderCalendar();renderPersona();renderPeople();renderBook();
+  if(vaultUnlocked)renderPasswords();
+  st.style.color='var(--green)';
+  st.textContent=`✓ Imported · ${a.entries} entries · ${a.passwords} passwords · ${a.cards} board cards · ${a.scenes} RPG scenes`;
+}
+
+function clearAllData(){
+  if(!confirm('Permanently delete ALL Chronicle data?'))return;
+  if(!confirm('Final warning — cannot be undone!'))return;
+  data={entries:[],personas:[],people:[],books:[],activeBookId:null,passwords:[],boards:null,comic:null,rpg:null};
+  localStorage.removeItem('chronicle_vtoken');
+  save();closeModal('modal-backup');
+  renderCalendar();renderPersona();renderPeople();
+  getActiveBook();renderBook();
+  initBoards();renderBoard();
+  getActiveComic();initRpg();
+}
+
+// ════════════════════════════════════
+//  MODALS + UTILS
+// ════════════════════════════════════
+// ════════════════════════════════════
+//  THEME / APPEARANCE
+// ════════════════════════════════════
+const THEMES={
+  dark:{bg:'#0d0d0f',bg2:'#13131a',bg3:'#1a1a24',bg4:'#222230',border:'#2e2e42',border2:'#3d3d58',text:'#d4d4e8',text2:'#9090aa'},
+  darker:{bg:'#050507',bg2:'#0a0a10',bg3:'#111118',bg4:'#18181f',border:'#222235',border2:'#2e2e45',text:'#c8c8dc',text2:'#7878a0'},
+  dim:{bg:'#161620',bg2:'#1e1e2a',bg3:'#252535',bg4:'#2c2c3f',border:'#383850',border2:'#454560',text:'#dcdcf0',text2:'#9898b8'},
+};
+function applyTheme(name,accent,fontSize,headingFont){
+  const t=THEMES[name]||THEMES.dark;
+  const r=document.documentElement;
+  Object.entries(t).forEach(([k,v])=>r.style.setProperty('--'+k,v));
+  if(accent){
+    r.style.setProperty('--gold',accent);
+    r.style.setProperty('--gold2',accent+'cc');
+  }
+  if(fontSize) document.body.style.fontSize=fontSize+'px';
+  if(headingFont) r.style.setProperty('--font-heading',`'${headingFont}',serif`);
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('active',s.dataset.accent===accent));
+  const fs=parseInt(fontSize||16);
+  const lbl=document.getElementById('fontSizeLabel');if(lbl)lbl.textContent=fs+'px';
+}
+function saveTheme(){
+  const prefs={theme:currentTheme,accent:currentAccent,fontSize:currentFontSize,headingFont:currentHeadingFont};
+  localStorage.setItem('chronicle_theme',JSON.stringify(prefs));
+}
+let currentTheme='dark',currentAccent='#c9a84c',currentFontSize=16,currentHeadingFont='Cinzel';
+function loadTheme(){
+  try{
+    const s=localStorage.getItem('chronicle_theme');
+    if(s){const p=JSON.parse(s);currentTheme=p.theme||'dark';currentAccent=p.accent||'#c9a84c';currentFontSize=p.fontSize||16;currentHeadingFont=p.headingFont||'Cinzel';}
+  }catch(e){}
+  applyTheme(currentTheme,currentAccent,currentFontSize,currentHeadingFont);
+  // Highlight active theme button
+  ['dark','darker','dim'].forEach(t=>{const b=document.getElementById('theme-'+t);if(b)b.style.borderColor=t===currentTheme?'var(--gold)':'';});
+}
+function setAccent(btn){
+  currentAccent=btn.dataset.accent;
+  document.documentElement.style.setProperty('--gold',currentAccent);
+  document.documentElement.style.setProperty('--gold2',currentAccent+'cc');
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('active',s.dataset.accent===currentAccent));
+  saveTheme();
+}
+function setTheme(name){
+  currentTheme=name;
+  applyTheme(name,currentAccent,currentFontSize,currentHeadingFont);
+  ['dark','darker','dim'].forEach(t=>{const b=document.getElementById('theme-'+t);if(b)b.style.borderColor=t===name?'var(--gold)':'';});
+  saveTheme();
+}
+function adjustFontSize(delta){
+  currentFontSize=Math.max(13,Math.min(20,currentFontSize+delta));
+  document.body.style.fontSize=currentFontSize+'px';
+  const lbl=document.getElementById('fontSizeLabel');if(lbl)lbl.textContent=currentFontSize+'px';
+  saveTheme();
+}
+function setHeadingFont(font){
+  currentHeadingFont=font;
+  document.documentElement.style.setProperty('--font-heading',`'${font}',serif`);
+  saveTheme();
+}
+
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';
+  if(id==='modal-backup'){
+    // Sync theme UI state
+    document.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('active',s.dataset.accent===currentAccent));
+    ['dark','darker','dim'].forEach(t=>{const b=document.getElementById('theme-'+t);if(b)b.style.borderColor=t===currentTheme?'var(--gold)':'';});
+    const lbl=document.getElementById('fontSizeLabel');if(lbl)lbl.textContent=currentFontSize+'px';
+  }
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function toast(msg){
+  const el=document.createElement('div');el.className='toast';el.textContent=msg;
+  document.body.appendChild(el);setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),400);},1400);
+}
+
+// ════════════════════════════════════
+//  INIT
+// ════════════════════════════════════
+
+// ════════════════════════════════════
+//  BOARD TAGS
+// ════════════════════════════════════
+const DEFAULT_TAGS=[
+  {id:'ngy',name:'No Gods Yet',color:'#e05050'},
+  {id:'north',name:'North Eden Studios',color:'#c9a84c'},
+  {id:'personal',name:'Personal',color:'#7b6cee'},
+];
+function getBoardTags(){
+  const bd=getBoardData();
+  if(!bd.tags||!bd.tags.length)bd.tags=[...DEFAULT_TAGS];
+  return bd.tags;
+}
+function openTagManager(){
+  renderTagManagerList();
+  openModal('modal-tag-manager');
+}
+function renderTagManagerList(){
+  const tags=getBoardTags();
+  document.getElementById('tagManagerList').innerHTML=tags.length
+    ?tags.map(t=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span class="tag-chip" style="color:${t.color};border-color:${t.color}40;background:${t.color}15;flex:1;">${escHtml(t.name)}</span>
+      <button class="btn btn-danger" style="font-size:10px;padding:3px 8px;" onclick="deleteTag('${t.id}')">Remove</button>
+    </div>`).join('')
+    :'<div class="empty-state" style="padding:10px 0;">No tags yet.</div>';
+}
+function saveNewTag(){
+  const name=document.getElementById('newTagName').value.trim();if(!name)return;
+  const color=document.getElementById('newTagColor').value;
+  const bd=getBoardData();getBoardTags();
+  bd.tags.push({id:uid(),name,color});
+  save();renderTagManagerList();document.getElementById('newTagName').value='';
+  toast('Tag added ✓');
+}
+function deleteTag(id){
+  const bd=getBoardData();
+  bd.tags=(bd.tags||[]).filter(t=>t.id!==id);
+  // clear that tag from any cards
+  (bd.cards||[]).forEach(c=>{if(c.tag===id)c.tag='';});
+  save();renderTagManagerList();renderBoard();
+}
+function populateBcTagSelect(selected=''){
+  const tags=getBoardTags();
+  document.getElementById('bcTag').innerHTML='<option value="">None</option>'
+    +tags.map(t=>`<option value="${t.id}"${t.id===selected?' selected':''}>${escHtml(t.name)}</option>`).join('');
+}
+let activeBoardId=null, editingCardId=null, editingColId=null;
+
+function getBoardData(){
+  if(!data.boards) data.boards={boards:[],cols:[],cards:[],tags:[]};
+  if(!data.boards.cols) data.boards.cols=[];
+  if(!data.boards.cards) data.boards.cards=[];
+  if(!data.boards.tags) data.boards.tags=[];
+  return data.boards;
+}
+
+function initBoards(){
+  const bd=getBoardData();
+  if(!bd.boards.length){
+    // Seed with NGY board
+    const b1={id:uid(),name:'No Gods Yet'};
+    const b2={id:uid(),name:'Current Projects'};
+    bd.boards.push(b1,b2);
+    const cols1=[
+      {id:uid(),boardId:b1.id,name:'Story',order:0},
+      {id:uid(),boardId:b1.id,name:'Art',order:1},
+      {id:uid(),boardId:b1.id,name:'RPG',order:2},
+      {id:uid(),boardId:b1.id,name:'Done',order:3},
+    ];
+    const cols2=[
+      {id:uid(),boardId:b2.id,name:'To Do',order:0},
+      {id:uid(),boardId:b2.id,name:'In Progress',order:1},
+      {id:uid(),boardId:b2.id,name:'Done',order:2},
+    ];
+    if(!bd.cols) bd.cols=[];
+    bd.cols.push(...cols1,...cols2);
+    const cards=[
+      {id:uid(),boardId:b1.id,colId:cols1[0].id,title:'Chapter 1: Rush Hour — script',notes:'Panel by panel breakdown ready. See Studio tab.',tag:'ngy'},
+      {id:uid(),boardId:b1.id,colId:cols1[0].id,title:'Chapter 2 outline',notes:'Cross goes after the exec\'s kid. First impact fusion reveal.',tag:'ngy'},
+      {id:uid(),boardId:b1.id,colId:cols1[1].id,title:'Cover — Cross confrontational pose',notes:'3 fingers down. Rat + crow. City backdrop. Gachiakuta style.',tag:'ngy'},
+      {id:uid(),boardId:b1.id,colId:cols1[2].id,title:'City map layout',notes:'8 districts. Corporate zone high up. Midstack = Cross home.',tag:'ngy'},
+      {id:uid(),boardId:b1.id,colId:cols1[2].id,title:'Combat system prototype',notes:'Totem cooldowns. Impact fusion mechanic. Ascension tracking.',tag:'ngy'},
+    ];
+    bd.cards.push(...cards);
+    activeBoardId=b1.id;
+    save();
+  } else {
+    activeBoardId=bd.boards[0].id;
+  }
+  renderBoard();
+}
+
+function renderBoard(){
+  const bd=getBoardData();
+  const tags=getBoardTags();
+  const tabsRow=document.getElementById('boardTabsRow');
+  tabsRow.innerHTML=bd.boards.map(b=>`<button class="board-tab${b.id===activeBoardId?' active':''}" onclick="switchBoard('${b.id}')">${escHtml(b.name)}</button>`).join('')
+    +`<button class="board-tab" onclick="openAddBoard()">+ Board</button>`;
+  const cols=(bd.cols||[]).filter(c=>c.boardId===activeBoardId).sort((a,b)=>a.order-b.order);
+  const container=document.getElementById('kanbanCols');
+  container.innerHTML='';
+  cols.forEach(col=>{
+    const cards=(bd.cards||[]).filter(c=>c.colId===col.id);
+    const colEl=document.createElement('div');colEl.className='kanban-col';
+    const cardsHtml=cards.map(card=>{
+      const tag=tags.find(t=>t.id===card.tag);
+      const tagHtml=tag?`<div class="kanban-card-tags"><span class="tag-chip" style="color:${tag.color};border-color:${tag.color}40;background:${tag.color}15;">${escHtml(tag.name)}</span></div>`:'';
+      return`<div class="kanban-card" onclick="openEditBoardCard('${card.id}')"><div class="kanban-card-title">${escHtml(card.title)}</div>${card.notes?`<div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.4;">${escHtml(card.notes.slice(0,80))}${card.notes.length>80?'…':''}</div>`:''}${tagHtml}</div>`;
+    }).join('');
+    colEl.innerHTML=`<div class="kanban-col-hdr"><span class="kanban-col-title">${escHtml(col.name)}</span><div style="display:flex;align-items:center;gap:6px;"><span class="kanban-col-count">${cards.length}</span><button class="kcol-del" onclick="deleteBoardCol('${col.id}')">×</button></div></div><div class="kanban-cards-wrap" id="kc-${col.id}">${cardsHtml}</div><button class="kanban-add" onclick="openAddBoardCard('${col.id}')">+ Add card</button>`;
+    container.appendChild(colEl);
+  });
+  const addCol=document.createElement('div');
+  addCol.style.cssText='min-width:120px;display:flex;align-items:flex-start;padding-top:4px;';
+  addCol.innerHTML=`<button class="btn" style="font-size:10px;white-space:nowrap;" onclick="openAddCol()">+ Column</button>`;
+  container.appendChild(addCol);
+}
+
+function switchBoard(id){activeBoardId=id;renderBoard();}
+
+function openAddBoard(){document.getElementById('newBoardName').value='';openModal('modal-add-board');}
+function saveNewBoard(){
+  const name=document.getElementById('newBoardName').value.trim();if(!name)return;
+  const bd=getBoardData();
+  const b={id:uid(),name};bd.boards.push(b);
+  if(!bd.cols)bd.cols=[];
+  ['To Do','In Progress','Done'].forEach((n,i)=>bd.cols.push({id:uid(),boardId:b.id,name:n,order:i}));
+  activeBoardId=b.id;save();closeModal('modal-add-board');renderBoard();
+}
+
+function openAddCol(){document.getElementById('newColName').value='';openModal('modal-add-col');}
+function saveNewCol(){
+  const name=document.getElementById('newColName').value.trim();if(!name)return;
+  const bd=getBoardData();if(!bd.cols)bd.cols=[];
+  const maxOrder=Math.max(-1,...bd.cols.filter(c=>c.boardId===activeBoardId).map(c=>c.order));
+  bd.cols.push({id:uid(),boardId:activeBoardId,name,order:maxOrder+1});
+  save();closeModal('modal-add-col');renderBoard();
+}
+function deleteBoardCol(id){
+  if(!confirm('Delete this column and all its cards?'))return;
+  const bd=getBoardData();
+  bd.cols=(bd.cols||[]).filter(c=>c.id!==id);
+  bd.cards=(bd.cards||[]).filter(c=>c.colId!==id);
+  save();renderBoard();
+}
+
+function openAddBoardCard(colId){
+  editingCardId=null;
+  document.getElementById('boardCardModalTitle').textContent='Add Card';
+  document.getElementById('bcTitle').value='';
+  document.getElementById('bcNotes').value='';
+  populateBcTagSelect('');
+  document.getElementById('deleteBcBtn').style.display='none';
+  populateColSelect(colId||null);
+  openModal('modal-board-card');
+}
+function openEditBoardCard(id){
+  const bd=getBoardData();const card=(bd.cards||[]).find(c=>c.id===id);if(!card)return;
+  editingCardId=id;
+  document.getElementById('boardCardModalTitle').textContent='Edit Card';
+  document.getElementById('bcTitle').value=card.title;
+  document.getElementById('bcNotes').value=card.notes||'';
+  populateBcTagSelect(card.tag||'');
+  document.getElementById('deleteBcBtn').style.display='inline-block';
+  populateColSelect(card.colId);
+  openModal('modal-board-card');
+}
+function populateColSelect(selectedColId){
+  const bd=getBoardData();
+  const cols=(bd.cols||[]).filter(c=>c.boardId===activeBoardId).sort((a,b)=>a.order-b.order);
+  document.getElementById('bcCol').innerHTML=cols.map(c=>`<option value="${c.id}"${c.id===selectedColId?' selected':''}>${escHtml(c.name)}</option>`).join('');
+}
+function saveBoardCard(){
+  const title=document.getElementById('bcTitle').value.trim();if(!title)return;
+  const bd=getBoardData();if(!bd.cards)bd.cards=[];
+  const colId=document.getElementById('bcCol').value;
+  if(!colId){toast('Please select a column first.');return;}
+  const card={id:editingCardId||uid(),boardId:activeBoardId,colId,title,notes:document.getElementById('bcNotes').value.trim(),tag:document.getElementById('bcTag').value};
+  if(editingCardId){const i=bd.cards.findIndex(c=>c.id===editingCardId);if(i>=0)bd.cards[i]=card;}
+  else bd.cards.push(card);
+  save();closeModal('modal-board-card');renderBoard();
+}
+function deleteBoardCard(){
+  if(!confirm('Delete this card?'))return;
+  const bd=getBoardData();bd.cards=(bd.cards||[]).filter(c=>c.id!==editingCardId);
+  save();closeModal('modal-board-card');renderBoard();
+}
+
+// ════════════════════════════════════
+//  COMIC (MULTI)
+// ════════════════════════════════════
+let editingArcId=null, editingPanelId=null, editingPanelArcId=null, editingComicId=null;
+
+function getComicData(){
+  if(!data.comic)data.comic={comics:[],activeComicId:null};
+  // migrate old flat arcs
+  if(data.comic.arcs&&!data.comic.comics.length){
+    const c={id:uid(),title:'No Gods Yet',tagline:'Street-level action, post-singularity',arcs:data.comic.arcs,worldBible:data.comic.worldBible||[]};
+    data.comic.comics=[c];data.comic.activeComicId=c.id;delete data.comic.arcs;
+  }
+  return data.comic;
+}
+
+function getActiveComic(){
+  const cd=getComicData();
+  if(!cd.comics.length){
+    const c={id:uid(),title:'No Gods Yet',tagline:'Street-level action, post-singularity',arcs:[],worldBible:[]};
+    cd.comics=[c];cd.activeComicId=c.id;save();
+  }
+  return cd.comics.find(c=>c.id===cd.activeComicId)||cd.comics[0];
+}
+
+function renderComicSelector(){
+  const cd=getComicData();
+  const row=document.getElementById('comicSelectorRow');
+  if(!row)return;
+  row.innerHTML=cd.comics.map(c=>`<button class="book-sel-tab${c.id===cd.activeComicId?' active':''}" onclick="switchComic('${c.id}')">${escHtml(c.title)}</button>`).join('')
+    +`<button class="book-sel-tab" onclick="openAddComic()">+ Comic</button>`;
+}
+
+function switchComic(id){const cd=getComicData();cd.activeComicId=id;save();renderComicSelector();renderComicArcs();}
+
+function openAddComic(){
+  editingComicId=null;
+  document.getElementById('comicModalTitle').textContent='New Comic';
+  document.getElementById('comicTitle').value='';document.getElementById('comicTagline').value='';
+  document.getElementById('deleteComicBtn').style.display='none';
+  openModal('modal-add-comic');
+}
+function editCurrentComic(){
+  const c=getActiveComic();editingComicId=c.id;
+  document.getElementById('comicModalTitle').textContent='Edit Comic';
+  document.getElementById('comicTitle').value=c.title;document.getElementById('comicTagline').value=c.tagline||'';
+  document.getElementById('deleteComicBtn').style.display='inline-block';
+  openModal('modal-add-comic');
+}
+function saveComic(){
+  const title=document.getElementById('comicTitle').value.trim();if(!title)return;
+  const cd=getComicData();
+  if(editingComicId){
+    const c=cd.comics.find(x=>x.id===editingComicId);if(c){c.title=title;c.tagline=document.getElementById('comicTagline').value.trim();}
+  } else {
+    const c={id:uid(),title,tagline:document.getElementById('comicTagline').value.trim(),arcs:[],worldBible:[]};
+    cd.comics.push(c);cd.activeComicId=c.id;
+  }
+  save();closeModal('modal-add-comic');renderComicSelector();renderComicArcs();
+}
+function deleteComic(){
+  const cd=getComicData();
+  if(cd.comics.length<=1){alert('Need at least one comic.');return;}
+  if(!confirm('Delete this comic and all its content?'))return;
+  cd.comics=cd.comics.filter(c=>c.id!==editingComicId);
+  cd.activeComicId=cd.comics[0].id;
+  save();closeModal('modal-add-comic');renderComicSelector();renderComicArcs();
+}
+
+function renderComicArcs(){
+  const comic=getActiveComic();
+  const list=document.getElementById('comicArcList');
+  if(!(comic.arcs||[]).length){list.innerHTML='<div class="empty-state">No arcs yet. Start building your story.</div>';return;}
+  list.innerHTML=(comic.arcs||[]).map(arc=>{
+    const panels=arc.panels||[];
+    return`<div class="comic-arc-card"><div class="comic-arc-hdr" onclick="toggleEl('cab-${arc.id}','cach-${arc.id}')"><div><span class="comic-arc-label">${escHtml(arc.title)}</span><span style="font-size:11px;color:var(--text2);margin-left:8px;">${panels.length} panel${panels.length!==1?'s':''}</span></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" style="font-size:9px;padding:2px 8px;" onclick="event.stopPropagation();editArc('${arc.id}')">Edit</button><span class="chevron" id="cach-${arc.id}">▶</span></div></div><div class="comic-arc-body" id="cab-${arc.id}">${arc.summary?`<div style="font-size:13px;color:var(--text2);font-style:italic;margin-bottom:10px;">${escHtml(arc.summary)}</div>`:''}${panels.map((p,pi)=>`<div class="panel-row"><span class="panel-num">P${pi+1}</span><div class="panel-text"><div>${escHtml(p.desc)}</div>${p.dialogue?`<div style="font-size:13px;color:var(--gold2);margin-top:3px;font-style:italic;">${escHtml(p.dialogue)}</div>`:''}</div><button class="panel-del" onclick="editPanel('${arc.id}','${p.id}')">✎</button></div>`).join('')}<button class="btn" style="width:100%;margin-top:8px;font-size:10px;" onclick="openAddPanel('${arc.id}')">+ Add Panel</button></div></div>`;
+  }).join('');
+}
+
+function openAddArc(){editingArcId=null;document.getElementById('arcModalTitle').textContent='New Arc / Chapter';document.getElementById('arcTitle').value='';document.getElementById('arcSummary').value='';document.getElementById('deleteArcBtn').style.display='none';openModal('modal-add-arc');}
+function editArc(id){
+  editingArcId=id;const comic=getActiveComic();const arc=(comic.arcs||[]).find(a=>a.id===id);if(!arc)return;
+  document.getElementById('arcModalTitle').textContent='Edit Arc';
+  document.getElementById('arcTitle').value=arc.title;document.getElementById('arcSummary').value=arc.summary||'';
+  document.getElementById('deleteArcBtn').style.display='inline-block';openModal('modal-add-arc');
+}
+function saveArc(){
+  const title=document.getElementById('arcTitle').value.trim();if(!title)return;
+  const comic=getActiveComic();if(!comic.arcs)comic.arcs=[];
+  const arc={id:editingArcId||uid(),title,summary:document.getElementById('arcSummary').value.trim(),panels:[]};
+  if(editingArcId){const i=comic.arcs.findIndex(a=>a.id===editingArcId);if(i>=0){arc.panels=comic.arcs[i].panels;comic.arcs[i]=arc;}else comic.arcs.push(arc);}
+  else comic.arcs.push(arc);
+  save();closeModal('modal-add-arc');renderComicArcs();
+}
+function deleteArc(){
+  if(!confirm('Delete this arc and all panels?'))return;
+  const comic=getActiveComic();comic.arcs=(comic.arcs||[]).filter(a=>a.id!==editingArcId);
+  save();closeModal('modal-add-arc');renderComicArcs();
+}
+
+function openAddPanel(arcId){
+  editingPanelId=null;editingPanelArcId=arcId;
+  document.getElementById('panelModalTitle').textContent='Add Panel';
+  document.getElementById('panelDesc').value='';document.getElementById('panelDialogue').value='';
+  document.getElementById('deletePanelBtn').style.display='none';openModal('modal-add-panel');
+}
+function editPanel(arcId,panelId){
+  editingPanelArcId=arcId;editingPanelId=panelId;
+  const comic=getActiveComic();const arc=(comic.arcs||[]).find(a=>a.id===arcId);if(!arc)return;
+  const p=(arc.panels||[]).find(p=>p.id===panelId);if(!p)return;
+  document.getElementById('panelModalTitle').textContent='Edit Panel';
+  document.getElementById('panelDesc').value=p.desc||'';document.getElementById('panelDialogue').value=p.dialogue||'';
+  document.getElementById('deletePanelBtn').style.display='inline-block';openModal('modal-add-panel');
+}
+function savePanel(){
+  const desc=document.getElementById('panelDesc').value.trim();if(!desc)return;
+  const comic=getActiveComic();const arc=(comic.arcs||[]).find(a=>a.id===editingPanelArcId);if(!arc)return;
+  const panel={id:editingPanelId||uid(),desc,dialogue:document.getElementById('panelDialogue').value.trim()};
+  if(editingPanelId){const i=(arc.panels||[]).findIndex(p=>p.id===editingPanelId);if(i>=0)arc.panels[i]=panel;}
+  else{if(!arc.panels)arc.panels=[];arc.panels.push(panel);}
+  save();closeModal('modal-add-panel');renderComicArcs();
+}
+function deletePanel(){
+  if(!confirm('Delete this panel?'))return;
+  const comic=getActiveComic();const arc=(comic.arcs||[]).find(a=>a.id===editingPanelArcId);if(!arc)return;
+  arc.panels=(arc.panels||[]).filter(p=>p.id!==editingPanelId);
+  save();closeModal('modal-add-panel');renderComicArcs();
+}
+
+// ════════════════════════════════════
+//  WORLD BIBLE (editable entries)
+// ════════════════════════════════════
+let editingWbId=null;
+
+function openWorldModal(){
+  renderWbEntries();
+  openModal('modal-world');
+}
+function renderWbEntries(){
+  const comic=getActiveComic();
+  const entries=comic.worldBible||[];
+  const list=document.getElementById('wbEntriesList');
+  if(!entries.length){
+    list.innerHTML='<div class="empty-state" style="padding:10px 0;">No entries yet. Add your first world bible entry.</div>';return;
+  }
+  list.innerHTML=entries.map(e=>`<div class="wb-entry"><div class="wb-entry-body"><span class="wb-entry-tag">${escHtml(e.tag||'NOTE')}</span><div class="wb-entry-text">${escHtml(e.text)}</div></div><div class="wb-entry-actions"><button class="btn" style="font-size:9px;padding:2px 7px;" onclick="openWbEntry('${e.id}')">Edit</button></div></div>`).join('');
+}
+function openWbEntry(id){
+  editingWbId=id||null;
+  if(id){
+    const comic=getActiveComic();const e=(comic.worldBible||[]).find(x=>x.id===id);if(!e)return;
+    document.getElementById('wbEntryTitle').textContent='Edit Entry';
+    document.getElementById('wbEntryTag').value=e.tag||'';
+    document.getElementById('wbEntryText').value=e.text||'';
+    document.getElementById('deleteWbBtn').style.display='inline-block';
+  } else {
+    document.getElementById('wbEntryTitle').textContent='New Entry';
+    document.getElementById('wbEntryTag').value='';
+    document.getElementById('wbEntryText').value='';
+    document.getElementById('deleteWbBtn').style.display='none';
+  }
+  openModal('modal-wb-entry');
+}
+function saveWbEntry(){
+  const text=document.getElementById('wbEntryText').value.trim();if(!text)return;
+  const comic=getActiveComic();if(!comic.worldBible)comic.worldBible=[];
+  const entry={id:editingWbId||uid(),tag:document.getElementById('wbEntryTag').value.trim().toUpperCase()||'NOTE',text};
+  if(editingWbId){const i=comic.worldBible.findIndex(x=>x.id===editingWbId);if(i>=0)comic.worldBible[i]=entry;else comic.worldBible.push(entry);}
+  else comic.worldBible.push(entry);
+  save();closeModal('modal-wb-entry');renderWbEntries();toast('Entry saved ✓');
+}
+function deleteWbEntry(){
+  if(!confirm('Delete this entry?'))return;
+  const comic=getActiveComic();
+  comic.worldBible=(comic.worldBible||[]).filter(x=>x.id!==editingWbId);
+  save();closeModal('modal-wb-entry');renderWbEntries();
+}
+
+// ════════════════════════════════════
+//  RPG — BRANCHING SCENE TREE
+// ════════════════════════════════════
+let selectedRpgCell=null, editingSceneId=null, ptState=null, ptCurrentSceneId=null;
+const RPG_ROWS=6, RPG_COLS=8;
+
+function getRpgData(){
+  if(!data.rpg)data.rpg={rooms:{},scenes:[],ptHistory:[]};
+  return data.rpg;
+}
+
+function switchRpgView(view){
+  document.querySelectorAll('.rpg-view').forEach(v=>v.style.display='none');
+  document.getElementById('rpg-view-'+view).style.display='block';
+  // highlight active button
+  ['map','scenes','play'].forEach(v=>{
+    const b=document.getElementById('rpg'+v.charAt(0).toUpperCase()+v.slice(1)+'Btn');
+    if(b)b.className=v===view?'btn btn-gold':'btn';
+  });
+  if(view==='map')renderRpgMap();
+  if(view==='scenes')renderSceneTree();
+  if(view==='play')initPlaytest();
+}
+
+function initRpg(){
+  const rd=getRpgData();
+  // seed if no scenes
+  if(!rd.scenes||!rd.scenes.length){
+    const s1=uid(),s2a=uid(),s2b=uid(),s2c=uid(),s3=uid(),s4=uid();
+    rd.scenes=[
+      {id:s1,title:'The Alley Shortcut',type:'start',narr:'The shortcut reeks. Scratch shifts on your shoulder.\n\n"Smells like piss and death."\n\nTimer\'s running. Three minutes saved or three of clean streets.',choices:[
+        {text:'Take the shortcut',outcome:'You move fast. Something moves in the shadows — but you\'re gone before it resolves.',nextId:s2a,effect:{hp:-5,asc:0}},
+        {text:'Go the long way',outcome:'Slower. Your timer is tight now but you arrive intact.',nextId:s2b,effect:{hp:0,asc:0}},
+        {text:'Stop and check the shadows',outcome:'A feral Beast watches from a drainpipe. It decides you\'re not worth it. Today.',nextId:s2c,effect:{hp:0,asc:5}},
+      ]},
+      {id:s2a,title:'First Delivery',type:'normal',narr:'Customer has partial Beast features — feathers at the collar. Takes the package and pauses.\n\n"Westside Collective is recruiting aggressive today."',choices:[
+        {text:'"Not my problem."',outcome:'They close the window.',nextId:s3,effect:{hp:0,asc:0}},
+        {text:'"What kind of aggressive?"',outcome:'"Totem-collecting aggressive. Watch your marks."',nextId:s3,effect:{hp:0,asc:0}},
+      ]},
+      {id:s2b,title:'The Long Route',type:'normal',narr:'Clean streets. Quiet. A delivery drone passes overhead. Scratch dozes on your shoulder.',choices:[
+        {text:'Keep moving',outcome:'Uneventful. You arrive on time.',nextId:s3,effect:{hp:0,asc:0}},
+      ]},
+      {id:s2c,title:'The Beast',type:'normal',narr:'The Beast is a scarred urban fox, three rungs above you. Watching. Learning. You held your ground.',choices:[
+        {text:'Nod and move on',outcome:'It nods back. That\'s new.',nextId:s3,effect:{hp:0,asc:10}},
+      ]},
+      {id:s3,title:'The Encounter',type:'normal',narr:'You see it happen. A Kin flickers, fades — defeated. The antagonist brushes their suit.\n\n"Should\'ve thought before spilling coffee on me."\n\nThey notice you watching.',choices:[
+        {text:'Break eye contact. Keep moving.',outcome:'"Not my problem." Scratch relaxes.',nextId:s4,effect:{hp:0,asc:-5}},
+        {text:'Hold eye contact.',outcome:'A long second. They smile — not warmly. You\'ve been noticed.',nextId:s4,effect:{hp:0,asc:5}},
+        {text:'Say something.',outcome:'"Rough day?" The words leave before your brain catches up.',nextId:s4,effect:{hp:-10,asc:10}},
+      ]},
+      {id:s4,title:'The Call',type:'end',narr:'Home. Food. Your phone rings. Sister\'s face on the screen.\n\n"They took my Totem, Cross. Just because they could."\n\nYou look out at the city.',choices:[]},
+    ];
+    if(!Object.keys(rd.rooms||{}).length){
+      Object.assign(rd.rooms={},{
+        '0,0':{name:'Lowstack',district:'Feral District',icon:'🐀',desc:'Bottom rung. Most avoid it.'},
+        '1,1':{name:'Sewer Run',district:'Underground',icon:'🕳',desc:'Cross\'s delivery shortcut.'},
+        '2,3':{name:'Midstack',district:'Residential',icon:'🏠',desc:'Cross\' home district.'},
+        '2,4':{name:'Cross\' Apt',district:'Midstack',icon:'🚪',desc:'Small, lived in. Scratch\'s counter corner.'},
+        '3,4':{name:'Dispatch Hub',district:'Midstack',icon:'📦',desc:'Delivery pickups.'},
+        '3,6':{name:'Market Row',district:'Midstack',icon:'🛒',desc:'Street market. Fused workers everywhere.'},
+        '4,2':{name:'Titan Corp',district:'Corporate',icon:'🏢',desc:'Major corp. Totem surrender contracts.'},
+        '5,3':{name:'Exec Quarter',district:'Upper',icon:'💼',desc:'The antagonist\'s territory.'},
+        '5,6':{name:'The Ascended',district:'High Spire',icon:'✨',desc:'Those near the top live here.'},
+      });
+    }
+    save();
+  }
+}
+
+// ── Scene Tree Renderer ──
+function renderSceneTree(){
+  const rd=getRpgData();
+  const container=document.getElementById('rpgSceneTree');
+  if(!rd.scenes||!rd.scenes.length){
+    container.innerHTML='<div class="empty-state">No scenes yet. Add one to start.</div>';return;
+  }
+  // find roots (start type or unreferenced)
+  const referenced=new Set(rd.scenes.flatMap(s=>(s.choices||[]).map(c=>c.nextId).filter(Boolean)));
+  const roots=rd.scenes.filter(s=>s.type==='start'||(s.type!=='end'&&!referenced.has(s.id)));
+  if(!roots.length)roots.push(rd.scenes[0]);
+  const rendered=new Set();
+  container.innerHTML='';
+  roots.forEach(r=>container.appendChild(buildTreeNode(r,rd,rendered,0)));
+  // orphans
+  rd.scenes.filter(s=>!rendered.has(s.id)).forEach(s=>{
+    const orphanLabel=document.createElement('div');
+    orphanLabel.style.cssText='font-family:Cinzel,serif;font-size:10px;color:var(--text2);margin:14px 0 6px;letter-spacing:0.08em;';
+    orphanLabel.textContent='— UNLINKED SCENES —';
+    if(!rendered.size)container.appendChild(orphanLabel);
+    container.appendChild(buildTreeNode(s,rd,rendered,0));
+  });
+}
+
+function buildTreeNode(scene,rd,rendered,depth){
+  if(rendered.has(scene.id)||depth>12){
+    // show as link-back ref
+    const ref=document.createElement('div');
+    ref.style.cssText='font-size:11px;color:var(--accent2);padding:4px 10px;font-style:italic;';
+    ref.textContent=`↩ ${scene.title} (linked above)`;
+    return ref;
+  }
+  rendered.add(scene.id);
+  const node=document.createElement('div');node.className='tree-node';
+  const card=document.createElement('div');
+  card.className='tree-card'+(scene.type==='start'?' tree-start':scene.type==='end'?' tree-end':'');
+  card.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;"><div style="flex:1;"><div class="tree-card-title">${escHtml(scene.title)}${scene.type==='start'?'<span class="tree-badge tree-badge-start">START</span>':scene.type==='end'?'<span class="tree-badge tree-badge-end">END</span>':''}</div><div class="tree-card-narr">${escHtml((scene.narr||'').slice(0,80))}${(scene.narr||'').length>80?'…':''}</div></div><button class="btn" style="font-size:9px;padding:2px 7px;flex-shrink:0;" onclick="event.stopPropagation();editScene('${scene.id}')">Edit</button></div>`;
+  node.appendChild(card);
+  // render each choice as a branch
+  const choices=scene.choices||[];
+  if(choices.length){
+    choices.forEach(ch=>{
+      const branch=document.createElement('div');branch.className='tree-children';
+      const label=document.createElement('div');label.className='tree-branch-label';
+      label.textContent=`▸ ${ch.text}${ch.outcome?` — "${ch.outcome.slice(0,40)}${ch.outcome.length>40?'…':''}"` :''}`;
+      branch.appendChild(label);
+      if(ch.nextId){
+        const child=rd.scenes.find(s=>s.id===ch.nextId);
+        if(child)branch.appendChild(buildTreeNode(child,rd,rendered,depth+1));
+        else{const miss=document.createElement('div');miss.style.cssText='font-size:11px;color:var(--red);padding:4px 10px;';miss.textContent='⚠ Linked scene not found';branch.appendChild(miss);}
+      } else {
+        const addBtn=document.createElement('button');addBtn.className='tree-add-child';
+        addBtn.textContent='+ Link or create next scene';
+        addBtn.onclick=()=>openAddScene(scene.id,choices.indexOf(ch));
+        branch.appendChild(addBtn);
+      }
+      node.appendChild(branch);
+    });
+  }
+  // add choice button if not end
+  if(scene.type!=='end'){
+    const addChoice=document.createElement('button');addChoice.className='tree-add-child';
+    addChoice.style.marginTop='8px';addChoice.textContent='+ Add choice / branch';
+    addChoice.onclick=()=>editScene(scene.id);
+    node.appendChild(addChoice);
+  }
+  return node;
+}
+
+function renderRpgMap(){
+  const rd=getRpgData();
+  const grid=document.getElementById('rpgMapGrid');
+  if(!grid)return;
+  grid.innerHTML='';
+  for(let r=0;r<RPG_ROWS;r++){
+    for(let c=0;c<RPG_COLS;c++){
+      const key=`${r},${c}`;const room=rd.rooms[key];
+      const cell=document.createElement('div');
+      cell.className='rpg-cell'+(room?' room':' empty')+(key===selectedRpgCell?' selected':'');
+      if(room)cell.innerHTML=`<span style="font-size:${window.innerWidth<400?'13':'16'}px">${room.icon||'📍'}</span><span class="rpg-cell-label">${escHtml((room.name||'').slice(0,8))}</span>`;
+      cell.onclick=()=>selectRpgCell(key);
+      grid.appendChild(cell);
+    }
+  }
+}
+function selectRpgCell(key){
+  selectedRpgCell=key;renderRpgMap();
+  const rd=getRpgData();const room=rd.rooms[key];
+  const editor=document.getElementById('rpgRoomEditor');editor.style.display='block';
+  document.getElementById('rpgRoomEdTitle').textContent=room?'Edit Location':'Add Location';
+  document.getElementById('rpgRoomName').value=room?room.name:'';
+  document.getElementById('rpgRoomDistrict').value=room?room.district:'';
+  document.getElementById('rpgRoomDesc').value=room?room.desc:'';
+  document.getElementById('rpgRoomIcon').value=room?room.icon:'📍';
+}
+function saveRpgRoom(){
+  const name=document.getElementById('rpgRoomName').value.trim();if(!name||!selectedRpgCell)return;
+  const rd=getRpgData();
+  rd.rooms[selectedRpgCell]={name,district:document.getElementById('rpgRoomDistrict').value.trim(),desc:document.getElementById('rpgRoomDesc').value.trim(),icon:document.getElementById('rpgRoomIcon').value||'📍'};
+  save();closeRpgRoomEditor();renderRpgMap();toast('Location saved ✓');
+}
+function deleteRpgRoom(){
+  if(!selectedRpgCell||!confirm('Remove?'))return;
+  const rd=getRpgData();delete rd.rooms[selectedRpgCell];
+  save();closeRpgRoomEditor();renderRpgMap();
+}
+function closeRpgRoomEditor(){selectedRpgCell=null;document.getElementById('rpgRoomEditor').style.display='none';renderRpgMap();}
+
+// ── Scene CRUD ──
+function openAddScene(parentSceneId,choiceIdx){
+  editingSceneId=null;
+  document.getElementById('sceneModalTitle').textContent='New Scene';
+  document.getElementById('sceneTitle').value='';
+  document.getElementById('sceneNarr').value='';
+  document.getElementById('sceneType').value='normal';
+  document.getElementById('deleteSceneBtn').style.display='none';
+  document.getElementById('choiceFields').innerHTML='';
+  document.getElementById('choiceFields').dataset.parentId=parentSceneId||'';
+  document.getElementById('choiceFields').dataset.choiceIdx=choiceIdx!=null?choiceIdx:'';
+  addChoiceField();
+  openModal('modal-add-scene');
+}
+function editScene(id){
+  const rd=getRpgData();const s=rd.scenes.find(x=>x.id===id);if(!s)return;
+  editingSceneId=id;
+  document.getElementById('sceneModalTitle').textContent='Edit Scene';
+  document.getElementById('sceneTitle').value=s.title;
+  document.getElementById('sceneNarr').value=s.narr||'';
+  document.getElementById('sceneType').value=s.type||'normal';
+  document.getElementById('deleteSceneBtn').style.display='inline-block';
+  document.getElementById('choiceFields').innerHTML='';
+  document.getElementById('choiceFields').dataset.parentId='';
+  document.getElementById('choiceFields').dataset.choiceIdx='';
+  (s.choices||[]).forEach(ch=>addChoiceField(ch.text,ch.outcome,ch.nextId));
+  if(!(s.choices||[]).length)addChoiceField();
+  openModal('modal-add-scene');
+}
+function addChoiceField(text='',outcome='',nextId=''){
+  const fields=document.getElementById('choiceFields');
+  if(fields.children.length>=5)return;
+  const i=fields.children.length;
+  const rd=getRpgData();
+  const sceneOptions=(rd.scenes||[]).filter(s=>s.id!==editingSceneId)
+    .map(s=>`<option value="${s.id}"${s.id===nextId?' selected':''}>${escHtml(s.title)}</option>`).join('');
+  const d=document.createElement('div');d.style.cssText='margin-bottom:12px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px;';
+  d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-family:Cinzel,serif;font-size:10px;color:var(--text2);">Choice ${i+1}</span><button type="button" onclick="this.closest('div[style]').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;">×</button></div><div class="field" style="margin-bottom:6px;"><label>Choice Text</label><input type="text" class="choice-text" placeholder="What the player does..." value="${escHtml(text)}"></div><div class="field" style="margin-bottom:6px;"><label>Outcome</label><textarea class="choice-outcome" placeholder="What happens..." style="min-height:40px;">${escHtml(outcome)}</textarea></div><div class="field"><label>→ Leads to scene</label><select class="choice-next"><option value="">— Dead end —</option>${sceneOptions}</select></div>`;
+  fields.appendChild(d);
+}
+function saveScene(){
+  const title=document.getElementById('sceneTitle').value.trim();if(!title)return;
+  const choices=[];
+  document.querySelectorAll('#choiceFields>[style]').forEach(div=>{
+    const t=div.querySelector('.choice-text').value.trim();
+    const o=div.querySelector('.choice-outcome').value.trim();
+    const n=div.querySelector('.choice-next').value;
+    if(t)choices.push({text:t,outcome:o,nextId:n||null,effect:{hp:0,asc:0}});
+  });
+  const rd=getRpgData();
+  const sceneId=editingSceneId||uid();
+  const scene={id:sceneId,title,narr:document.getElementById('sceneNarr').value.trim(),type:document.getElementById('sceneType').value,choices};
+  if(editingSceneId){const i=rd.scenes.findIndex(s=>s.id===editingSceneId);if(i>=0)rd.scenes[i]=scene;}
+  else rd.scenes.push(scene);
+  // if created from a branch, wire up the parent choice
+  const parentId=document.getElementById('choiceFields').dataset.parentId;
+  const choiceIdx=document.getElementById('choiceFields').dataset.choiceIdx;
+  if(parentId&&choiceIdx!==''){
+    const parent=rd.scenes.find(s=>s.id===parentId);
+    if(parent&&parent.choices[parseInt(choiceIdx)])parent.choices[parseInt(choiceIdx)].nextId=sceneId;
+  }
+  save();closeModal('modal-add-scene');renderSceneTree();
+}
+function deleteScene(){
+  if(!confirm('Delete this scene? Links to it will become dead ends.'))return;
+  const rd=getRpgData();rd.scenes=rd.scenes.filter(s=>s.id!==editingSceneId);
+  save();closeModal('modal-add-scene');renderSceneTree();
+}
+
+// ── Playtest Engine (branching) ──
+function initPlaytest(){
+  const rd=getRpgData();
+  if(!rd.scenes||!rd.scenes.length){
+    document.getElementById('ptNarr').innerHTML='<em>No scenes yet — go to the Scenes tab to build your story.</em>';
+    document.getElementById('ptChoices').innerHTML='';return;
+  }
+  if(!ptState){
+    const startScene=rd.scenes.find(s=>s.type==='start')||rd.scenes[0];
+    ptState={sceneId:startScene.id,hp:100,asc:20,totems:3,log:[]};
+  }
+  renderPlaytest();
+}
+function renderPlaytest(){
+  if(!ptState)return;
+  const rd=getRpgData();
+  updatePtStats();
+  const scene=rd.scenes.find(s=>s.id===ptState.sceneId);
+  if(!scene){
+    document.getElementById('ptNarr').innerHTML='<em>Scene not found. The story path may have a broken link.</em>';
+    document.getElementById('ptChoices').innerHTML=`<button class="rpg-pt-btn" onclick="ptRestart()">↺ Restart</button>`;
+    return;
+  }
+  document.getElementById('ptSceneLabel').textContent=`— ${scene.title.toUpperCase()} —`;
+  document.getElementById('ptNarr').innerHTML=scene.narr.replace(/\n/g,'<br>');
+  const choicesEl=document.getElementById('ptChoices');
+  if(scene.type==='end'||!scene.choices||!scene.choices.length){
+    choicesEl.innerHTML=`<div style="font-family:Cinzel,serif;font-size:11px;color:var(--text2);margin-bottom:8px;text-align:center;">${scene.type==='end'?'— END —':'— No choices —'}</div><button class="rpg-pt-btn" onclick="ptRestart()">↺ Play Again</button>`;
+  } else {
+    choicesEl.innerHTML=scene.choices.map((ch,i)=>`<button class="rpg-pt-btn" onclick="ptChoose(${i})">▸ ${escHtml(ch.text)}</button>`).join('');
+  }
+  renderPtLog();
+}
+function ptChoose(i){
+  const rd=getRpgData();const scene=rd.scenes.find(s=>s.id===ptState.sceneId);if(!scene)return;
+  const ch=scene.choices[i];if(!ch)return;
+  ptState.hp=Math.max(0,Math.min(100,ptState.hp+(ch.effect?.hp||0)));
+  ptState.asc=Math.max(0,Math.min(100,ptState.asc+(ch.effect?.asc||0)));
+  ptState.log.push({scene:scene.title,choice:ch.text,outcome:ch.outcome});
+  updatePtStats();
+  document.getElementById('ptSceneLabel').textContent=`— ${scene.title.toUpperCase()} —`;
+  document.getElementById('ptNarr').innerHTML=`<span style="color:var(--gold2);font-style:italic;">${escHtml(ch.outcome||'...')}</span>`;
+  if(ch.nextId){
+    document.getElementById('ptChoices').innerHTML=`<button class="rpg-pt-btn" onclick="ptGoto('${ch.nextId}')">▸ Continue →</button>`;
+  } else {
+    document.getElementById('ptChoices').innerHTML=`<div style="font-family:Cinzel,serif;font-size:11px;color:var(--text2);margin-bottom:8px;">— Dead end. No scene linked. —</div><button class="rpg-pt-btn" onclick="ptRestart()">↺ Restart</button>`;
+  }
+  renderPtLog();
+}
+function ptGoto(sceneId){ptState.sceneId=sceneId;renderPlaytest();}
+function ptRestart(){
+  const rd=getRpgData();
+  const startScene=rd.scenes.find(s=>s.type==='start')||rd.scenes[0];
+  ptState={sceneId:startScene?startScene.id:null,hp:100,asc:20,totems:3,log:[]};
+  renderPlaytest();
+}
+function updatePtStats(){
+  if(!ptState)return;
+  ['asc','hp'].forEach(k=>{
+    const el=document.getElementById('pt-'+k);const vel=document.getElementById('pt-'+k+'-v');
+    if(el)el.style.width=ptState[k]+'%';if(vel)vel.textContent=ptState[k];
+  });
+  const totEl=document.getElementById('pt-tot');const totVel=document.getElementById('pt-tot-v');
+  if(totEl)totEl.style.width=(ptState.totems/3*100)+'%';if(totVel)totVel.textContent=ptState.totems;
+}
+function renderPtLog(){
+  const log=document.getElementById('ptLog');if(!log)return;
+  if(!ptState||!ptState.log.length){log.innerHTML='';return;}
+  log.innerHTML=ptState.log.slice(-4).reverse().map(e=>`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:8px 12px;margin-bottom:6px;"><div style="font-family:'Cinzel',serif;font-size:10px;color:var(--text2);margin-bottom:3px;">${escHtml(e.scene)}</div><div style="font-size:12px;color:var(--text2);font-style:italic;">▸ ${escHtml(e.choice)}</div>${e.outcome?`<div style="font-size:13px;color:var(--text);margin-top:4px;">${escHtml(e.outcome)}</div>`:''}</div>`).join('');
+}
+
+load();
+loadTheme();
+initLock();
+initBoards();
+getActiveComic(); // migrate + init
+initRpg();
+renderCalendar();renderPersona();renderPeople();renderBook();
+if(!data.cardgame)data.cardgame={cards:[],games:[]};
+initCardGame();
+
+// ════════════════════════════════════════════════════════
+//  CARD GAME ENGINE
+// ════════════════════════════════════════════════════════
+
+// ── helpers ──
+function getCGData(){if(!data.cardgame)data.cardgame={cards:[],games:[]};return data.cardgame;}
+const CG_TYPE_COLORS={Creature:'#4a6fa5',Spell:'#9955cc',Resource:'#55aa77',Field:'#cc8844',Equipment:'#8899bb',Hero:'#c9a84c',Trap:'#cc5555',Support:'#5588cc'};
+function cgTypeColor(t){return CG_TYPE_COLORS[t]||'#555577';}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
+function deepCard(c){return{...c,attacks:(c.attacks||[]).map(a=>({...a})),_hp:c.hp,_sta:c.sta,_atk:c.atk,_def:c.def,_tapped:false,_attacks:0,_iid:uid()};}
+
+// ── sub-tab ──
+function cgTab(name){
+  ['builder','games','play'].forEach(n=>{
+    const el=document.getElementById('cg-view-'+n);
+    if(el)el.style.display=n===name?'block':'none';
+    const btn=document.getElementById('cg-tab-'+n);
+    if(btn){btn.className=n===name?'btn btn-gold':'btn';btn.style.fontSize='10px';btn.style.whiteSpace='nowrap';}
+  });
+  if(name==='builder'){populateCgFilters();renderCardGrid();}
+  if(name==='games'){renderGameList();populateCgGameSelect();}
+  if(name==='play'){renderPlaySelect();}
+}
+
+// ════ CARD BUILDER ════
+function populateCgFilters(){
+  const d=getCGData();
+  const gSel=document.getElementById('cgGameFilter');
+  if(!gSel)return;
+  const gv=gSel.value;
+  gSel.innerHTML='<option value="">All Games</option>';
+  d.games.forEach(g=>gSel.innerHTML+=`<option value="${g.id}">${escHtml(g.name)}</option>`);
+  gSel.value=gv;
+  const types=[...new Set(d.cards.map(c=>c.type).filter(Boolean))];
+  const tSel=document.getElementById('cgTypeFilter');
+  if(!tSel)return;
+  const tv=tSel.value;
+  tSel.innerHTML='<option value="">All Types</option>';
+  types.forEach(t=>tSel.innerHTML+=`<option value="${t}">${t}</option>`);
+  tSel.value=tv;
+}
+
+function populateCgGameSelect(){
+  const d=getCGData();
+  const gs=document.getElementById('cgCGameSel');
+  if(!gs)return;
+  gs.innerHTML='<option value="">No Game</option>';
+  d.games.forEach(g=>gs.innerHTML+=`<option value="${g.id}">${escHtml(g.name)}</option>`);
+}
+
+function renderCardGrid(){
+  const d=getCGData();
+  const gf=document.getElementById('cgGameFilter')?.value||'';
+  const tf=document.getElementById('cgTypeFilter')?.value||'';
+  let cards=d.cards;
+  if(gf)cards=cards.filter(c=>c.gameId===gf);
+  if(tf)cards=cards.filter(c=>c.type===tf);
+  const grid=document.getElementById('cgCardGrid');
+  if(!grid)return;
+  if(!cards.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--text2);font-style:italic;padding:20px;">No cards yet. Hit + New Card!</div>';
+    return;
+  }
+  grid.innerHTML=cards.map(c=>{
+    const col=cgTypeColor(c.type);
+    const game=d.games.find(g=>g.id===c.gameId);
+    return `<div class="cg-card-tile" style="border-color:${col};border-top:3px solid ${col};" onclick="openEditCard('${c.id}')">
+      <div style="font-size:18px;">${c.emoji||'🃏'}</div>
+      <div class="cg-card-name">${escHtml(c.name)}</div>
+      <div class="cg-card-type" style="color:${col};">${c.type||'?'}</div>
+      <div class="cg-card-cost">⚡${c.cost||0}</div>
+      ${c.hp?`<div style="font-size:8px;color:var(--text2);">❤${c.hp}`:''} ${c.atk?`⚔${c.atk}`:''} ${c.def?`🛡${c.def}`:''} ${c.hp?'</div>':''}
+      ${game?`<div style="font-size:8px;color:var(--text2);margin-top:2px;">${escHtml(game.name)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openAddCard(){
+  cgEditCardId=null;
+  document.getElementById('cgCardModalTitle').textContent='New Card';
+  document.getElementById('cgDeleteCardBtn').style.display='none';
+  ['cgCName','cgCEmoji','cgCDesc','cgCRules'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['cgCHp','cgCAtk','cgCDef','cgCSta','cgCCost','cgCMov'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0';});
+  const ct=document.getElementById('cgCType');if(ct)ct.value='Creature';
+  populateCgGameSelect();
+  document.getElementById('cgCGameSel').value='';
+  const al=document.getElementById('cgAttacksList');if(al){al.innerHTML='';al.dataset.attacks='[]';}
+  openModal('modal-card-edit');
+}
+
+function openEditCard(id){
+  cgEditCardId=id;
+  const c=getCGData().cards.find(x=>x.id===id);if(!c)return;
+  document.getElementById('cgCardModalTitle').textContent='Edit Card';
+  document.getElementById('cgDeleteCardBtn').style.display='inline-block';
+  document.getElementById('cgCName').value=c.name||'';
+  document.getElementById('cgCEmoji').value=c.emoji||'';
+  document.getElementById('cgCDesc').value=c.desc||'';
+  document.getElementById('cgCHp').value=c.hp||0;
+  document.getElementById('cgCAtk').value=c.atk||0;
+  document.getElementById('cgCDef').value=c.def||0;
+  document.getElementById('cgCSta').value=c.sta||0;
+  document.getElementById('cgCCost').value=c.cost||0;
+  document.getElementById('cgCMov').value=c.mov||0;
+  document.getElementById('cgCType').value=c.type||'Creature';
+  document.getElementById('cgCRules').value=(c.rules||[]).join(', ');
+  populateCgGameSelect();
+  document.getElementById('cgCGameSel').value=c.gameId||'';
+  renderAttacksList(c.attacks||[]);
+  openModal('modal-card-edit');
+}
+
+function renderAttacksList(attacks){
+  const al=document.getElementById('cgAttacksList');
+  if(!al)return;
+  al.dataset.attacks=JSON.stringify(attacks);
+  al.innerHTML=attacks.map((a,i)=>`
+    <div class="cg-attack-row">
+      <input type="text" value="${escHtml(a.name||'')}" placeholder="Attack name" style="flex:2;"
+        onchange="cgUpdateAtk(${i},'name',this.value)">
+      <input type="text" value="${escHtml(a.value||'')}" placeholder="-3" style="flex:0 0 52px;"
+        onchange="cgUpdateAtk(${i},'value',this.value)">
+      <select style="flex:1;font-size:11px;" onchange="cgUpdateAtk(${i},'target',this.value)">
+        <option value="hp"${a.target==='hp'?' selected':''}>HP</option>
+        <option value="atk"${a.target==='atk'?' selected':''}>ATK</option>
+        <option value="def"${a.target==='def'?' selected':''}>DEF</option>
+        <option value="sta"${a.target==='sta'?' selected':''}>STA</option>
+        <option value="player_hp"${a.target==='player_hp'?' selected':''}>Player HP</option>
+      </select>
+      <input type="text" value="${escHtml(a.desc||'')}" placeholder="Description" style="flex:2;"
+        onchange="cgUpdateAtk(${i},'desc',this.value)">
+      <button class="btn btn-danger" style="padding:3px 8px;font-size:10px;flex:0 0 auto;" onclick="cgRemoveAtk(${i})">✕</button>
+    </div>`).join('');
+}
+
+function cgUpdateAtk(i,field,val){
+  const al=document.getElementById('cgAttacksList');
+  const atks=JSON.parse(al.dataset.attacks||'[]');
+  if(atks[i])atks[i][field]=val;
+  al.dataset.attacks=JSON.stringify(atks);
+}
+function cgRemoveAtk(i){
+  const al=document.getElementById('cgAttacksList');
+  const atks=JSON.parse(al.dataset.attacks||'[]');
+  atks.splice(i,1);
+  renderAttacksList(atks);
+}
+function cgAddAttack(){
+  const al=document.getElementById('cgAttacksList');
+  const atks=JSON.parse(al.dataset.attacks||'[]');
+  atks.push({name:'Attack',value:'-1',target:'hp',desc:''});
+  renderAttacksList(atks);
+}
+
+function saveCard(){
+  const d=getCGData();
+  const name=document.getElementById('cgCName').value.trim();if(!name)return;
+  const atks=JSON.parse(document.getElementById('cgAttacksList').dataset.attacks||'[]');
+  const rulesRaw=document.getElementById('cgCRules').value;
+  const obj={
+    id:cgEditCardId||uid(),name,
+    emoji:document.getElementById('cgCEmoji').value||'🃏',
+    desc:document.getElementById('cgCDesc').value.trim(),
+    type:document.getElementById('cgCType').value,
+    gameId:document.getElementById('cgCGameSel').value,
+    hp:  parseInt(document.getElementById('cgCHp').value)||0,
+    atk: parseInt(document.getElementById('cgCAtk').value)||0,
+    def: parseInt(document.getElementById('cgCDef').value)||0,
+    sta: parseInt(document.getElementById('cgCSta').value)||0,
+    cost:parseInt(document.getElementById('cgCCost').value)||0,
+    mov: parseInt(document.getElementById('cgCMov').value)||0,
+    rules:rulesRaw?rulesRaw.split(',').map(x=>x.trim()).filter(Boolean):[],
+    attacks:atks
+  };
+  if(cgEditCardId){const i=d.cards.findIndex(x=>x.id===cgEditCardId);if(i>=0)d.cards[i]=obj;}
+  else d.cards.push(obj);
+  save();closeModal('modal-card-edit');renderCardGrid();populateCgFilters();
+}
+
+function deleteCard(){
+  if(!confirm('Delete this card?'))return;
+  getCGData().cards=getCGData().cards.filter(x=>x.id!==cgEditCardId);
+  save();closeModal('modal-card-edit');renderCardGrid();populateCgFilters();
+}
+
+// ════ GAME SETUP ════
+function renderGameList(){
+  const d=getCGData();
+  const list=document.getElementById('cgGameList');if(!list)return;
+  if(!d.games.length){list.innerHTML='<div class="empty-state">No games yet.</div>';return;}
+  list.innerHTML=d.games.map(g=>`
+    <div class="cg-game-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3>${escHtml(g.name)}</h3>
+        <button class="btn" style="font-size:10px;padding:3px 8px;" onclick="openEditGame('${g.id}')">Edit</button>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px;">
+        ${d.cards.filter(c=>c.gameId===g.id).length} cards &nbsp;·&nbsp;
+        HP:${g.startHp} &nbsp;·&nbsp; Hand:${g.handSize} &nbsp;·&nbsp; Res/turn:${g.resPerTurn} &nbsp;·&nbsp; Field max:${g.maxField}
+      </div>
+      ${g.desc?`<div style="font-size:13px;color:var(--text2);font-style:italic;margin-top:6px;">${escHtml(g.desc)}</div>`:''}
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">
+        ${(g.typeRules||[]).map(r=>`<span class="cg-attack-tag" style="font-size:10px;">${escHtml(r.type)}: ${escHtml(r.rule.replace(/_/g,' '))}</span>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function openAddGame(){
+  cgEditGameId=null;
+  document.getElementById('cgGameModalTitle').textContent='New Game Config';
+  document.getElementById('cgDeleteGameBtn').style.display='none';
+  document.getElementById('cgGName').value='';
+  document.getElementById('cgGStartHp').value='20';
+  document.getElementById('cgGHandSize').value='5';
+  document.getElementById('cgGResPerTurn').value='3';
+  document.getElementById('cgGMaxField').value='5';
+  document.getElementById('cgGDesc').value='';
+  const trl=document.getElementById('cgGTypeRulesList');if(trl){trl.innerHTML='';trl.dataset.rules='[]';}
+  openModal('modal-game-edit');
+}
+
+function openEditGame(id){
+  cgEditGameId=id;
+  const g=getCGData().games.find(x=>x.id===id);if(!g)return;
+  document.getElementById('cgGameModalTitle').textContent='Edit Game';
+  document.getElementById('cgDeleteGameBtn').style.display='inline-block';
+  document.getElementById('cgGName').value=g.name||'';
+  document.getElementById('cgGStartHp').value=g.startHp||20;
+  document.getElementById('cgGHandSize').value=g.handSize||5;
+  document.getElementById('cgGResPerTurn').value=g.resPerTurn||3;
+  document.getElementById('cgGMaxField').value=g.maxField||5;
+  document.getElementById('cgGDesc').value=g.desc||'';
+  renderTypeRules(g.typeRules||[]);
+  openModal('modal-game-edit');
+}
+
+function renderTypeRules(rules){
+  const el=document.getElementById('cgGTypeRulesList');if(!el)return;
+  el.dataset.rules=JSON.stringify(rules);
+  el.innerHTML=rules.map((r,i)=>`
+    <div class="cg-attack-row">
+      <input type="text" value="${escHtml(r.type||'')}" placeholder="Type name" style="flex:1;"
+        onchange="cgUpdateTypeRule(${i},'type',this.value)">
+      <select style="flex:2;font-size:11px;" onchange="cgUpdateTypeRule(${i},'rule',this.value)">
+        <option value="stays_until_destroyed"${r.rule==='stays_until_destroyed'?' selected':''}>Stays until destroyed</option>
+        <option value="leaves_after_use"${r.rule==='leaves_after_use'?' selected':''}>Leaves after use</option>
+        <option value="leaves_end_of_turn"${r.rule==='leaves_end_of_turn'?' selected':''}>Leaves end of turn</option>
+        <option value="cant_attack"${r.rule==='cant_attack'?' selected':''}>Cannot attack</option>
+        <option value="blocks_only"${r.rule==='blocks_only'?' selected':''}>Blocks only</option>
+        <option value="one_per_field"${r.rule==='one_per_field'?' selected':''}>One per field</option>
+        <option value="field_effect_slot"${r.rule==='field_effect_slot'?' selected':''}>Field effect slot</option>
+        <option value="immediate_effect"${r.rule==='immediate_effect'?' selected':''}>Immediate effect</option>
+        <option value="can_attack_twice"${r.rule==='can_attack_twice'?' selected':''}>Attack twice/turn</option>
+      </select>
+      <button class="btn btn-danger" style="padding:3px 7px;font-size:10px;flex:0 0 auto;" onclick="cgRemoveTypeRule(${i})">✕</button>
+    </div>`).join('');
+}
+
+function cgUpdateTypeRule(i,field,val){
+  const el=document.getElementById('cgGTypeRulesList');
+  const rules=JSON.parse(el.dataset.rules||'[]');
+  if(rules[i])rules[i][field]=val;
+  el.dataset.rules=JSON.stringify(rules);
+}
+function cgRemoveTypeRule(i){
+  const el=document.getElementById('cgGTypeRulesList');
+  const rules=JSON.parse(el.dataset.rules||'[]');
+  rules.splice(i,1);renderTypeRules(rules);
+}
+function cgAddTypeRule(){
+  const el=document.getElementById('cgGTypeRulesList');
+  const rules=JSON.parse(el.dataset.rules||'[]');
+  rules.push({type:'',rule:'stays_until_destroyed'});
+  renderTypeRules(rules);
+}
+
+function saveGame(){
+  const d=getCGData();
+  const name=document.getElementById('cgGName').value.trim();if(!name)return;
+  const typeRules=JSON.parse(document.getElementById('cgGTypeRulesList').dataset.rules||'[]');
+  const obj={
+    id:cgEditGameId||uid(),name,
+    startHp:  parseInt(document.getElementById('cgGStartHp').value)||20,
+    handSize: parseInt(document.getElementById('cgGHandSize').value)||5,
+    resPerTurn:parseInt(document.getElementById('cgGResPerTurn').value)||3,
+    maxField: parseInt(document.getElementById('cgGMaxField').value)||5,
+    desc:document.getElementById('cgGDesc').value.trim(),
+    typeRules
+  };
+  if(cgEditGameId){const i=d.games.findIndex(x=>x.id===cgEditGameId);if(i>=0)d.games[i]=obj;}
+  else d.games.push(obj);
+  save();closeModal('modal-game-edit');renderGameList();populateCgFilters();populateCgGameSelect();
+}
+
+function deleteGame(){
+  if(!confirm('Delete this game config?'))return;
+  getCGData().games=getCGData().games.filter(x=>x.id!==cgEditGameId);
+  save();closeModal('modal-game-edit');renderGameList();populateCgFilters();
+}
+
+// ════ PLAYTEST ════
+
+function renderPlaySelect(){
+  const d=getCGData();
+  const pa=document.getElementById('cgPlayArea');
+  const ps=document.getElementById('cgPlaySelect');
+  if(pa)pa.style.display='none';
+  if(ps)ps.style.display='block';
+  const btns=document.getElementById('cgPlayGameBtns');if(!btns)return;
+  if(!d.games.length){btns.innerHTML='<div class="empty-state">No game configs yet.</div>';return;}
+  btns.innerHTML=d.games.map(g=>{
+    const n=d.cards.filter(c=>c.gameId===g.id).length;
+    return `<div class="cg-game-card">
+      <h3>${escHtml(g.name)}</h3>
+      <div style="font-size:12px;color:var(--text2);">${n} cards &nbsp;·&nbsp; HP ${g.startHp} &nbsp;·&nbsp; Hand ${g.handSize}</div>
+      <button class="btn btn-gold" style="margin-top:8px;font-size:10px;width:100%;" onclick="cgStartGame('${g.id}')">▶ Playtest</button>
+    </div>`;
+  }).join('');
+}
+
+function cgStartGame(gameId){
+  const d=getCGData();
+  const game=d.games.find(x=>x.id===gameId);
+  if(!game){alert('Game not found.');return;}
+  const pool=d.cards.filter(c=>c.gameId===gameId);
+  if(pool.length<4){alert('Need at least 4 cards assigned to this game to playtest.');return;}
+
+  function buildDeck(){return shuffle(pool.map(c=>deepCard(c)));}
+
+  cgs={
+    game,turn:1,phase:'player',gameOver:false,
+    selectedCard:null,fieldSlot:null,log:[],
+    player:{hp:game.startHp,maxHp:game.startHp,res:game.resPerTurn,hand:[],field:[],grave:[],deck:buildDeck()},
+    opp:  {hp:game.startHp,maxHp:game.startHp,res:game.resPerTurn,hand:[],field:[],grave:[],deck:buildDeck()}
+  };
+
+  const hs=Math.min(game.handSize,7);
+  for(let i=0;i<hs;i++){cgDraw('player');cgDraw('opp');}
+
+  document.getElementById('cgPlaySelect').style.display='none';
+  document.getElementById('cgPlayArea').style.display='block';
+  cgLog('⚔ Game started: '+game.name+' — Your turn 1. ⚡'+game.resPerTurn+' resources.');
+  cgRender();
+}
+
+// ── draw ──
+function cgDraw(who){
+  const side=cgs[who];
+  if(!side.deck.length){cgLog((who==='player'?'You':'Opponent')+' ran out of cards!');return;}
+  if(who==='player'&&side.hand.length>=7){cgLog('Hand full!');return;}
+  side.hand.push(side.deck.pop());
+}
+
+// ── log ──
+function cgLog(msg){
+  if(!cgs)return;
+  cgs.log.push(msg);
+  const el=document.getElementById('cgBattleLog');
+  if(!el)return;
+  el.innerHTML=cgs.log.slice(-30).reverse().map(m=>`<div class="cg-log-entry">${escHtml(m)}</div>`).join('');
+}
+
+// ── get type rule ──
+function cgRule(type){
+  const r=(cgs.game.typeRules||[]).find(x=>x.type===type);
+  return r?r.rule:null;
+}
+
+// ── render ──
+function cgRender(){
+  if(!cgs)return;
+  const {player,opp}=cgs;
+
+  // HP
+  const ppct=Math.max(0,player.hp/player.maxHp*100);
+  const opct=Math.max(0,opp.hp/opp.maxHp*100);
+  document.getElementById('cgPlayerHpVal').textContent=player.hp;
+  document.getElementById('cgOppHpVal').textContent=opp.hp;
+  document.getElementById('cgPlayerHpBar').style.width=ppct+'%';
+  document.getElementById('cgOppHpBar').style.width=opct+'%';
+  document.getElementById('cgPlayerHpBar').style.background=ppct>50?'var(--green)':ppct>25?'var(--amber)':'var(--red)';
+  document.getElementById('cgOppHpBar').style.background=opct>50?'var(--red)':'var(--amber)';
+
+  // Resources
+  document.getElementById('cgPlayerRes').textContent=player.res;
+  document.getElementById('cgOppRes').textContent=opp.res;
+
+  // Player hand
+  document.getElementById('cgHandCount').textContent=player.hand.length;
+  document.getElementById('cgHandRow').innerHTML=player.hand.map((c,i)=>`
+    <div class="cg-play-card${cgs.selectedCard===c?' selected':''}"
+         style="border-color:${cgTypeColor(c.type)};" onclick="cgSelectHand(${i})">
+      <div style="font-size:15px;">${c.emoji||'🃏'}</div>
+      <div class="cpn">${escHtml(c.name)}</div>
+      <div class="cps">
+        ${c.hp?`<span>❤${c._hp}</span>`:''}
+        ${c.atk?`<span>⚔${c._atk}</span>`:''}
+        ${c.def?`<span>🛡${c._def}</span>`:''}
+      </div>
+      <div style="font-size:9px;color:${player.res>=c.cost?'var(--gold)':'var(--red)'};margin-top:2px;">⚡${c.cost}</div>
+    </div>`).join('');
+
+  // Player field
+  document.getElementById('cgPlayerField').innerHTML=player.field.length
+    ? player.field.map((c,i)=>`
+        <div class="cg-play-card${c._tapped?' tapped':''}${cgs.selectedCard===c?' selected':''}"
+             style="border-color:${cgTypeColor(c.type)};" onclick="cgSelectField(${i})">
+          <div style="font-size:13px;">${c.emoji||'🃏'}</div>
+          <div class="cpn">${escHtml(c.name)}</div>
+          <div class="cps">
+            ${c.hp?`<span>❤${c._hp}</span>`:''}
+            ${c.atk?`<span>⚔${c._atk}</span>`:''}
+            ${c.def?`<span>🛡${c._def}</span>`:''}
+            ${c.sta?`<span>💨${c._sta}</span>`:''}
+          </div>
+          ${c._tapped?'<div style="font-size:8px;color:var(--amber);">tapped</div>':''}
+        </div>`).join('')
+    : '<div style="color:var(--text2);font-size:11px;font-style:italic;padding:8px 0;">Empty field</div>';
+
+  // Opp field
+  document.getElementById('cgOppField').innerHTML=opp.field.length
+    ? opp.field.map((c,i)=>`
+        <div class="cg-opp-card" style="border-color:${cgTypeColor(c.type)};" onclick="cgTargetOpp(${i})">
+          <div style="font-size:13px;">${c.emoji||'🃏'}</div>
+          <div>${escHtml(c.name)}</div>
+          <div style="font-size:9px;color:var(--text2);">❤${c._hp} ⚔${c._atk} 🛡${c._def}</div>
+        </div>`).join('')
+    : '<div style="color:var(--text2);font-size:11px;font-style:italic;padding:4px 0;">Empty</div>';
+
+  // Opp hand (face down)
+  document.getElementById('cgOppHandCount').textContent=opp.hand.length;
+  document.getElementById('cgOppHandRow').innerHTML=opp.hand.map(()=>
+    '<div style="min-width:56px;height:76px;background:var(--bg4);border:2px solid var(--border2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;">🂠</div>'
+  ).join('');
+
+  // Counts
+  document.getElementById('cgPlayerGraveCount').textContent=player.grave.length;
+  document.getElementById('cgOppGraveCount').textContent=opp.grave.length;
+  document.getElementById('cgDeckCount').textContent=player.deck.length;
+
+  // Field slot
+  const fs=document.getElementById('cgFieldSlot');
+  if(fs){
+    if(cgs.fieldSlot){fs.textContent=cgs.fieldSlot.emoji+' '+cgs.fieldSlot.name;fs.classList.add('active');}
+    else{fs.textContent='Empty';fs.classList.remove('active');}
+  }
+
+  // End turn button opacity
+  const eb=document.querySelector('button[onclick="cgEndTurn()"]');
+  if(eb)eb.style.opacity=cgs.phase==='player'?'1':'0.4';
+}
+
+// ── select hand card: first tap selects, second tap plays ──
+function cgSelectHand(i){
+  if(cgs.phase!=='player'||cgs.gameOver)return;
+  const card=cgs.player.hand[i];
+  if(cgs.selectedCard===card){
+    // Second tap — try to play
+    cgPlayCard(i);
+  } else {
+    cgs.selectedCard=card;
+    cgLog('Selected '+card.name+' (⚡'+card.cost+') — tap again to play to field.');
+    cgRender();
+  }
+}
+
+// ── select field card: tap to select for attacking ──
+function cgSelectField(i){
+  if(cgs.phase!=='player'||cgs.gameOver)return;
+  const card=cgs.player.field[i];
+  if(cgs.selectedCard===card){
+    cgs.selectedCard=null;
+    cgLog('Deselected '+card.name+'.');
+  } else {
+    cgs.selectedCard=card;
+    cgLog('Selected '+card.name+' — tap an opponent card to attack, or tap "⚔ Direct" to attack player.');
+  }
+  cgRender();
+}
+
+// ── play card from hand to field ──
+function cgPlayCard(handIdx){
+  const card=cgs.player.hand[handIdx];
+  if(cgs.player.res<card.cost){
+    cgLog('Not enough resources! Need ⚡'+card.cost+', have ⚡'+cgs.player.res);
+    cgs.selectedCard=null;cgRender();return;
+  }
+  const rule=cgRule(card.type);
+  if(rule==='one_per_field'&&cgs.player.field.find(c=>c.type===card.type)){
+    cgLog('Only one '+card.type+' allowed on field!');cgs.selectedCard=null;cgRender();return;
+  }
+  if(cgs.player.field.length>=cgs.game.maxField&&rule!=='field_effect_slot'&&rule!=='immediate_effect'){
+    cgLog('Field full! (max '+cgs.game.maxField+')');cgs.selectedCard=null;cgRender();return;
+  }
+
+  cgs.player.res-=card.cost;
+  cgs.player.hand.splice(handIdx,1);
+  cgs.selectedCard=null;
+
+  if(rule==='field_effect_slot'){
+    cgs.fieldSlot=card;
+    cgLog(card.name+' → field effect slot.');
+  } else if(rule==='immediate_effect'){
+    cgApplyCardEffect(card,'player');
+    cgs.player.grave.push(card);
+    cgLog(card.name+' → immediate effect, sent to graveyard.');
+  } else {
+    cgs.player.field.push(card);
+    cgLog(card.name+' played to field. (⚡'+card.cost+' spent, '+cgs.player.res+' remaining)');
+    if(rule==='leaves_after_use'||rule==='leaves_end_of_turn')card._leaveFlag=rule;
+  }
+  cgCheckDead();cgWinCheck();cgRender();
+}
+
+// ── target an opponent field card to attack ──
+function cgTargetOpp(i){
+  if(cgs.phase!=='player'||cgs.gameOver)return;
+  const sel=cgs.selectedCard;
+  if(!sel){cgLog('Select one of your field cards first.');return;}
+
+  // Must be on your field
+  if(!cgs.player.field.includes(sel)){
+    cgLog('You must play '+sel.name+' to the field before attacking. (Tap it once to select, tap again to play)');
+    return;
+  }
+
+  const rule=cgRule(sel.type);
+  if(rule==='cant_attack'||rule==='blocks_only'){cgLog(sel.name+' cannot attack!');return;}
+  if(sel._tapped){cgLog(sel.name+' already attacked this turn.');return;}
+  const maxAtks=rule==='can_attack_twice'?2:1;
+  if(sel._attacks>=maxAtks){cgLog(sel.name+' has used all attacks this turn.');return;}
+
+  cgResolve(sel, cgs.opp.field[i], cgs.opp);
+  cgs.selectedCard=null;
+  cgCheckDead();cgWinCheck();cgRender();
+}
+
+// ── direct attack on opponent player ──
+function cgAttackPlayer(){
+  if(cgs.phase!=='player'||cgs.gameOver)return;
+  const sel=cgs.selectedCard;
+  if(!sel){cgLog('Select a field card first.');return;}
+  if(!cgs.player.field.includes(sel)){cgLog(sel.name+' is not on the field yet.');return;}
+  const rule=cgRule(sel.type);
+  if(rule==='cant_attack'||rule==='blocks_only'){cgLog(sel.name+' cannot attack!');return;}
+  if(sel._tapped){cgLog(sel.name+' already attacked this turn.');return;}
+  if(cgs.opp.field.length>0){cgLog('Opponent has '+cgs.opp.field.length+' card(s) on the field — clear them first.');return;}
+
+  const dmg=Math.max(0,sel._atk);
+  cgs.opp.hp-=dmg;
+  sel._attacks=(sel._attacks||0)+1;
+  sel._tapped=sel._attacks>=(cgRule(sel.type)==='can_attack_twice'?2:1);
+  cgLog('⚔ '+sel.name+' attacks opponent directly for '+dmg+'!');
+  cgs.selectedCard=null;
+  cgWinCheck();cgRender();
+}
+
+// ── resolve combat between two field cards ──
+function cgResolve(atk, def, defOwner){
+  const dmgTodef =Math.max(0, atk._atk - def._def);
+  const dmgToAtk =Math.max(0, def._atk - atk._def);
+  def._hp -=dmgTodef;
+  atk._hp -=dmgToAtk;
+  atk._attacks=(atk._attacks||0)+1;
+  atk._tapped=atk._attacks>=(cgRule(atk.type)==='can_attack_twice'?2:1);
+  cgLog('⚔ '+atk.name+' vs '+def.name+': '+atk.name+' deals '+dmgTodef+', takes '+dmgToAtk+' counter');
+
+  // Apply attacker's first special attack ability on top
+  const ab=(atk.attacks||[])[0];
+  if(ab){
+    const v=parseFloat(ab.value)||0;
+    if(v!==0){
+      const target_=ab.target;
+      if(target_==='hp'){def._hp+=v;cgLog('  Ability "'+ab.name+'": '+def.name+' HP '+(v>0?'+':'')+v);}
+      else if(target_==='atk'){def._atk+=v;cgLog('  Ability "'+ab.name+'": '+def.name+' ATK '+(v>0?'+':'')+v);}
+      else if(target_==='def'){def._def+=v;cgLog('  Ability "'+ab.name+'": '+def.name+' DEF '+(v>0?'+':'')+v);}
+      else if(target_==='sta'){def._sta+=v;cgLog('  Ability "'+ab.name+'": '+def.name+' STA '+(v>0?'+':'')+v);}
+      else if(target_==='player_hp'){defOwner.hp+=v;cgLog('  Ability "'+ab.name+'": opp HP '+(v>0?'+':'')+v);}
+    }
+  }
+}
+
+// ── apply immediate/spell effect ──
+function cgApplyCardEffect(card, who){
+  const enemy=who==='player'?cgs.opp:cgs.player;
+  (card.attacks||[]).forEach(a=>{
+    const v=parseFloat(a.value)||0;if(!v)return;
+    if(a.target==='player_hp'){
+      enemy.hp+=v;
+      cgLog('  '+card.name+' "'+a.name+'": enemy HP '+(v>0?'+':'')+v);
+    } else if(a.target==='hp'&&enemy.field.length){
+      const t=enemy.field[0|Math.random()*enemy.field.length];
+      t._hp+=v;
+      cgLog('  '+card.name+' "'+a.name+'": '+t.name+' HP '+(v>0?'+':'')+v);
+    }
+  });
+}
+
+// ── check for dead cards ──
+function cgCheckDead(){
+  [cgs.player, cgs.opp].forEach(side=>{
+    const dead=side.field.filter(c=>c._hp<=0||(c.sta>0&&c._sta<=0));
+    dead.forEach(c=>{cgLog('☠ '+c.name+' destroyed → graveyard');side.grave.push(c);});
+    side.field=side.field.filter(c=>!(c._hp<=0||(c.sta>0&&c._sta<=0)));
+  });
+}
+
+// ── win condition ──
+function cgWinCheck(){
+  if(cgs.gameOver)return;
+  if(cgs.opp.hp<=0){cgs.gameOver=true;cgLog('🏆 YOU WIN! Opponent HP reached 0.');toast('🏆 Victory!');}
+  if(cgs.player.hp<=0){cgs.gameOver=true;cgLog('💀 DEFEATED. Your HP reached 0.');toast('💀 Defeated...');}
+}
+
+// ── end turn ──
+function cgEndTurn(){
+  if(!cgs){cgLog('No game in progress.');return;}
+  if(cgs.gameOver){cgLog('Game over — resign to start a new game.');return;}
+  if(cgs.phase!=='player'){cgLog("Opponent is taking their turn...");return;}
+
+  // Player end-of-turn cleanup
+  cgEndOfTurnCleanup(cgs.player);
+
+  cgs.phase='opponent';
+  cgs.selectedCard=null;
+  cgLog('── Opponent\'s turn ──');
+  cgRender();
+
+  setTimeout(cgAiTurn, 500);
+}
+
+function cgEndOfTurnCleanup(side){
+  const toGrave=[];
+  side.field.forEach(c=>{
+    const r=cgRule(c.type)||c._leaveFlag;
+    if(r==='leaves_end_of_turn'){toGrave.push(c);cgLog(c.name+' leaves field (end of turn).');}
+  });
+  toGrave.forEach(c=>{
+    side.field=side.field.filter(x=>x!==c);
+    side.grave.push(c);
+  });
+  // Untap all
+  side.field.forEach(c=>{c._tapped=false;c._attacks=0;});
+}
+
+// ── AI turn ──
+function cgAiTurn(){
+  if(!cgs||cgs.gameOver)return;
+  const ai=cgs.opp, you=cgs.player, game=cgs.game;
+
+  // Refresh resources
+  ai.res=game.resPerTurn;
+  cgDraw('opp');
+
+  // Phase 1: Play affordable cards, prioritising highest ATK
+  const playable=[...ai.hand].sort((a,b)=>(b.atk||0)-(a.atk||0)||(a.cost||0)-(b.cost||0));
+  for(const c of playable){
+    if(ai.res<c.cost)continue;
+    const rule=cgRule(c.type);
+    if(rule==='one_per_field'&&ai.field.find(f=>f.type===c.type))continue;
+    if(ai.field.length>=game.maxField&&rule!=='field_effect_slot'&&rule!=='immediate_effect')continue;
+    ai.res-=c.cost;
+    ai.hand=ai.hand.filter(x=>x!==c);
+    if(rule==='field_effect_slot'){cgs.fieldSlot=c;cgLog('Opp plays '+c.name+' → field slot.');}
+    else if(rule==='immediate_effect'){cgApplyCardEffect(c,'opp');ai.grave.push(c);cgLog('Opp plays '+c.name+' (immediate effect).');}
+    else{ai.field.push(c);cgLog('Opp plays '+c.name+' to field.');}
+  }
+  cgCheckDead();cgWinCheck();
+  if(cgs.gameOver){cgRender();return;}
+
+  // Phase 2: Attack with all eligible cards
+  setTimeout(()=>{
+    if(!cgs||cgs.gameOver)return;
+    const attackers=ai.field.filter(c=>{
+      const r=cgRule(c.type);
+      return !c._tapped && r!=='cant_attack' && r!=='blocks_only';
+    });
+
+    for(const atk of attackers){
+      if(cgs.gameOver)break;
+      if(you.field.length>0){
+        // Attack weakest HP card
+        const target=[...you.field].sort((a,b)=>a._hp-b._hp)[0];
+        cgResolve(atk,target,you);
+        cgCheckDead();cgWinCheck();
+      } else {
+        // Direct attack
+        const dmg=Math.max(0,atk._atk);
+        you.hp-=dmg;
+        atk._tapped=true;
+        cgLog('Opp '+atk.name+' attacks you directly for '+dmg+'!');
+        cgWinCheck();
+      }
+    }
+
+    // Phase 3: Cleanup + return turn
+    cgEndOfTurnCleanup(ai);
+    cgs.phase='player';
+    cgs.turn++;
+    you.res=game.resPerTurn;
+    cgDraw('player');
+    cgLog('── Your turn '+cgs.turn+' · ⚡'+you.res+' resources ──');
+    cgRender();
+  }, 700);
+}
+
+// ── resign ──
+function cgResign(){
+  if(!cgs)return;
+  if(!confirm('Resign this game?'))return;
+  cgs=null;
+  document.getElementById('cgPlayArea').style.display='none';
+  document.getElementById('cgPlaySelect').style.display='block';
+  renderPlaySelect();
+}
+
+// ── draw button ──
+function cgDrawBtn(){
+  if(!cgs||cgs.phase!=='player'||cgs.gameOver)return;
+  cgDraw('player');cgRender();
+}
+
+// ── view graveyard ──
+function cgViewGrave(who){
+  if(!cgs)return;
+  const g=cgs[who].grave;
+  if(!g.length){toast('Graveyard is empty.');return;}
+  alert((who==='player'?'Your':'Opponent\'s')+' Graveyard:\n'+g.map(c=>(c.emoji||'🃏')+' '+c.name+' ('+c.type+')').join('\n'));
+}
+
+// ── field slot click ──
+function cgPlayFieldSlotClick(){
+  if(!cgs||cgs.phase!=='player'||!cgs.selectedCard)return;
+  const sel=cgs.selectedCard;
+  const hi=cgs.player.hand.indexOf(sel);
+  if(hi>=0)cgPlayCard(hi);
+}
+
+// ── init ──
+function initCardGame(){
+  if(!data.cardgame)data.cardgame={cards:[],games:[]};
+  populateCgGameSelect();
+  populateCgFilters();
+  renderCardGrid();
+}
+
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(r=>{console.log('Chronicle SW:',r.scope);r.addEventListener('updatefound',()=>{const nw=r.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){if(confirm('Chronicle has been updated. Reload now?'))window.location.reload();}});});}).catch(e=>console.warn('SW:',e));});}
+</script>
+</body>
+</html>
