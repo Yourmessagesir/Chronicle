@@ -2565,7 +2565,8 @@ if('serviceWorker' in navigator){
         const nw=r.installing;
         nw.addEventListener('statechange',()=>{
           if(nw.state==='installed'&&navigator.serviceWorker.controller){
-            if(confirm('Forge has been updated. Reload?'))window.location.reload();
+            // Silently reload to apply updates — no prompt
+            window.location.reload();
           }
         });
       });
