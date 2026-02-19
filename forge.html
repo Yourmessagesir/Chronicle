@@ -1,0 +1,3538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0d0f">
+<link rel="manifest" href="forge_manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Forge — Card Game Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;--bg5:#2a2a3e;
+  --border:#2e2e42;--border2:#3d3d58;
+  --gold:#c9a84c;--gold2:#e8c97a;
+  --text:#d4d4e8;--text2:#9090aa;--text3:#6060880;
+  --accent:#7b6cee;--accent2:#a99bff;
+  --red:#cc5555;--green:#55aa77;--amber:#cc8844;--blue:#4488cc;--purple:#9955cc;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9998;opacity:0.5;}
+
+/* ── HEADER ── */
+header{background:linear-gradient(180deg,#0d0d0f,var(--bg2));border-bottom:1px solid var(--border);padding:12px 14px 8px;position:sticky;top:0;z-index:100;}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;}
+header h1{font-family:'Cinzel',serif;font-size:19px;font-weight:700;color:var(--gold);letter-spacing:0.18em;text-shadow:0 0 30px rgba(201,168,76,0.4);}
+header p{font-size:10px;color:var(--text2);letter-spacing:0.05em;margin-top:1px;}
+
+/* ── TAB BAR ── */
+.tab-bar{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;position:sticky;top:57px;z-index:99;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tb{flex:0 0 auto;background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);padding:9px 12px 7px;font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap;}
+.tb svg{width:16px;height:16px;}
+.tb.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+/* ── SECTIONS ── */
+.sec{display:none;padding:14px 13px 100px;}
+.sec.active{display:block;}
+.sec-play{display:none;padding:0 0 0;}
+.sec-play.active{display:block;}
+
+/* ── BUTTONS ── */
+.btn{background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 13px;border-radius:3px;font-family:'Cinzel',serif;font-size:10.5px;letter-spacing:0.07em;cursor:pointer;transition:all 0.18s;}
+.btn:active{background:var(--bg4);border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,#7a5e1a,var(--gold));border-color:var(--gold2);color:#150f00;font-weight:700;}
+.btn-gold:active{filter:brightness(1.15);color:#150f00;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+.btn-sm{padding:3px 9px;font-size:9.5px;}
+.btn-xs{padding:2px 6px;font-size:8.5px;}
+.btn-accent{border-color:var(--accent);color:var(--accent2);}
+.btn-green{border-color:var(--green);color:var(--green);}
+
+/* ── INPUTS ── */
+input[type=text],input[type=number],input[type=password],textarea,select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 11px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:14px;width:100%;outline:none;transition:border-color 0.2s;}
+input:focus,textarea:focus,select:focus{border-color:var(--gold);}
+select option{background:var(--bg3);}
+textarea{resize:vertical;min-height:60px;}
+label{display:block;font-size:9.5px;letter-spacing:0.09em;color:var(--text2);font-family:'Cinzel',serif;text-transform:uppercase;margin-bottom:4px;}
+.field{margin-bottom:11px;}
+.row{display:flex;gap:8px;}.row>.field{flex:1;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+
+/* ── DIVIDER ── */
+.div{display:flex;align-items:center;gap:10px;margin:13px 0;color:var(--text2);font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;}
+.div::before,.div::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── MODAL ── */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;display:none;align-items:flex-end;justify-content:center;}
+.mo.open{display:flex;}
+.mb{background:var(--bg2);border:1px solid var(--border2);border-radius:8px 8px 0 0;width:100%;max-width:620px;max-height:93vh;overflow-y:auto;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0));}
+.mb h2{font-family:'Cinzel',serif;font-size:15px;color:var(--gold);letter-spacing:0.1em;margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid var(--border);}
+.ma{display:flex;gap:8px;margin-top:14px;justify-content:flex-end;flex-wrap:wrap;}
+
+/* ── CARD GRID ── */
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.ctile{background:var(--bg2);border:2px solid var(--border);border-radius:6px;padding:8px 5px 6px;cursor:pointer;transition:all 0.14s;position:relative;min-height:90px;display:flex;flex-direction:column;align-items:center;text-align:center;user-select:none;}
+.ctile:active{transform:scale(0.94);}
+.ctile .ci{font-size:20px;margin-bottom:2px;}
+.ctile .cn{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:0.04em;line-height:1.3;word-break:break-word;}
+.ctile .ct{font-size:7.5px;margin-top:2px;}
+.ctile .cc{position:absolute;top:3px;right:5px;font-family:'Cinzel',serif;font-size:9px;color:var(--gold);}
+.ctile .cs{font-size:7.5px;color:var(--text2);margin-top:3px;line-height:1.5;}
+.ctile .fusion-badge{position:absolute;top:3px;left:4px;font-size:8px;background:var(--purple);color:#fff;border-radius:2px;padding:0 3px;}
+
+/* ── GAME CARD ── */
+.gcrd{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:13px;margin-bottom:10px;position:relative;}
+.gcrd::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--gold),transparent);border-radius:4px 0 0 4px;}
+.gcrd h3{font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);margin-bottom:5px;}
+
+/* ── KEYWORD TAGS ── */
+.kw{display:inline-block;padding:1px 6px;border-radius:2px;font-size:9px;font-family:'Cinzel',serif;letter-spacing:0.05em;margin:1px;border:1px solid;}
+.kw-Flying{background:rgba(68,136,204,0.2);border-color:#4488cc;color:#88bbee;}
+.kw-Taunt{background:rgba(204,85,85,0.2);border-color:#cc5555;color:#ee9999;}
+.kw-Lifesteal{background:rgba(85,170,119,0.2);border-color:#55aa77;color:#88ccaa;}
+.kw-Poison{background:rgba(100,180,80,0.25);border-color:#64b450;color:#99dd77;}
+.kw-Regen{background:rgba(85,200,140,0.2);border-color:#55c88c;color:#77eeaa;}
+.kw-Haste{background:rgba(204,136,68,0.2);border-color:#cc8844;color:#eebb77;}
+.kw-Shield{background:rgba(136,153,187,0.25);border-color:#8899bb;color:#aabbdd;}
+.kw-Trample{background:rgba(180,100,60,0.2);border-color:#b4643c;color:#dd9966;}
+.kw-Piercing{background:rgba(200,170,60,0.2);border-color:#c8aa3c;color:#eecc77;}
+.kw-Burn{background:rgba(220,80,40,0.2);border-color:#dc5028;color:#ff8866;}
+.kw-Freeze{background:rgba(80,160,220,0.2);border-color:#50a0dc;color:#88ccff;}
+.kw-Silence{background:rgba(130,100,180,0.2);border-color:#8264b4;color:#bb99ff;}
+.kw-Stealth{background:rgba(80,80,120,0.2);border-color:#505078;color:#9999bb;}
+.kw-Charge{background:rgba(201,168,76,0.2);border-color:var(--gold);color:var(--gold2);}
+.kw-Deathtouch{background:rgba(160,40,100,0.2);border-color:#a02864;color:#dd77aa;}
+.kw-Defender{background:rgba(60,100,160,0.2);border-color:#3c64a0;color:#7799cc;}
+.kw-Indestructible{background:rgba(201,168,76,0.3);border-color:var(--gold2);color:#fff0a0;}
+.kw-Vigilance{background:rgba(100,160,100,0.2);border-color:#64a064;color:#88cc88;}
+.kw-Prowess{background:rgba(150,80,200,0.2);border-color:#9650c8;color:#cc88ff;}
+.kw-Cascade{background:rgba(200,100,200,0.2);border-color:#c864c8;color:#ff99ff;}
+.kw-Reborn{background:rgba(100,180,200,0.2);border-color:#64b4c8;color:#88ddff;}
+
+/* ── RULE TAG ── */
+.rtag{display:inline-block;background:rgba(123,108,238,0.12);border:1px solid rgba(123,108,238,0.28);color:var(--accent2);border-radius:3px;padding:1px 6px;font-size:9px;margin:2px;}
+
+/* ── PLAY TABLE ── */
+#playTable{background:var(--bg);}
+.pt-zone{padding:8px 13px 5px;}
+.pt-lbl{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:0.11em;color:var(--text2);text-transform:uppercase;margin-bottom:5px;}
+.hp-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.hp-lbl{font-family:'Cinzel',serif;font-size:9.5px;color:var(--text2);min-width:24px;}
+.hp-track{flex:1;height:9px;background:var(--bg4);border-radius:5px;overflow:hidden;border:1px solid var(--border);}
+.hp-fill{height:100%;border-radius:5px;transition:width 0.3s,background 0.3s;}
+.hp-val{font-family:'Cinzel',serif;font-size:11px;min-width:28px;text-align:right;}
+.res-lbl{font-family:'Cinzel',serif;font-size:10px;color:var(--gold);min-width:36px;}
+
+/* field / hand rows */
+.frow{display:flex;gap:5px;overflow-x:auto;padding:3px 0 6px;min-height:100px;align-items:flex-start;}
+.hrow{display:flex;gap:5px;overflow-x:auto;padding:3px 0 6px;min-height:110px;}
+.frow::-webkit-scrollbar,.hrow::-webkit-scrollbar{height:2px;}
+.frow::-webkit-scrollbar-thumb,.hrow::-webkit-scrollbar-thumb{background:var(--border2);}
+
+/* play card */
+.pc{background:var(--bg3);border:2px solid var(--border2);border-radius:6px;padding:5px 4px;min-width:72px;max-width:82px;cursor:pointer;transition:all 0.16s;position:relative;flex-shrink:0;text-align:center;user-select:none;}
+.pc:active{transform:scale(0.92);}
+.pc.sel{border-color:var(--gold);box-shadow:0 0 14px rgba(201,168,76,0.5);}
+.pc.tapped{opacity:0.48;filter:brightness(0.65);}
+.pc.frozen{border-color:#50a0dc;box-shadow:0 0 8px rgba(80,160,220,0.4);}
+.pc.poisoned{border-color:#64b450;}
+.pc.shielded{border-color:#8899bb;box-shadow:0 0 8px rgba(136,153,187,0.4);}
+.pc .pi{font-size:16px;margin-bottom:2px;display:block;}
+.pc .pn{font-family:'Cinzel',serif;font-size:7.5px;line-height:1.2;margin-bottom:2px;}
+.pc .ps{font-size:7px;color:var(--text2);display:flex;flex-wrap:wrap;justify-content:center;gap:2px;}
+.pc .ps span{background:var(--bg4);border-radius:2px;padding:1px 3px;}
+.pc .pc-cost{position:absolute;top:2px;right:3px;font-size:7.5px;color:var(--gold);font-family:'Cinzel',serif;}
+.pc .pc-counters{position:absolute;bottom:2px;left:3px;font-size:7px;color:var(--amber);}
+.pc .pc-kws{font-size:6.5px;color:var(--accent2);margin-top:1px;line-height:1.3;}
+.pc .pc-status{position:absolute;top:2px;left:3px;font-size:8px;}
+
+/* opp card */
+.oc{background:rgba(180,40,40,0.08);border:2px solid var(--border);border-radius:6px;padding:5px 4px;min-width:66px;max-width:76px;cursor:pointer;flex-shrink:0;text-align:center;transition:border-color 0.15s;}
+.oc:active{border-color:var(--red);}
+.oc .oi{font-size:14px;}
+.oc .on{font-family:'Cinzel',serif;font-size:7.5px;color:var(--text);line-height:1.2;}
+.oc .os{font-size:7.5px;color:var(--text2);}
+
+/* card-back */
+.cback{min-width:58px;height:84px;background:var(--bg4);border:2px solid var(--border2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+
+/* piles */
+.prow{display:flex;gap:7px;padding:5px 13px;}
+.pbox{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:7px 4px;text-align:center;font-family:'Cinzel',serif;font-size:8px;color:var(--text2);cursor:pointer;transition:border-color 0.2s;letter-spacing:0.04em;line-height:1.7;}
+.pbox:active{border-color:var(--gold);}
+
+/* field slot */
+.fslot{background:var(--bg3);border:1px dashed var(--border2);border-radius:4px;padding:5px 9px;font-family:'Cinzel',serif;font-size:9px;color:var(--text2);cursor:pointer;text-align:center;transition:all 0.2s;flex:1;}
+.fslot.active{border-style:solid;border-color:var(--accent);color:var(--accent2);}
+
+/* dividing line */
+.bline{border-top:2px solid var(--border2);margin:3px 13px;position:relative;}
+.bline::after{content:'⚔';position:absolute;left:50%;top:-10px;transform:translateX(-50%);background:var(--bg);padding:0 7px;font-size:14px;color:var(--border2);}
+
+/* battle log */
+.blog{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:7px;max-height:80px;overflow-y:auto;font-size:10.5px;color:var(--text2);}
+.blog::-webkit-scrollbar{width:2px;}
+.blog::-webkit-scrollbar-thumb{background:var(--border2);}
+.ll{padding:2px 0;border-bottom:1px solid var(--border);}
+.ll:last-child{border:none;}
+.ll.imp{color:var(--text);}
+.ll.good{color:var(--green);}
+.ll.bad{color:var(--red);}
+.ll.info{color:var(--accent2);}
+.ll.phase{color:var(--gold);font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:0.05em;}
+
+/* action bar */
+.abar{display:flex;gap:5px;padding:7px 13px;background:var(--bg2);border-top:1px solid var(--border);position:sticky;bottom:0;z-index:80;flex-wrap:wrap;}
+.abar .btn{flex:1;min-width:52px;font-size:9.5px;padding:8px 4px;text-align:center;}
+
+/* ability panel */
+.ab-panel{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:8px;margin:4px 13px;}
+.ab-panel-title{font-family:'Cinzel',serif;font-size:9px;color:var(--text2);letter-spacing:0.08em;margin-bottom:6px;}
+.ab-btn{display:inline-flex;align-items:center;gap:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:3px;padding:3px 8px;font-family:'Cinzel',serif;font-size:9px;color:var(--text);cursor:pointer;margin:2px;transition:all 0.15s;}
+.ab-btn:active{border-color:var(--accent);color:var(--accent2);}
+.ab-btn .ab-cost{color:var(--gold);font-size:8px;}
+.ab-btn .ab-val{color:var(--red);}
+
+/* phase indicator */
+.phase-bar{display:flex;gap:0;background:var(--bg4);border-bottom:1px solid var(--border);}
+.phase-pip{flex:1;padding:4px 2px;text-align:center;font-family:'Cinzel',serif;font-size:7.5px;color:var(--text2);letter-spacing:0.06em;border-right:1px solid var(--border);transition:all 0.2s;}
+.phase-pip:last-child{border:none;}
+.phase-pip.cur{background:rgba(201,168,76,0.15);color:var(--gold);}
+
+/* fusion zone */
+.fusion-zone{background:rgba(153,85,204,0.08);border:1px solid rgba(153,85,204,0.3);border-radius:4px;padding:10px;margin-bottom:10px;}
+.fusion-zone h4{font-family:'Cinzel',serif;font-size:11px;color:var(--purple);margin-bottom:8px;letter-spacing:0.08em;}
+
+/* counter badge */
+.cbadge{display:inline-block;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;padding:1px 6px;font-size:9px;font-family:'Cinzel',serif;margin:1px;}
+
+/* token */
+.token{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;border:2px solid var(--border2);background:var(--bg4);font-size:14px;cursor:pointer;transition:all 0.15s;flex-shrink:0;}
+.token:active{border-color:var(--gold);}
+
+/* toast */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);padding:7px 18px;border-radius:20px;font-family:'Cinzel',serif;font-size:11px;z-index:9000;transition:opacity 0.4s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center;}
+
+/* empty */
+.empty{text-align:center;padding:26px 16px;color:var(--text2);font-style:italic;font-size:14px;}
+
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ── GRID BATTLE ── */
+.grid-board { display: grid; gap: 2px; padding: 8px; background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; overflow: auto; }
+.grid-cell { width: 52px; height: 52px; background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: all 0.15s; font-size: 10px; }
+.grid-cell.player-row { border-color: rgba(85,170,119,0.35); background: rgba(85,170,119,0.06); }
+.grid-cell.opp-row { border-color: rgba(204,85,85,0.35); background: rgba(204,85,85,0.06); }
+.grid-cell.has-card { border-color: var(--gold); }
+.grid-cell.selected { background: rgba(201,168,76,0.25); border-color: var(--gold2); box-shadow: 0 0 8px rgba(201,168,76,0.4); }
+.grid-cell.reachable { background: rgba(85,170,119,0.18); border-color: var(--green); }
+.grid-cell.attackable { background: rgba(204,85,85,0.18); border-color: var(--red); }
+.grid-cell .gc-icon { font-size: 16px; line-height: 1; }
+.grid-cell .gc-name { font-size: 6.5px; font-family: 'Cinzel', serif; text-align: center; line-height: 1.2; color: var(--text2); max-width: 48px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.grid-cell .gc-stats { font-size: 6px; color: var(--text2); }
+.grid-cell .gc-hp-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--bg4); border-radius: 0 0 3px 3px; overflow: hidden; }
+.grid-cell .gc-hp-fill { height: 100%; background: var(--green); }
+.grid-cell.opp-card { border-color: rgba(204,85,85,0.6); }
+.grid-coords { font-family: 'Cinzel', serif; font-size: 8px; color: var(--text2); text-align: center; padding: 2px 0; }
+
+/* ── ARENA BOARD ── */
+.arena-wrap { display: flex; flex-direction: column; align-items: center; padding: 8px; }
+.arena-row { display: flex; gap: 4px; justify-content: center; }
+.arena-center { width: 140px; height: 140px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; display: flex; align-items: center; justify-content: center; margin: 4px; }
+.arena-slot { width: 52px; height: 68px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; font-size: 9px; padding: 2px; }
+.arena-slot.has-card { border-color: var(--gold); }
+.arena-slot.player-slot { border-color: rgba(85,170,119,0.4); }
+.arena-slot.opp-slot { border-color: rgba(204,85,85,0.4); }
+.arena-slot.selected { border-color: var(--gold2); box-shadow: 0 0 8px rgba(201,168,76,0.5); }
+.arena-slot .as-icon { font-size: 14px; }
+.arena-slot .as-name { font-family: 'Cinzel', serif; font-size: 6.5px; text-align: center; line-height: 1.2; }
+.arena-slot .as-stats { font-size: 6px; color: var(--text2); }
+.arena-side { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+
+/* ── RESOURCE TYPES ── */
+.res-pip { display: inline-flex; align-items: center; gap: 3px; background: var(--bg4); border: 1px solid var(--border2); border-radius: 10px; padding: 2px 8px; font-family: 'Cinzel', serif; font-size: 9px; cursor: pointer; margin: 2px; transition: all 0.15s; }
+.res-pip:active { border-color: var(--gold); }
+.res-pool { display: flex; flex-wrap: wrap; gap: 3px; padding: 6px 0; }
+.res-cost-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.res-cost-item { display: flex; align-items: center; gap: 4px; background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; padding: 4px 8px; font-size: 12px; }
+.res-cost-item label { margin: 0; font-size: 9px; color: var(--text2); }
+.res-cost-item input { width: 40px; padding: 2px 5px; font-size: 12px; }
+
+/* ── CARD ZONES ── */
+.zone-panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; padding: 8px; margin-bottom: 7px; }
+.zone-label { font-family: 'Cinzel', serif; font-size: 8.5px; color: var(--text2); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+.zone-label span { color: var(--gold); font-size: 10px; }
+.zone-single-slot { width: 72px; min-height: 90px; background: var(--bg3); border: 1px dashed var(--border2); border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.18s; font-size: 9px; color: var(--text2); text-align: center; padding: 4px; }
+.zone-single-slot.filled { border-style: solid; border-color: var(--accent); }
+.zone-single-slot:active { border-color: var(--gold); }
+
+/* ── PLAYTEST MODE SELECT ── */
+.mode-card { background: var(--bg2); border: 2px solid var(--border); border-radius: 6px; padding: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.18s; }
+.mode-card:active { border-color: var(--gold); background: var(--bg3); }
+.mode-card h3 { font-family: 'Cinzel', serif; font-size: 14px; color: var(--gold2); margin-bottom: 5px; }
+.mode-card p { font-size: 12px; color: var(--text2); line-height: 1.6; }
+.mode-card .mode-icon { font-size: 28px; margin-bottom: 6px; }
+
+/* ── LANE BATTLE ── */
+.lane-board { display: grid; grid-template-rows: auto auto auto; gap: 6px; padding: 8px; }
+.lane { display: grid; grid-template-columns: 80px 1fr 1fr 1fr 80px; gap: 4px; align-items: center; }
+.lane-label { font-family: 'Cinzel', serif; font-size: 8px; color: var(--text2); text-align: center; writing-mode: horizontal-tb; }
+.lane-slot { min-height: 80px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; padding: 3px; transition: all 0.15s; }
+.lane-slot.has-card { border-color: var(--gold); }
+.lane-slot.player-lane { border-color: rgba(85,170,119,0.3); }
+.lane-slot.opp-lane { border-color: rgba(204,85,85,0.3); }
+.lane-slot.selected { border-color: var(--gold2); box-shadow: 0 0 8px rgba(201,168,76,0.4); }
+
+
+/* Grid/Arena/Lanes modes */
+#gridTable,#arenaTable,#lanesTable{background:var(--bg);display:none;padding-bottom:120px;}
+.grid-container{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding:8px;}
+.arena-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:10px;}
+.lanes-cols{display:flex;gap:7px;padding:10px;}
+.gg-hp-row{display:flex;align-items:center;gap:6px;padding:5px 12px;}
+.gg-hp-row .hp-lbl{font-size:9px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="hdr-row">
+    <div><h1>FORGE</h1><p id="hSub">Card Game Laboratory</p></div>
+    <button class="btn btn-sm" onclick="openModal('mo-backup')">⚔ Backup</button>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <button class="tb active" id="tb-cards" onclick="showTab('cards')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/><circle cx="7" cy="15" r="1.5" fill="currentColor"/></svg>Cards
+  </button>
+  <button class="tb" id="tb-fusion" onclick="showTab('fusion')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="12" r="4"/><circle cx="15" cy="12" r="4"/><path d="M12 8v8"/></svg>Fusion
+  </button>
+  <button class="tb" id="tb-games" onclick="showTab('games')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>Games
+  </button>
+  <button class="tb" id="tb-play" onclick="showTab('play')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5,3 19,12 5,21"/></svg>Play
+  </button>
+  <button class="tb" id="tb-grid" onclick="showTab('grid')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Grid
+  </button>
+  <button class="tb" id="tb-arena" onclick="showTab('arena')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4"/></svg>Arena
+  </button>
+  <button class="tb" id="tb-lanes" onclick="showTab('lanes')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="2" x2="12" y2="22"/><line x1="6" y1="2" x2="6" y2="22"/><line x1="18" y1="2" x2="18" y2="22"/></svg>Lanes
+  </button>
+  <button class="tb" id="tb-guide" onclick="showTab('guide')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>Guide
+  </button>
+</div>
+
+<!-- ═══════ CARDS TAB ═══════ -->
+<section class="sec active" id="sec-cards">
+  <div style="display:flex;gap:7px;margin-bottom:11px;flex-wrap:wrap;">
+    <button class="btn btn-gold" style="flex:1;" onclick="openAddCard()">+ New Card</button>
+    <select id="fGame" onchange="renderCards()" style="flex:1;font-size:11px;padding:6px 7px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:3px;"></select>
+    <select id="fType" onchange="renderCards()" style="flex:1;font-size:11px;padding:6px 7px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:3px;"><option value="">All Types</option></select>
+  </div>
+  <div class="cgrid" id="cardGrid"></div>
+</section>
+
+<!-- ═══════ FUSION TAB ═══════ -->
+<section class="sec" id="sec-fusion">
+  <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.7;">Create <strong style="color:var(--gold2);">Fusion cards</strong> by combining two or more base cards. Define the recipe here — during playtesting, sacrifice matching cards from your field to summon the fusion.</p>
+  <button class="btn btn-gold" style="width:100%;margin-bottom:14px;" onclick="openAddFusion()">+ New Fusion Card</button>
+  <div id="fusionList"></div>
+</section>
+
+<!-- ═══════ GAMES TAB ═══════ -->
+<section class="sec" id="sec-games">
+  <button class="btn btn-gold" style="width:100%;margin-bottom:14px;" onclick="openAddGame()">+ New Game Config</button>
+  <div id="gameList"></div>
+</section>
+
+<!-- ═══════ PLAY TAB ═══════ -->
+<section class="sec-play" id="sec-play">
+  <!-- select screen -->
+  <div id="playSelect" style="padding:14px 13px 90px;">
+    <p style="color:var(--text2);font-style:italic;margin-bottom:14px;font-size:14px;">Select a game to playtest:</p>
+    <div id="playGameList"></div>
+  </div>
+  <!-- table -->
+  <div id="playTable" style="display:none;">
+    <!-- phase bar -->
+    <div class="phase-bar" id="phaseBar">
+      <div class="phase-pip" id="ph-draw">DRAW</div>
+      <div class="phase-pip" id="ph-main">MAIN</div>
+      <div class="phase-pip" id="ph-combat">COMBAT</div>
+      <div class="phase-pip" id="ph-end">END</div>
+    </div>
+
+    <!-- OPP ZONE -->
+    <div class="pt-zone" style="background:#110e18;border-bottom:1px solid var(--border);">
+      <div class="pt-lbl" style="color:var(--red);">⚔ Opponent &nbsp;<span id="oppTurnLbl" style="color:var(--amber);font-size:7.5px;display:none;">THEIR TURN</span></div>
+      <div class="hp-row">
+        <span class="hp-lbl">HP</span>
+        <div class="hp-track"><div id="oppHpBar" class="hp-fill" style="background:var(--red);width:100%;"></div></div>
+        <span class="hp-val" id="oppHpVal">20</span>
+        <span class="res-lbl">⚡<span id="oppRes">0</span></span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+        <div class="pt-lbl" style="margin:0;">Field</div>
+        <div class="pt-lbl" style="margin:0;margin-left:auto;">Hand <span id="oppHandCnt" style="color:var(--text2);">(0)</span></div>
+      </div>
+      <div class="hrow" id="oppHandRow"></div>
+      <div class="frow" id="oppFieldRow"></div>
+    </div>
+
+    <!-- FIELD EFFECTS + TOKENS -->
+    <div style="padding:5px 13px;display:flex;gap:7px;align-items:center;flex-wrap:wrap;">
+      <div class="pt-lbl" style="margin:0;min-width:34px;">🌐</div>
+      <div class="fslot" id="fSlotEl" onclick="fieldSlotClick()">Empty field effect</div>
+      <div id="tokenRow" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+    </div>
+
+    <div class="bline"></div>
+
+    <!-- PLAYER ZONE -->
+    <div class="pt-zone">
+      <div class="pt-lbl" style="color:var(--green);">🛡 You &nbsp;<span id="playerTurnLbl" style="color:var(--green);font-size:7.5px;">YOUR TURN</span></div>
+      <div class="hp-row">
+        <span class="hp-lbl">HP</span>
+        <div class="hp-track"><div id="playerHpBar" class="hp-fill" style="background:var(--green);width:100%;"></div></div>
+        <span class="hp-val" id="playerHpVal">20</span>
+        <span class="res-lbl">⚡<span id="playerRes">0</span></span>
+      </div>
+      <div class="pt-lbl" style="margin-top:4px;">Your Field</div>
+      <div class="frow" id="playerFieldRow"></div>
+      <div class="pt-lbl" style="margin-top:4px;">
+        Hand (<span id="handCnt">0</span>/7)
+        <button class="btn btn-sm" style="margin-left:7px;padding:2px 7px;font-size:8.5px;" onclick="doDrawCard()">Draw</button>
+        <button class="btn btn-sm btn-accent" style="margin-left:4px;padding:2px 7px;font-size:8.5px;" onclick="openFusionPlay()">🔀 Fuse</button>
+      </div>
+      <div class="hrow" id="handRow"></div>
+    </div>
+
+
+    <!-- EXTRA ZONES (shown when enabled in game config) -->
+    <div id="extraZones" style="display:none;padding:0 13px 6px;">
+      <div style="display:flex;gap:7px;flex-wrap:wrap;">
+        <div id="zone-assistant" style="display:none;">
+          <div class="zone-label">🤝 <span>Assistant</span></div>
+          <div id="assistantSlot" class="zone-single-slot" onclick="clickZoneSlot('assistant')">
+            <div style="font-size:18px;">+</div>
+            <div style="font-size:8px;margin-top:3px;">Empty</div>
+          </div>
+        </div>
+        <div id="zone-construct" style="display:none;">
+          <div class="zone-label">⚙ <span>Construct</span></div>
+          <div class="frow" id="constructZone" style="min-height:70px;"></div>
+        </div>
+        <div id="zone-collector" style="display:none;">
+          <div class="zone-label">📦 <span>Collector</span> <span id="collectorCount" style="color:var(--text2);">(0)</span></div>
+          <div style="font-family:Cinzel,serif;font-size:10px;color:var(--text2);cursor:pointer;" onclick="viewCollector()">View Pile</div>
+        </div>
+        <div id="zone-sanctuary" style="display:none;">
+          <div class="zone-label">🏛 <span>Sanctuary</span></div>
+          <div id="sanctuarySlot" class="zone-single-slot" onclick="clickZoneSlot('sanctuary')">
+            <div style="font-size:18px;">+</div>
+            <div style="font-size:8px;margin-top:3px;">Protected</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- RESOURCE POOL (multi-resource) -->
+    <div id="multiResPanel" style="display:none;padding:4px 13px 2px;">
+      <div class="pt-lbl">Resources</div>
+      <div class="res-pool" id="playerResPool"></div>
+    </div>
+
+    <!-- PILES -->
+    <div class="prow">
+      <div class="pbox" onclick="viewGrave('player')">⚰<br>Your Grave<br><b id="playerGraveCnt">0</b></div>
+      <div class="pbox">📚<br>Deck<br><b id="deckCnt">0</b></div>
+      <div class="pbox" onclick="viewGrave('opp')">⚰<br>Opp Grave<br><b id="oppGraveCnt">0</b></div>
+      <div class="pbox" onclick="viewExile()">🌀<br>Exile<br><b id="exileCnt">0</b></div>
+    </div>
+
+    <!-- ABILITY PANEL -->
+    <div class="ab-panel" id="abilityPanel" style="display:none;">
+      <div class="ab-panel-title">⚡ ABILITIES — <span id="abilityCardName"></span></div>
+      <div id="abilityBtns"></div>
+    </div>
+
+    <!-- BATTLE LOG -->
+    <div style="padding:5px 13px;">
+      <div class="pt-lbl">Battle Log</div>
+      <div class="blog" id="blog"></div>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div class="abar">
+      <button class="btn btn-gold" onclick="advancePhase()" id="phaseBtn">NEXT PHASE ▶</button>
+      <button class="btn" style="border-color:var(--red);color:var(--red);" onclick="attackDirect()">⚔ Direct</button>
+      <button class="btn btn-accent" onclick="openFusionPlay()">🔀 Fuse</button>
+      <button class="btn btn-danger" onclick="resignGame()">Resign</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ GUIDE TAB ═══════ -->
+
+<!-- ═══════ GRID BATTLE TAB ═══════ -->
+<section class="sec-play" id="sec-grid">
+  <div id="gridSelect" style="padding:14px 13px 90px;">
+    <p style="color:var(--text2);font-style:italic;margin-bottom:14px;font-size:14px;">Grid Battle — 6×6 tactical board. Cards use MOV to move each turn, ATK to fight adjacent enemies.</p>
+    <div id="gridGameList"></div>
+  </div>
+  <div id="gridTable" style="display:none;">
+    <div class="phase-bar" id="gridPhaseBar">
+      <div class="phase-pip" id="gph-deploy" >DEPLOY</div>
+      <div class="phase-pip" id="gph-move">MOVE</div>
+      <div class="phase-pip" id="gph-attack">ATTACK</div>
+      <div class="phase-pip" id="gph-end">END</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 13px;background:var(--bg2);border-bottom:1px solid var(--border);">
+      <div class="hp-row" style="margin:0;flex:1;gap:6px;">
+        <span style="font-family:Cinzel,serif;font-size:9px;color:var(--green);">YOU ❤</span>
+        <div class="hp-track" style="flex:1;"><div id="gPlayerHpBar" class="hp-fill" style="background:var(--green);width:100%;"></div></div>
+        <span id="gPlayerHpVal" style="font-family:Cinzel,serif;font-size:11px;min-width:24px;">20</span>
+      </div>
+      <div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold);margin:0 10px;">⚡<span id="gPlayerRes">0</span></div>
+      <div class="hp-row" style="margin:0;flex:1;gap:6px;">
+        <span id="gOppHpVal" style="font-family:Cinzel,serif;font-size:11px;min-width:24px;text-align:right;">20</span>
+        <div class="hp-track" style="flex:1;"><div id="gOppHpBar" class="hp-fill" style="background:var(--red);width:100%;"></div></div>
+        <span style="font-family:Cinzel,serif;font-size:9px;color:var(--red);">❤ OPP</span>
+      </div>
+    </div>
+    <div style="padding:6px 13px 4px;font-family:Cinzel,serif;font-size:9px;color:var(--text2);" id="gridStatusLine">Select a card to deploy or move.</div>
+    <div style="overflow-x:auto;padding:6px 13px;">
+      <div class="grid-coords" id="gridCoords" style="display:grid;"></div>
+      <div class="grid-board" id="gridBoard" style="grid-template-columns:repeat(6,52px);grid-template-rows:repeat(6,52px);width:fit-content;"></div>
+    </div>
+    <div style="padding:6px 13px;">
+      <div class="pt-lbl">Your Hand — tap card to deploy to your front row</div>
+      <div class="hrow" id="gridHandRow"></div>
+    </div>
+    <div style="padding:5px 13px;"><div class="pt-lbl">Battle Log</div><div class="blog" id="gridLog"></div></div>
+    <div class="abar">
+      <button class="btn btn-gold" onclick="gridNextPhase()" id="gridPhaseBtn">NEXT PHASE ▶</button>
+      <button class="btn btn-danger" onclick="resignGrid()">Resign</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ ARENA TAB ═══════ -->
+<section class="sec-play" id="sec-arena">
+  <div id="arenaSelect" style="padding:14px 13px 90px;">
+    <p style="color:var(--text2);font-style:italic;margin-bottom:14px;font-size:14px;">Arena Mode — cards placed around the edges of a central square. Choose your slot layout.</p>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="btn btn-sm" id="arenaLayout2btn" onclick="setArenaLayout(2)" style="flex:1;">2 slots per side</button>
+      <button class="btn btn-sm" id="arenaLayout3btn" onclick="setArenaLayout(3)" style="flex:1;">2/3 slots (top/bottom=3)</button>
+    </div>
+    <div id="arenaGameList"></div>
+  </div>
+  <div id="arenaTable" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 13px;background:var(--bg2);border-bottom:1px solid var(--border);">
+      <span style="font-family:Cinzel,serif;font-size:10px;color:var(--green);">❤ <span id="aPlayerHpVal">20</span></span>
+      <span style="font-family:Cinzel,serif;font-size:9px;color:var(--text2);" id="arenaPhaseLabel">Your Turn</span>
+      <span style="font-family:Cinzel,serif;font-size:10px;color:var(--red);"><span id="aOppHpVal">20</span> ❤</span>
+    </div>
+    <div style="font-family:Cinzel,serif;font-size:8.5px;color:var(--text2);text-align:center;padding:4px;" id="arenaStatus"></div>
+    <div class="arena-wrap" id="arenaBoard"></div>
+    <div style="padding:5px 13px;"><div class="pt-lbl">Your Hand</div><div class="hrow" id="arenaHandRow"></div></div>
+    <div style="padding:5px 13px;"><div class="pt-lbl">Battle Log</div><div class="blog" id="arenaLog"></div></div>
+    <div class="abar">
+      <button class="btn btn-gold" onclick="arenaEndTurn()">END TURN ▶</button>
+      <button class="btn btn-danger" onclick="resignArena()">Resign</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ LANE BATTLE TAB ═══════ -->
+<section class="sec-play" id="sec-lanes">
+  <div id="lanesSelect" style="padding:14px 13px 90px;">
+    <p style="color:var(--text2);font-style:italic;margin-bottom:14px;font-size:14px;">Lane Battle — 3 lanes, each card fights the card directly opposite. Win 2 lanes to win.</p>
+    <div id="lanesGameList"></div>
+  </div>
+  <div id="lanesTable" style="display:none;">
+    <div style="display:flex;justify-content:space-between;padding:7px 13px;background:var(--bg2);border-bottom:1px solid var(--border);font-family:Cinzel,serif;font-size:10px;">
+      <span style="color:var(--green);">❤ <span id="lPlayerHp">20</span></span>
+      <span style="color:var(--text2);" id="lanesPhaseLabel">Your Turn</span>
+      <span style="color:var(--red);"><span id="lOppHp">20</span> ❤</span>
+    </div>
+    <div style="font-family:Cinzel,serif;font-size:8.5px;color:var(--text2);text-align:center;padding:3px;" id="lanesStatus"></div>
+    <div id="laneScores" style="display:flex;gap:6px;padding:5px 13px;"></div>
+    <div class="lane-board" id="lanesBoard"></div>
+    <div style="padding:5px 13px;"><div class="pt-lbl">Your Hand</div><div class="hrow" id="lanesHandRow"></div></div>
+    <div style="padding:5px 13px;"><div class="pt-lbl">Battle Log</div><div class="blog" id="lanesLog"></div></div>
+    <div class="abar">
+      <button class="btn btn-gold" onclick="lanesEndTurn()">END TURN ▶</button>
+      <button class="btn btn-danger" onclick="resignLanes()">Resign</button>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="sec-guide">
+  <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold);margin-bottom:12px;letter-spacing:0.1em;">FORGE GUIDE</div>
+  <div style="line-height:1.9;font-size:14px;color:var(--text);">
+    <p style="margin-bottom:10px;"><b style="color:var(--gold2);">Turn Phases:</b> Each turn has 4 phases — Draw (auto), Main (play cards, use abilities), Combat (attack), End (cleanup). Tap NEXT PHASE ▶ to advance.</p>
+    <p style="margin-bottom:10px;"><b style="color:var(--gold2);">Playing Cards:</b> Tap a hand card to select (gold border), tap again to play. Cost shown in gold — need enough ⚡ resources.</p>
+    <p style="margin-bottom:10px;"><b style="color:var(--gold2);">Abilities:</b> When you tap a field card, its abilities appear in the Abilities panel below the field. Tap any ability button to use it.</p>
+    <p style="margin-bottom:10px;"><b style="color:var(--gold2);">Combat:</b> In Combat phase, tap your field card, then tap an opponent's field card to attack. ATK − DEF = damage (min 0). Counter-damage flows back.</p>
+    <p style="margin-bottom:10px;"><b style="color:var(--gold2);">Keywords work automatically:</b> Lifestealing heals you, Trample deals overflow damage to player, Deathtouch kills regardless of HP, Poison adds counters each attack, Freeze prevents attacks, Shield absorbs first hit, Regen heals at end of turn, Reborn returns with 1 HP once.</p>
+    <p style="margin-bottom:10px;"><b style="color:var(--gold2);">Fusion:</b> In the Fusion tab, create fusion recipes (e.g. Dragon + Fire = Elder Dragon). During play tap 🔀 Fuse, pick the recipe and the matching field cards are sacrificed to summon the fusion.</p>
+    <p style="margin-bottom:10px;"><b style="color:var(--gold2);">Exile:</b> Some effects send cards to exile (removed from game). View them in the exile pile box.</p>
+  </div>
+  <div class="div">Keywords</div>
+  <div style="font-size:13px;line-height:2;color:var(--text2);">
+    <span class="kw kw-Flying">Flying</span> Can only be blocked by other Flying cards<br>
+    <span class="kw kw-Taunt">Taunt</span> Opponent must attack this card first<br>
+    <span class="kw kw-Lifesteal">Lifesteal</span> Damage dealt heals your HP<br>
+    <span class="kw kw-Poison">Poison</span> Adds poison counter on hit; counters drain HP each turn<br>
+    <span class="kw kw-Regen">Regen</span> Restores 1 HP per turn (up to base max)<br>
+    <span class="kw kw-Haste">Haste</span> Can attack the turn it is played<br>
+    <span class="kw kw-Shield">Shield</span> Negates the first instance of damage<br>
+    <span class="kw kw-Trample">Trample</span> Excess damage carries through to player HP<br>
+    <span class="kw kw-Piercing">Piercing</span> Ignores DEF when calculating damage<br>
+    <span class="kw kw-Burn">Burn</span> Deals 1 damage to attacker at start of your turn<br>
+    <span class="kw kw-Freeze">Freeze</span> Frozen card cannot attack for 1 turn<br>
+    <span class="kw kw-Silence">Silence</span> Silenced card cannot use abilities<br>
+    <span class="kw kw-Stealth">Stealth</span> Cannot be targeted by abilities until it attacks<br>
+    <span class="kw kw-Charge">Charge</span> Can attack the turn it is played (same as Haste)<br>
+    <span class="kw kw-Deathtouch">Deathtouch</span> Any damage dealt is lethal<br>
+    <span class="kw kw-Defender">Defender</span> Cannot attack, but DEF is doubled<br>
+    <span class="kw kw-Indestructible">Indestructible</span> Cannot be destroyed by damage<br>
+    <span class="kw kw-Vigilance">Vigilance</span> Does not tap when attacking<br>
+    <span class="kw kw-Prowess">Prowess</span> Gets +1 ATK each time you play a non-creature card<br>
+    <span class="kw kw-Cascade">Cascade</span> When played, draw and play the top card for free<br>
+    <span class="kw kw-Reborn">Reborn</span> Returns from graveyard once with 1 HP<br>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     MODALS
+═══════════════════════════════════ -->
+<!-- BACKUP -->
+<div class="mo" id="mo-backup"><div class="mb">
+  <h2>⚔ Backup & Restore</h2>
+  <div class="div">Export</div>
+  <div class="field"><label>Encryption password (optional)</label>
+    <div style="position:relative;">
+      <input type="password" id="expPw" placeholder="Leave blank for plain JSON" oninput="chkStr()">
+      <button onclick="togPw('expPw',this)" style="position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:9px;font-family:'Cinzel',serif;">SHOW</button>
+    </div>
+  </div>
+  <div id="strDiv" style="font-size:10px;min-height:14px;margin-top:-6px;margin-bottom:10px;"></div>
+  <button class="btn btn-gold" style="width:100%;" onclick="doExport()">↓ Download Backup</button>
+  <div class="div">Import</div>
+  <div class="field"><label>Backup file (.json)</label><input type="file" id="impFile" accept=".json" style="padding:5px;color:var(--text);"></div>
+  <div class="field"><label>Password (if encrypted)</label><input type="password" id="impPw" placeholder="Leave blank if unencrypted"></div>
+  <button class="btn btn-gold" style="width:100%;" onclick="doImport()">↑ Import</button>
+  <div id="impSt" style="margin-top:7px;font-size:11px;text-align:center;min-height:16px;font-family:'Cinzel',serif;"></div>
+  <div class="div">Danger</div>
+  <button class="btn btn-danger" style="width:100%;" onclick="clearAll()">✕ Clear All Data</button>
+  <div class="ma"><button class="btn" onclick="closeModal('mo-backup')">Close</button></div>
+</div></div>
+
+<!-- CARD EDITOR -->
+<div class="mo" id="mo-card"><div class="mb">
+  <h2 id="cardMT">New Card</h2>
+  <div class="row">
+    <div class="field"><label>Name</label><input type="text" id="cN" placeholder="Fire Drake"></div>
+    <div class="field" style="flex:0 0 80px;"><label>Icon</label><input type="text" id="cE" placeholder="🐉" maxlength="2" style="text-align:center;font-size:22px;"></div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label>Type</label>
+      <select id="cTy" onchange="toggleCustomType()">
+        <option>Creature</option><option>Spell</option><option>Resource</option>
+        <option>Field</option><option>Equipment</option><option>Hero</option>
+        <option>Trap</option><option>Support</option><option>Token</option><option>Custom</option>
+      </select>
+    </div>
+    <div class="field" id="customTypeField" style="display:none;"><label>Custom Type Name</label><input type="text" id="cCT" placeholder="e.g. Dragon"></div>
+  </div>
+  <div class="field"><label>Game</label><select id="cG"><option value="">— No Game —</option></select></div>
+  <div class="grid3">
+    <div class="field"><label>❤ HP</label><input type="number" id="cHp" value="0" min="0"></div>
+    <div class="field"><label>⚔ ATK</label><input type="number" id="cAt" value="0" min="0"></div>
+    <div class="field"><label>🛡 DEF</label><input type="number" id="cDf" value="0" min="0"></div>
+    <div class="field"><label>💨 STA</label><input type="number" id="cSt" value="0" min="0"></div>
+    <div class="field"><label>⚡ Cost</label><input type="number" id="cCo" value="0" min="0"></div>
+    <div class="field"><label>👟 MOV</label><input type="number" id="cMv" value="0" min="0"></div>
+  </div>
+  <div class="field"><label>Level / Tier (1-10, used for tribute)</label><input type="number" id="cLv" value="1" min="1" max="10"></div>
+  <div class="field">
+    <label>Keywords (select multiple)</label>
+    <div id="kwSelector" style="display:flex;flex-wrap:wrap;gap:4px;padding:6px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;max-height:100px;overflow-y:auto;"></div>
+  </div>
+  <div class="field"><label>Description / Flavour</label><textarea id="cDs" placeholder="Card text, flavour..."></textarea></div>
+  <div class="field"><label>Rule Tags (comma separated)</label><input type="text" id="cRu" placeholder="flying, haste..."></div>
+  <div class="div">Attacks &amp; Abilities</div>
+
+  <div class="div" id="cardResCostDiv" style="display:none;">Resource Costs</div>
+  <div id="cardResCosts" style="display:none;"></div>
+  <div id="atkList" data-atks="[]"></div>
+  <button class="btn" style="width:100%;margin-top:5px;font-size:10px;" onclick="addAtk()">+ Add Attack / Ability</button>
+  <div class="ma">
+    <button class="btn btn-danger" id="delCardBtn" onclick="delCard()" style="display:none;">Delete</button>
+    <button class="btn" onclick="closeModal('mo-card')">Cancel</button>
+    <button class="btn btn-gold" onclick="saveCard()">Save Card</button>
+  </div>
+</div></div>
+
+<!-- FUSION EDITOR -->
+<div class="mo" id="mo-fusion"><div class="mb">
+  <h2 id="fusionMT">New Fusion Card</h2>
+  <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6;">Define the recipe (which base cards to sacrifice) and the result card that is summoned in their place.</p>
+  <div class="div">Recipe — Ingredients</div>
+  <div id="recipeList" style="margin-bottom:8px;"></div>
+  <button class="btn" style="width:100%;font-size:10px;margin-bottom:14px;" onclick="addRecipeCard()">+ Add Ingredient Card</button>
+  <div class="div">Result — Fusion Card Stats</div>
+  <div class="row">
+    <div class="field"><label>Fusion Name</label><input type="text" id="fN" placeholder="Elder Dragon"></div>
+    <div class="field" style="flex:0 0 80px;"><label>Icon</label><input type="text" id="fE" placeholder="🐲" maxlength="2" style="text-align:center;font-size:22px;"></div>
+  </div>
+  <div class="field"><label>Game</label><select id="fG"><option value="">— No Game —</option></select></div>
+  <div class="grid3">
+    <div class="field"><label>❤ HP</label><input type="number" id="fHp" value="0" min="0"></div>
+    <div class="field"><label>⚔ ATK</label><input type="number" id="fAt" value="0" min="0"></div>
+    <div class="field"><label>🛡 DEF</label><input type="number" id="fDf" value="0" min="0"></div>
+    <div class="field"><label>💨 STA</label><input type="number" id="fSt" value="0" min="0"></div>
+    <div class="field"><label>⚡ Cost</label><input type="number" id="fCo" value="0" min="0"></div>
+    <div class="field"><label>Level</label><input type="number" id="fLv" value="5" min="1" max="10"></div>
+  </div>
+  <div class="field">
+    <label>Keywords</label>
+    <div id="fkwSelector" style="display:flex;flex-wrap:wrap;gap:4px;padding:6px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;max-height:80px;overflow-y:auto;"></div>
+  </div>
+  <div class="field"><label>Description</label><textarea id="fDs" placeholder="Effect description..."></textarea></div>
+  <div id="fusAtkList" data-atks="[]"></div>
+  <button class="btn" style="width:100%;margin-top:5px;font-size:10px;" onclick="addFusAtk()">+ Add Ability to Fusion</button>
+  <div class="ma">
+    <button class="btn btn-danger" id="delFusBtn" onclick="delFusion()" style="display:none;">Delete</button>
+    <button class="btn" onclick="closeModal('mo-fusion')">Cancel</button>
+    <button class="btn btn-gold" onclick="saveFusion()">Save Fusion</button>
+  </div>
+</div></div>
+
+<!-- GAME EDITOR -->
+<div class="mo" id="mo-game"><div class="mb">
+  <h2 id="gameMT">New Game Config</h2>
+  <div class="field"><label>Game Name</label><input type="text" id="gN" placeholder="Dragon Wars"></div>
+  <div class="div">Player Settings</div>
+  <div class="grid2">
+    <div class="field"><label>Start HP</label><input type="number" id="gHp" value="20" min="1"></div>
+    <div class="field"><label>Opening Hand Size</label><input type="number" id="gHand" value="5" min="1" max="7"></div>
+    <div class="field"><label>Resources / Turn</label><input type="number" id="gRes" value="3" min="1"></div>
+    <div class="field"><label>Max Field Cards</label><input type="number" id="gFld" value="5" min="1" max="12"></div>
+    <div class="field"><label>Draw Per Turn</label><input type="number" id="gDraw" value="1" min="0" max="5"></div>
+    <div class="field"><label>Max Hand Size</label><input type="number" id="gMaxH" value="7" min="1" max="12"></div>
+  </div>
+  <div class="div">Rules</div>
+  <div id="ruleToggles" style="display:flex;flex-direction:column;gap:8px;"></div>
+  <div class="div">Win Conditions</div>
+  <div id="winConditions" style="display:flex;flex-direction:column;gap:6px;"></div>
+  <div class="div">Card Type Rules</div>
+  <p style="font-size:11px;color:var(--text2);margin-bottom:9px;">Override default behaviour per card type.</p>
+  <div id="typeRuleList" data-rules="[]"></div>
+  <button class="btn" style="width:100%;margin-top:5px;font-size:10px;" onclick="addTypeRule()">+ Add Type Rule</button>
+
+  <div class="div">Resource Types (up to 5)</div>
+  <p style="font-size:11px;color:var(--text2);margin-bottom:9px;">Name each resource type. Leave blank to use only the default generic resource. Cards can have costs per type.</p>
+  <div id="resTypeBuilder" style="display:flex;flex-direction:column;gap:7px;"></div>
+  <div class="div">Card Zones (toggleable)</div>
+  <p style="font-size:11px;color:var(--text2);margin-bottom:9px;">Enable additional zones beyond the main field.</p>
+  <div style="display:flex;flex-direction:column;gap:8px;" id="zoneToggles">
+    <label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);cursor:pointer;"><input type="checkbox" id="zt-assistant" style="width:auto;"> Assistant Zone — 1 support card slot per player</label>
+    <label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);cursor:pointer;"><input type="checkbox" id="zt-collector" style="width:auto;"> Collector Zone — accumulation area (e.g. score pile)</label>
+    <label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);cursor:pointer;"><input type="checkbox" id="zt-construct" style="width:auto;"> Construct Zone — fusions/crafted cards stage here before deploying</label>
+    <label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);cursor:pointer;"><input type="checkbox" id="zt-sanctuary" style="width:auto;"> Sanctuary — protected slot, cards here cannot be targeted</label>
+  </div>
+  <div class="div">Playtest Mode</div>
+  <div class="field">
+    <label>Default Mode for this game</label>
+    <select id="gPlayMode">
+      <option value="classic">Classic Battle</option>
+      <option value="grid">Grid Battle (6×6)</option>
+      <option value="arena">Arena (perimeter slots)</option>
+      <option value="lanes">Lane Battle (3 lanes)</option>
+    </select>
+  </div>
+  <div class="div">AI Opponent Strategy</div>
+  <div class="field">
+    <label>AI Playstyle</label>
+    <select id="gAI">
+      <option value="balanced">Balanced — plays a mix of cards and attacks</option>
+      <option value="aggro">Aggressive — rushes cards, always attacks</option>
+      <option value="control">Control — saves resources, plays high-value cards</option>
+      <option value="defensive">Defensive — prioritises high-DEF cards, rarely attacks direct</option>
+      <option value="combo">Combo — hoards hand, dumps everything at once</option>
+      <option value="random">Random — pure chaos</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>AI Target Priority</label>
+    <select id="gAITarget">
+      <option value="weakest">Weakest HP card first</option>
+      <option value="strongest">Strongest ATK card first (threat removal)</option>
+      <option value="random">Random target</option>
+      <option value="taunt">Taunt cards first, then random</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>AI Direct Attack Threshold (opp HP below this % → go face)</label>
+    <input type="number" id="gAIFace" value="30" min="0" max="100">
+  </div>
+  <div class="field"><label>Notes / Win Condition Description</label><textarea id="gDs" placeholder="Reduce opponent HP to 0..." style="min-height:50px;"></textarea></div>
+  <div class="ma">
+    <button class="btn btn-danger" id="delGameBtn" onclick="delGame()" style="display:none;">Delete</button>
+    <button class="btn" onclick="closeModal('mo-game')">Cancel</button>
+    <button class="btn btn-gold" onclick="saveGame()">Save Game</button>
+  </div>
+</div></div>
+
+<!-- FUSION PLAY MODAL -->
+<div class="mo" id="mo-fuseplay"><div class="mb">
+  <h2>🔀 Fusion Summon</h2>
+  <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">Select a fusion recipe. Matching cards will be sacrificed from your field.</p>
+  <div id="fusePlayList"></div>
+  <div class="ma"><button class="btn" onclick="closeModal('mo-fuseplay')">Cancel</button></div>
+</div></div>
+
+<!-- CARD DETAIL -->
+<div class="mo" id="mo-detail"><div class="mb">
+  <h2 id="detailT">Card Details</h2>
+  <div id="detailB" style="font-size:13px;line-height:1.8;"></div>
+  <div class="ma"><button class="btn" onclick="closeModal('mo-detail')">Close</button></div>
+</div></div>
+
+<script>
+'use strict';
+
+// ════════════════════════════
+//  CONSTANTS
+// ════════════════════════════
+const STORE = 'forge_v2';
+
+const ALL_KEYWORDS = [
+  'Flying','Taunt','Lifesteal','Poison','Regen','Haste','Shield','Trample',
+  'Piercing','Burn','Freeze','Silence','Stealth','Charge','Deathtouch',
+  'Defender','Indestructible','Vigilance','Prowess','Cascade','Reborn'
+];
+
+const TYPE_COLORS = {
+  Creature:'#4a6fa5',Spell:'#9955cc',Resource:'#55aa77',Field:'#cc8844',
+  Equipment:'#8899bb',Hero:'#c9a84c',Trap:'#cc5555',Support:'#5588cc',
+  Token:'#667799',Custom:'#778877'
+};
+function typeColor(t){ return TYPE_COLORS[t]||'#667799'; }
+
+const RULE_OPTS = [
+  ['stays_until_destroyed','Stays until destroyed'],['leaves_after_use','Leaves after use'],
+  ['leaves_end_of_turn','Leaves end of turn'],['cant_attack','Cannot attack'],
+  ['blocks_only','Blocks only (can\'t attack)'],['one_per_field','One of this type per field'],
+  ['field_effect_slot','Goes to field effect slot'],['immediate_effect','Immediate effect, then graveyard'],
+  ['can_attack_twice','May attack twice per turn'],['must_tribute','Requires tribute to play'],
+  ['indestructible','Cannot be destroyed'],['first_strike','Deals damage before defender'],
+];
+
+const RULE_TOGGLES = [
+  {key:'allowDirect',label:'Allow direct attacks on opponent HP',def:true},
+  {key:'mustClearField',label:'Must clear opponent\'s field before attacking direct',def:true},
+  {key:'tributeSystem',label:'Enable tribute system (high-level cards cost sacrifices)',def:false},
+  {key:'deckOut',label:'Win condition: opponent draws from empty deck loses',def:false},
+  {key:'maxOneAttack',label:'Each card can only attack once per turn (override can_attack_twice)',def:false},
+  {key:'spellSpeedRule',label:'Traps/Spells can be played during opponent\'s turn',def:false},
+  {key:'resourceCarryOver',label:'Unused resources carry over to next turn',def:false},
+  {key:'freeFirstCard',label:'First card played each turn costs 0',def:false},
+];
+
+// ════════════════════════════
+//  DATA
+// ════════════════════════════
+let D = { cards:[], games:[], fusions:[] };
+
+function persist(){ localStorage.setItem(STORE, JSON.stringify(D)); }
+function hydrate(){
+  try{
+    const r = localStorage.getItem(STORE);
+    if(r){ const p=JSON.parse(r); D={cards:[],games:[],fusions:[],...p}; }
+  }catch(e){ console.warn('Forge hydrate:',e); }
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function intEl(id){ return parseInt(document.getElementById(id)?.value)||0; }
+function togPw(id,btn){ const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='password'?'SHOW':'HIDE'; }
+
+// ════════════════════════════
+//  TABS
+// ════════════════════════════
+function showTab(name){
+  document.querySelectorAll('.sec,.sec-play').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('sec-'+name);
+  el.classList.add('active');
+  document.getElementById('tb-'+name).classList.add('active');
+  const subs={cards:'Card Builder',fusion:'Fusion & Crafting',games:'Game Setup',play:'Playtest Table',guide:'Guide & Keywords'};
+  document.getElementById('hSub').textContent=subs[name]||'';
+  if(name==='cards'){ refreshSelects(); renderCards(); }
+  if(name==='fusion'){ refreshSelects(); renderFusions(); }
+  if(name==='games')  renderGames();
+  if(name==='play')   renderPlaySelect();
+}
+
+// ════════════════════════════
+//  MODALS
+// ════════════════════════════
+function openModal(id){ document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o)closeModal(o.id); }));
+
+function toast(msg,type=''){
+  const el=document.createElement('div');
+  el.className='toast';el.textContent=msg;
+  const bg=type==='win'?'var(--green)':type==='loss'?'var(--red)':type==='info'?'var(--accent)':'rgba(40,40,60,0.95)';
+  Object.assign(el.style,{background:bg,color:'#fff',border:'1px solid rgba(255,255,255,0.15)'});
+  document.body.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),400);},2200);
+}
+
+// ════════════════════════════
+//  KEYWORD SELECTOR
+// ════════════════════════════
+function buildKwSelector(containerId, selectedArr){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  el.innerHTML=ALL_KEYWORDS.map(kw=>{
+    const on=selectedArr.includes(kw);
+    return `<span onclick="toggleKw(this,'${kw}','${containerId}')" class="kw kw-${kw}" style="cursor:pointer;opacity:${on?1:0.35};transition:opacity 0.15s;" data-kw="${kw}">${kw}</span>`;
+  }).join('');
+}
+function toggleKw(el,kw,containerId){
+  const on=parseFloat(el.style.opacity||1)>0.5;
+  el.style.opacity=on?0.35:1;
+}
+function getSelectedKws(containerId){
+  const el=document.getElementById(containerId);
+  if(!el)return[];
+  return [...el.querySelectorAll('[data-kw]')].filter(e=>parseFloat(e.style.opacity||1)>0.5).map(e=>e.dataset.kw);
+}
+
+// ════════════════════════════
+//  REFRESH SELECTS
+// ════════════════════════════
+function refreshSelects(){
+  ['cG','fG','fGame'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const v=el.value;
+    const isFilter=id==='fGame';
+    el.innerHTML=isFilter?'<option value="">All Games</option>':'<option value="">— No Game —</option>';
+    D.games.forEach(g=>el.innerHTML+=`<option value="${g.id}">${esc(g.name)}</option>`);
+    el.value=v;
+  });
+  const tf=document.getElementById('fType');
+  if(tf){
+    const v=tf.value;
+    const types=[...new Set(D.cards.map(c=>c.type).filter(Boolean))];
+    tf.innerHTML='<option value="">All Types</option>';
+    types.forEach(t=>tf.innerHTML+=`<option value="${t}">${t}</option>`);
+    tf.value=v;
+  }
+}
+
+// ════════════════════════════
+//  CARD BUILDER
+// ════════════════════════════
+let editCardId=null;
+
+function toggleCustomType(){
+  const v=document.getElementById('cTy').value;
+  document.getElementById('customTypeField').style.display=v==='Custom'?'block':'none';
+}
+
+function renderCards(){
+  const gf=document.getElementById('fGame')?.value||'';
+  const tf=document.getElementById('fType')?.value||'';
+  let cards=D.cards;
+  if(gf)cards=cards.filter(c=>c.gameId===gf);
+  if(tf)cards=cards.filter(c=>c.type===tf);
+  const grid=document.getElementById('cardGrid');
+  if(!cards.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1;">No cards yet — hit + New Card</div>';return;}
+  grid.innerHTML=cards.map(c=>{
+    const col=typeColor(c.type);
+    const game=D.games.find(g=>g.id===c.gameId);
+    const kws=(c.keywords||[]).slice(0,3).map(k=>`<span class="kw kw-${k}" style="font-size:7px;padding:0 3px;">${k}</span>`).join('');
+    const stats=[c.hp?`❤${c.hp}`:'',c.atk?`⚔${c.atk}`:'',c.def?`🛡${c.def}`:''].filter(Boolean).join(' ');
+    const isFusion=c._fusion;
+    return`<div class="ctile" style="border-color:${col};border-top:3px solid ${col};" onclick="openEditCard('${c.id}')">
+      ${isFusion?'<div class="fusion-badge">FUSION</div>':''}
+      <div class="cc">⚡${c.cost||0}</div>
+      <div class="ci">${c.emoji||'🃏'}</div>
+      <div class="cn">${esc(c.name)}</div>
+      <div class="ct" style="color:${col};">${c.type}${c.level>1?' Lv'+c.level:''}</div>
+      ${stats?`<div class="cs">${stats}</div>`:''}
+      ${kws?`<div style="margin-top:2px;">${kws}</div>`:''}
+      ${game?`<div style="font-size:7px;color:var(--text2);margin-top:2px;">${esc(game.name)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openAddCard(){
+  editCardId=null;
+  document.getElementById('cardMT').textContent='New Card';
+  document.getElementById('delCardBtn').style.display='none';
+  ['cN','cE','cDs','cRu','cCT'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['cHp','cAt','cDf','cSt','cCo','cMv'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0';});
+  document.getElementById('cLv').value='1';
+  document.getElementById('cTy').value='Creature';
+  document.getElementById('customTypeField').style.display='none';
+  refreshSelects();
+  document.getElementById('cG').value='';
+  buildKwSelector('kwSelector',[]);
+  setAtkList('atkList',[]);
+  openModal('mo-card');
+}
+
+function openEditCard(id){
+  editCardId=id;
+  const c=D.cards.find(x=>x.id===id);if(!c)return;
+  document.getElementById('cardMT').textContent='Edit: '+c.name;
+  document.getElementById('delCardBtn').style.display='inline-block';
+  document.getElementById('cN').value=c.name||'';
+  document.getElementById('cE').value=c.emoji||'';
+  document.getElementById('cDs').value=c.desc||'';
+  document.getElementById('cRu').value=(c.rules||[]).join(', ');
+  document.getElementById('cHp').value=c.hp||0;
+  document.getElementById('cAt').value=c.atk||0;
+  document.getElementById('cDf').value=c.def||0;
+  document.getElementById('cSt').value=c.sta||0;
+  document.getElementById('cCo').value=c.cost||0;
+  document.getElementById('cMv').value=c.mov||0;
+  document.getElementById('cLv').value=c.level||1;
+  const builtins=['Creature','Spell','Resource','Field','Equipment','Hero','Trap','Support','Token'];
+  if(builtins.includes(c.type)){document.getElementById('cTy').value=c.type;document.getElementById('customTypeField').style.display='none';}
+  else{document.getElementById('cTy').value='Custom';document.getElementById('cCT').value=c.type||'';document.getElementById('customTypeField').style.display='block';}
+  refreshSelects();
+  document.getElementById('cG').value=c.gameId||'';
+  buildKwSelector('kwSelector',c.keywords||[]);
+  setAtkList('atkList',c.attacks||[]);
+  openModal('mo-card');
+}
+
+function saveCard(){
+  const name=document.getElementById('cN').value.trim();if(!name){toast('Name required');return;}
+  const typeRaw=document.getElementById('cTy').value;
+  const type=typeRaw==='Custom'?(document.getElementById('cCT').value.trim()||'Custom'):typeRaw;
+  const obj={
+    id:editCardId||uid(),name,type,
+    emoji:document.getElementById('cE').value||'🃏',
+    desc:document.getElementById('cDs').value.trim(),
+    gameId:document.getElementById('cG').value,
+    hp:intEl('cHp'),atk:intEl('cAt'),def:intEl('cDf'),
+    sta:intEl('cSt'),cost:intEl('cCo'),mov:intEl('cMv'),
+    level:intEl('cLv')||1,
+    keywords:getSelectedKws('kwSelector'),
+    rules:document.getElementById('cRu').value.split(',').map(x=>x.trim()).filter(Boolean),
+    attacks:getAtkList('atkList')
+  };
+  if(editCardId){const i=D.cards.findIndex(x=>x.id===editCardId);if(i>=0)D.cards[i]=obj;}
+  else D.cards.push(obj);
+  persist();closeModal('mo-card');refreshSelects();renderCards();
+}
+
+function delCard(){
+  if(!confirm('Delete this card?'))return;
+  D.cards=D.cards.filter(x=>x.id!==editCardId);
+  persist();closeModal('mo-card');refreshSelects();renderCards();
+}
+
+// ── attack list ──
+function setAtkList(listId,atks){
+  const el=document.getElementById(listId);
+  el.dataset.atks=JSON.stringify(atks);
+  renderAtkList(listId);
+}
+function getAtkList(listId){
+  return JSON.parse(document.getElementById(listId).dataset.atks||'[]');
+}
+function renderAtkList(listId){
+  const el=document.getElementById(listId);
+  const atks=JSON.parse(el.dataset.atks||'[]');
+  el.innerHTML=atks.map((a,i)=>`
+    <div class="atk-row" style="display:flex;gap:5px;margin-bottom:7px;flex-wrap:wrap;">
+      <input type="text" value="${esc(a.name||'')}" placeholder="Ability name" style="flex:2;min-width:80px;font-size:12px;padding:5px 8px;" onchange="updAtk('${listId}',${i},'name',this.value)">
+      <input type="text" value="${esc(a.value||'')}" placeholder="-3" style="flex:0 0 46px;font-size:12px;padding:5px 6px;" onchange="updAtk('${listId}',${i},'value',this.value)">
+      <select style="flex:1;min-width:80px;font-size:11px;padding:5px 4px;" onchange="updAtk('${listId}',${i},'target',this.value)">
+        <option value="hp"${a.target==='hp'?' selected':''}>Target HP</option>
+        <option value="atk"${a.target==='atk'?' selected':''}>Target ATK</option>
+        <option value="def"${a.target==='def'?' selected':''}>Target DEF</option>
+        <option value="sta"${a.target==='sta'?' selected':''}>Target STA</option>
+        <option value="player_hp"${a.target==='player_hp'?' selected':''}>Opp Player HP</option>
+        <option value="self_hp"${a.target==='self_hp'?' selected':''}>Self HP (heal)</option>
+        <option value="draw"${a.target==='draw'?' selected':''}>Draw Cards</option>
+        <option value="res"${a.target==='res'?' selected':''}>Gain Resources</option>
+        <option value="counter"${a.target==='counter'?' selected':''}>Add Counter</option>
+        <option value="freeze"${a.target==='freeze'?' selected':''}>Freeze Target</option>
+        <option value="silence"${a.target==='silence'?' selected':''}>Silence Target</option>
+        <option value="exile"${a.target==='exile'?' selected':''}>Exile Target</option>
+        <option value="bounce"${a.target==='bounce'?' selected':''}>Return to Hand</option>
+        <option value="copy"${a.target==='copy'?' selected':''}>Copy a Card</option>
+      </select>
+      <input type="number" value="${a.cost||0}" min="0" placeholder="⚡" style="flex:0 0 42px;font-size:12px;padding:5px 4px;" title="Resource cost to activate" onchange="updAtk('${listId}',${i},'cost',parseInt(this.value)||0)">
+      <input type="text" value="${esc(a.desc||'')}" placeholder="Description" style="flex:2;min-width:80px;font-size:12px;padding:5px 8px;" onchange="updAtk('${listId}',${i},'desc',this.value)">
+      <button class="btn btn-danger btn-xs" style="flex:0 0 auto;padding:5px 7px;" onclick="rmAtk('${listId}',${i})">✕</button>
+    </div>`).join('');
+}
+function updAtk(listId,i,f,v){
+  const el=document.getElementById(listId);
+  const atks=JSON.parse(el.dataset.atks||'[]');
+  if(atks[i])atks[i][f]=v;
+  el.dataset.atks=JSON.stringify(atks);
+}
+function rmAtk(listId,i){
+  const el=document.getElementById(listId);
+  const atks=JSON.parse(el.dataset.atks||'[]');
+  atks.splice(i,1);el.dataset.atks=JSON.stringify(atks);renderAtkList(listId);
+}
+function addAtk(){ const el=document.getElementById('atkList');const atks=JSON.parse(el.dataset.atks||'[]');atks.push({name:'Attack',value:'-1',target:'hp',cost:0,desc:''});el.dataset.atks=JSON.stringify(atks);renderAtkList('atkList'); }
+function addFusAtk(){ const el=document.getElementById('fusAtkList');const atks=JSON.parse(el.dataset.atks||'[]');atks.push({name:'Attack',value:'-1',target:'hp',cost:0,desc:''});el.dataset.atks=JSON.stringify(atks);renderAtkList('fusAtkList'); }
+
+// ════════════════════════════
+//  FUSION BUILDER
+// ════════════════════════════
+let editFusionId=null;
+
+function renderFusions(){
+  const list=document.getElementById('fusionList');
+  if(!D.fusions.length){list.innerHTML='<div class="empty">No fusion recipes yet.</div>';return;}
+  list.innerHTML=D.fusions.map(f=>{
+    const ingredients=(f.recipe||[]).map(r=>{
+      const c=D.cards.find(x=>x.id===r);
+      return c?`<span class="rtag">${c.emoji||'🃏'} ${esc(c.name)}</span>`:`<span class="rtag" style="opacity:0.5;">Unknown</span>`;
+    }).join(' + ');
+    return`<div class="gcrd">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <h3>${f.emoji||'🔮'} ${esc(f.name)}</h3>
+        <button class="btn btn-sm" onclick="openEditFusion('${f.id}')">Edit</button>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Recipe: ${ingredients||'None'}</div>
+      <div style="font-size:12px;color:var(--text2);">Result: ❤${f.hp} ⚔${f.atk} 🛡${f.def} · ⚡${f.cost}</div>
+      ${f.desc?`<div style="font-size:12px;color:var(--text2);font-style:italic;margin-top:4px;">${esc(f.desc)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openAddFusion(){
+  editFusionId=null;
+  document.getElementById('fusionMT').textContent='New Fusion Card';
+  document.getElementById('delFusBtn').style.display='none';
+  ['fN','fE','fDs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fHp','fAt','fDf','fSt','fCo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0';});
+  document.getElementById('fLv').value='5';
+  refreshSelects();
+  document.getElementById('fG').value='';
+  document.getElementById('recipeList').innerHTML='';
+  document.getElementById('recipeList').dataset.recipe='[]';
+  buildKwSelector('fkwSelector',[]);
+  setAtkList('fusAtkList',[]);
+  openModal('mo-fusion');
+}
+
+function openEditFusion(id){
+  editFusionId=id;
+  const f=D.fusions.find(x=>x.id===id);if(!f)return;
+  document.getElementById('fusionMT').textContent='Edit: '+f.name;
+  document.getElementById('delFusBtn').style.display='inline-block';
+  document.getElementById('fN').value=f.name||'';
+  document.getElementById('fE').value=f.emoji||'';
+  document.getElementById('fDs').value=f.desc||'';
+  document.getElementById('fHp').value=f.hp||0;
+  document.getElementById('fAt').value=f.atk||0;
+  document.getElementById('fDf').value=f.def||0;
+  document.getElementById('fSt').value=f.sta||0;
+  document.getElementById('fCo').value=f.cost||0;
+  document.getElementById('fLv').value=f.level||5;
+  refreshSelects();
+  document.getElementById('fG').value=f.gameId||'';
+  buildKwSelector('fkwSelector',f.keywords||[]);
+  setAtkList('fusAtkList',f.attacks||[]);
+  // Recipe
+  document.getElementById('recipeList').dataset.recipe=JSON.stringify(f.recipe||[]);
+  renderRecipeList();
+  openModal('mo-fusion');
+}
+
+function addRecipeCard(){
+  // pick from cards
+  const gameId=document.getElementById('fG').value;
+  const pool=D.cards.filter(c=>!c._fusion&&(!gameId||c.gameId===gameId));
+  if(!pool.length){toast('No base cards available');return;}
+  const chosen=prompt('Enter card name (partial OK):\n'+pool.map(c=>c.emoji+' '+c.name).join('\n'));
+  if(!chosen)return;
+  const match=pool.find(c=>c.name.toLowerCase().includes(chosen.toLowerCase()));
+  if(!match){toast('Card not found');return;}
+  const el=document.getElementById('recipeList');
+  const recipe=JSON.parse(el.dataset.recipe||'[]');
+  recipe.push(match.id);
+  el.dataset.recipe=JSON.stringify(recipe);
+  renderRecipeList();
+}
+
+function renderRecipeList(){
+  const el=document.getElementById('recipeList');
+  const recipe=JSON.parse(el.dataset.recipe||'[]');
+  el.innerHTML=recipe.map((cardId,i)=>{
+    const c=D.cards.find(x=>x.id===cardId);
+    return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;background:var(--bg3);border-radius:3px;padding:6px 10px;">
+      <span style="font-size:16px;">${c?c.emoji||'🃏':'?'}</span>
+      <span style="flex:1;font-size:13px;">${c?esc(c.name):'Unknown card'}</span>
+      <button class="btn btn-danger btn-xs" onclick="rmRecipeCard(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function rmRecipeCard(i){
+  const el=document.getElementById('recipeList');
+  const r=JSON.parse(el.dataset.recipe||'[]');r.splice(i,1);
+  el.dataset.recipe=JSON.stringify(r);renderRecipeList();
+}
+
+function saveFusion(){
+  const name=document.getElementById('fN').value.trim();if(!name){toast('Name required');return;}
+  const recipe=JSON.parse(document.getElementById('recipeList').dataset.recipe||'[]');
+  if(recipe.length<2){toast('Recipe needs at least 2 cards');return;}
+  const obj={
+    id:editFusionId||uid(),name,
+    emoji:document.getElementById('fE').value||'🔮',
+    desc:document.getElementById('fDs').value.trim(),
+    gameId:document.getElementById('fG').value,
+    hp:intEl('fHp'),atk:intEl('fAt'),def:intEl('fDf'),
+    sta:intEl('fSt'),cost:intEl('fCo'),level:intEl('fLv')||5,
+    keywords:getSelectedKws('fkwSelector'),
+    attacks:getAtkList('fusAtkList'),
+    recipe
+  };
+  if(editFusionId){const i=D.fusions.findIndex(x=>x.id===editFusionId);if(i>=0)D.fusions[i]=obj;}
+  else D.fusions.push(obj);
+  persist();closeModal('mo-fusion');renderFusions();
+}
+
+function delFusion(){
+  if(!confirm('Delete this fusion?'))return;
+  D.fusions=D.fusions.filter(x=>x.id!==editFusionId);
+  persist();closeModal('mo-fusion');renderFusions();
+}
+
+// ════════════════════════════
+//  GAME SETUP
+// ════════════════════════════
+let editGameId=null;
+
+function buildRuleToggles(gameObj){
+  const el=document.getElementById('ruleToggles');
+  el.innerHTML=RULE_TOGGLES.map(rt=>{
+    const on=gameObj?(gameObj[rt.key]??rt.def):rt.def;
+    return`<label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);cursor:pointer;">
+      <input type="checkbox" id="rt-${rt.key}" ${on?'checked':''} style="width:auto;">
+      ${rt.label}
+    </label>`;
+  }).join('');
+}
+function buildWinConditions(gameObj){
+  const el=document.getElementById('winConditions');
+  const opts=[
+    {key:'winHp',label:'Reduce opponent HP to 0',def:true},
+    {key:'winDeckOut',label:'Opponent draws from empty deck',def:false},
+    {key:'winObjective',label:'Control objective card on field for 3 turns',def:false},
+  ];
+  el.innerHTML=opts.map(o=>{
+    const on=gameObj?(gameObj[o.key]??o.def):o.def;
+    return`<label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);cursor:pointer;">
+      <input type="checkbox" id="wc-${o.key}" ${on?'checked':''} style="width:auto;">
+      ${o.label}
+    </label>`;
+  }).join('');
+}
+function getRuleToggleValues(){
+  const out={};RULE_TOGGLES.forEach(rt=>{const el=document.getElementById('rt-'+rt.key);if(el)out[rt.key]=el.checked;});return out;
+}
+function getWinCondValues(){
+  const keys=['winHp','winDeckOut','winObjective'];const out={};
+  keys.forEach(k=>{const el=document.getElementById('wc-'+k);if(el)out[k]=el.checked;});return out;
+}
+
+function renderGames(){
+  const list=document.getElementById('gameList');
+  if(!D.games.length){list.innerHTML='<div class="empty">No game configs yet.</div>';return;}
+  list.innerHTML=D.games.map(g=>{
+    const n=D.cards.filter(c=>c.gameId===g.id).length;
+    const ai=g.aiStyle||'balanced';
+    return`<div class="gcrd">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+        <h3>${esc(g.name)}</h3>
+        <button class="btn btn-sm" onclick="openEditGame('${g.id}')">Edit</button>
+      </div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.9;">
+        ${n} cards &nbsp;·&nbsp; HP:${g.hp} &nbsp;·&nbsp; Hand:${g.hand} &nbsp;·&nbsp; Res:${g.res}/turn &nbsp;·&nbsp; Draw:${g.drawPerTurn||1}/turn<br>
+        Field max:${g.field} &nbsp;·&nbsp; AI: <span style="color:var(--accent2);">${ai}</span>
+      </div>
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">
+        ${RULE_TOGGLES.filter(rt=>g[rt.key]).map(rt=>`<span class="rtag" style="font-size:8px;">${rt.label.split('(')[0].trim()}</span>`).join('')}
+      </div>
+      ${g.desc?`<div style="font-size:12px;color:var(--text2);font-style:italic;margin-top:5px;">${esc(g.desc)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openAddGame(){
+  editGameId=null;
+  document.getElementById('gameMT').textContent='New Game Config';
+  document.getElementById('delGameBtn').style.display='none';
+  ['gN','gDs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('gHp').value=20;
+  document.getElementById('gHand').value=5;
+  document.getElementById('gRes').value=3;
+  document.getElementById('gFld').value=5;
+  document.getElementById('gDraw').value=1;
+  document.getElementById('gMaxH').value=7;
+  document.getElementById('gAI').value='balanced';
+  document.getElementById('gAITarget').value='weakest';
+  document.getElementById('gAIFace').value=30;
+  buildRuleToggles(null);buildWinConditions(null);
+  setTypeRuleList([]);
+  openModal('mo-game');
+}
+
+function openEditGame(id){
+  editGameId=id;
+  const g=D.games.find(x=>x.id===id);if(!g)return;
+  document.getElementById('gameMT').textContent='Edit: '+g.name;
+  document.getElementById('delGameBtn').style.display='inline-block';
+  document.getElementById('gN').value=g.name||'';
+  document.getElementById('gHp').value=g.hp||20;
+  document.getElementById('gHand').value=g.hand||5;
+  document.getElementById('gRes').value=g.res||3;
+  document.getElementById('gFld').value=g.field||5;
+  document.getElementById('gDraw').value=g.drawPerTurn||1;
+  document.getElementById('gMaxH').value=g.maxHand||7;
+  document.getElementById('gAI').value=g.aiStyle||'balanced';
+  document.getElementById('gAITarget').value=g.aiTarget||'weakest';
+  document.getElementById('gAIFace').value=g.aiFaceThreshold||30;
+  document.getElementById('gDs').value=g.desc||'';
+  buildRuleToggles(g);buildWinConditions(g);
+  setTypeRuleList(g.typeRules||[]);
+  openModal('mo-game');
+}
+
+function saveGame(){
+  const name=document.getElementById('gN').value.trim();if(!name){toast('Game name required');return;}
+  const obj={
+    id:editGameId||uid(),name,
+    hp:intEl('gHp'),hand:Math.min(intEl('gHand'),7),
+    res:intEl('gRes'),field:intEl('gFld'),
+    drawPerTurn:intEl('gDraw')||1,maxHand:intEl('gMaxH')||7,
+    aiStyle:document.getElementById('gAI').value,
+    aiTarget:document.getElementById('gAITarget').value,
+    aiFaceThreshold:intEl('gAIFace'),
+    desc:document.getElementById('gDs').value.trim(),
+    typeRules:getTypeRuleList(),
+    ...getRuleToggleValues(),
+    ...getWinCondValues()
+  };
+  if(editGameId){const i=D.games.findIndex(x=>x.id===editGameId);if(i>=0)D.games[i]=obj;}
+  else D.games.push(obj);
+  persist();closeModal('mo-game');renderGames();refreshSelects();
+}
+
+function delGame(){
+  if(!confirm('Delete this game config?'))return;
+  D.games=D.games.filter(x=>x.id!==editGameId);
+  persist();closeModal('mo-game');renderGames();refreshSelects();
+}
+
+// type rules
+function setTypeRuleList(rules){
+  const el=document.getElementById('typeRuleList');
+  el.dataset.rules=JSON.stringify(rules);renderTypeRuleList();
+}
+function getTypeRuleList(){ return JSON.parse(document.getElementById('typeRuleList').dataset.rules||'[]'); }
+function renderTypeRuleList(){
+  const el=document.getElementById('typeRuleList');
+  const rules=JSON.parse(el.dataset.rules||'[]');
+  el.innerHTML=rules.map((r,i)=>`
+    <div style="display:flex;gap:5px;margin-bottom:7px;flex-wrap:wrap;">
+      <input type="text" value="${esc(r.type||'')}" placeholder="Type name" style="flex:1;min-width:80px;font-size:12px;padding:5px 8px;" onchange="updRule(${i},'type',this.value)">
+      <select style="flex:2;font-size:11px;padding:5px 4px;" onchange="updRule(${i},'rule',this.value)">
+        ${RULE_OPTS.map(([v,l])=>`<option value="${v}"${r.rule===v?' selected':''}>${l}</option>`).join('')}
+      </select>
+      <button class="btn btn-danger btn-xs" style="flex:0 0 auto;padding:5px 7px;" onclick="rmRule(${i})">✕</button>
+    </div>`).join('');
+}
+function updRule(i,f,v){const el=document.getElementById('typeRuleList');const r=JSON.parse(el.dataset.rules||'[]');if(r[i])r[i][f]=v;el.dataset.rules=JSON.stringify(r);}
+function rmRule(i){const el=document.getElementById('typeRuleList');const r=JSON.parse(el.dataset.rules||'[]');r.splice(i,1);el.dataset.rules=JSON.stringify(r);renderTypeRuleList();}
+function addTypeRule(){const el=document.getElementById('typeRuleList');const r=JSON.parse(el.dataset.rules||'[]');r.push({type:'',rule:'stays_until_destroyed'});el.dataset.rules=JSON.stringify(r);renderTypeRuleList();}
+
+// ════════════════════════════
+//  PLAYTEST ENGINE
+// ════════════════════════════
+let G=null; // game state
+
+function renderPlaySelect(){
+  document.getElementById('playSelect').style.display='block';
+  document.getElementById('playTable').style.display='none';
+  const list=document.getElementById('playGameList');
+  if(!D.games.length){list.innerHTML='<div class="empty">No game configs — create one in Games tab.</div>';return;}
+  list.innerHTML=D.games.map(g=>{
+    const n=D.cards.filter(c=>c.gameId===g.id).length;
+    const warn=n<4?`<div style="font-size:11px;color:var(--amber);margin-top:6px;">⚠ Need at least 4 cards assigned to this game.</div>`:'';
+    return`<div class="gcrd">
+      <h3>${esc(g.name)}</h3>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:7px;">${n} cards · HP ${g.hp} · Hand ${g.hand} · Draw ${g.drawPerTurn||1}/turn · AI: ${g.aiStyle||'balanced'}</div>
+      ${warn}
+      ${n>=4?`<button class="btn btn-gold" style="width:100%;margin-top:5px;" onclick="startGame('${g.id}')">▶ Playtest</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+// deep copy card into live state
+function liveCard(c){
+  return{
+    ...c,
+    attacks:(c.attacks||[]).map(a=>({...a})),
+    keywords:[...(c.keywords||[])],
+    _hp:c.hp,_atk:c.atk,_def:c.def,_sta:c.sta,
+    _shield:c.keywords?.includes('Shield'),
+    _reborn:c.keywords?.includes('Reborn'),
+    _rebornUsed:false,
+    _frozen:false,_silenced:false,_stealthed:c.keywords?.includes('Stealth'),
+    _poisonCounters:0,_otherCounters:0,
+    _objectiveTurns:0,
+    _tapped:false,_atkCount:0,_iid:uid()
+  };
+}
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function startGame(gameId){
+  const game=D.games.find(x=>x.id===gameId);if(!game)return;
+  const pool=D.cards.filter(c=>c.gameId===gameId&&!c._fusion);
+  if(pool.length<4){toast('Need ≥4 cards');return;}
+  const mkDeck=()=>shuffle(pool.map(liveCard));
+  G={
+    game,turn:1,phase:'draw',over:false,
+    sel:null,fieldSlot:null,log:[],exile:[],
+    objectiveTurns:0,
+    cardsPlayedThisTurn:0,
+    player:{hp:game.hp,maxHp:game.hp,res:game.resourceCarryOver?game.res:0,hand:[],field:[],grave:[],deck:mkDeck()},
+    opp:  {hp:game.hp,maxHp:game.hp,res:0,hand:[],field:[],grave:[],deck:mkDeck()}
+  };
+  const hs=Math.min(game.hand,7);
+  for(let i=0;i<hs;i++){deal('player');deal('opp');}
+  document.getElementById('playSelect').style.display='none';
+  document.getElementById('playTable').style.display='block';
+  glog('⚔ '+game.name+' — Turn 1 begins.','phase');
+  G.phase='draw';doDrawPhase();
+}
+
+// ── deal ──
+function deal(who){
+  const s=G[who];
+  if(!s.deck.length){
+    if(G.game.winDeckOut&&!G.over){
+      G.over=true;
+      const w=who==='player'?'You':'Opponent';
+      glog(w+' drew from empty deck — game over!','bad');
+      toast(who==='player'?'💀 Deck out!':'🏆 Opponent decked out!',who==='player'?'loss':'win');
+    }
+    return;
+  }
+  const maxH=G.game.maxHand||7;
+  if(who==='player'&&s.hand.length>=maxH){glog('Hand full! (max '+maxH+')','');return;}
+  s.hand.push(s.deck.pop());
+}
+
+// ── log ──
+function glog(msg,cls=''){
+  if(!G)return;G.log.push({msg,cls});
+  const el=document.getElementById('blog');if(!el)return;
+  el.innerHTML=G.log.slice(-50).reverse().map(e=>`<div class="ll ${e.cls}">${esc(e.msg)}</div>`).join('');
+}
+
+// ── type rule ──
+function getRule(type){
+  const r=(G.game.typeRules||[]).find(x=>x.type===type);
+  return r?r.rule:'stays_until_destroyed';
+}
+
+// ── PHASES ──
+const PHASES=['draw','main','combat','end'];
+function setPhasePips(ph){
+  PHASES.forEach(p=>{
+    const el=document.getElementById('ph-'+p);
+    if(el)el.classList.toggle('cur',p===ph);
+  });
+  const btn=document.getElementById('phaseBtn');
+  const labels={draw:'DRAW PHASE',main:'MAIN PHASE ▶',combat:'COMBAT ▶',end:'END TURN ▶'};
+  if(btn)btn.textContent=labels[ph]||'NEXT ▶';
+}
+
+function doDrawPhase(){
+  if(!G||G.over)return;
+  G.phase='draw';
+  G.cardsPlayedThisTurn=0;
+  const n=G.game.drawPerTurn||1;
+  for(let i=0;i<n;i++)deal('player');
+  // Refresh resources
+  if(!G.game.resourceCarryOver)G.player.res=G.game.res;
+  else G.player.res+=G.game.res;
+  // Keyword: Burn on opp field cards damages them
+  G.opp.field.forEach(c=>{ if(hasKw(c,'Burn')){ c._hp-=1; glog(c.name+' takes 1 Burn damage','bad'); } });
+  // Keyword: Regen on player field
+  G.player.field.forEach(c=>{ if(hasKw(c,'Regen')&&c._hp<c.hp){ c._hp=Math.min(c.hp,c._hp+1); glog(c.name+' regenerates 1 HP','good'); } });
+  // Poison counters
+  G.player.field.forEach(c=>{ if(c._poisonCounters>0){ c._hp-=c._poisonCounters; glog(c.name+' takes '+c._poisonCounters+' poison damage','bad'); }});
+  checkDead();winCheck();
+  setPhasePips('draw');
+  glog('── Turn '+G.turn+' Draw Phase · ⚡'+G.player.res+' resources ──','phase');
+  G.phase='main';setPhasePips('main');
+  render();
+}
+
+function advancePhase(){
+  if(!G){return;}
+  if(G.over){glog('Game over — resign to exit.','');return;}
+  if(G.phase==='main'){ G.phase='combat'; setPhasePips('combat'); glog('Combat Phase','phase'); render(); }
+  else if(G.phase==='combat'){ G.phase='end'; setPhasePips('end'); glog('End Phase','phase'); doEndPhase(); }
+  else if(G.phase==='draw'||G.phase==='end'){ /* already handled */ }
+  else{ G.phase='main';setPhasePips('main');render(); }
+}
+
+function doEndPhase(){
+  if(!G||G.over)return;
+  G.sel=null;
+  endOfTurnCleanup(G.player);
+  // Objective win condition
+  const hasObj=G.player.field.find(c=>c.type==='Field'||c.rules?.includes('objective'));
+  if(hasObj&&G.game.winObjective){
+    G.objectiveTurns++;
+    if(G.objectiveTurns>=3){G.over=true;glog('🏆 YOU WIN — controlled objective for 3 turns!','good');toast('🏆 Objective Victory!','win');}
+    else glog('Objective turns: '+G.objectiveTurns+'/3','info');
+  } else {G.objectiveTurns=0;}
+  // Prowess reset
+  G.player.field.forEach(c=>{if(c._prowessBonus){c._atk-=c._prowessBonus;c._prowessBonus=0;}});
+  glog('── Opponent\'s Turn ──','phase');
+  render();
+  setTimeout(aiTurn,500);
+}
+
+// ════ RENDER ════
+function render(){
+  if(!G)return;
+  const{player,opp}=G;
+
+  // HP bars
+  const setBar=(barId,valId,cur,max)=>{
+    const pct=Math.max(0,cur/max*100);
+    document.getElementById(barId).style.width=pct+'%';
+    document.getElementById(barId).style.background=pct>50?'var(--green)':pct>25?'var(--amber)':'var(--red)';
+    document.getElementById(valId).textContent=cur;
+  };
+  setBar('playerHpBar','playerHpVal',player.hp,player.maxHp);
+  setBar('oppHpBar','oppHpVal',opp.hp,opp.maxHp);
+  document.getElementById('playerRes').textContent=player.res;
+  document.getElementById('oppRes').textContent=opp.res;
+
+  // Turn labels
+  const isPlayer=G.phase!=='opp';
+  document.getElementById('playerTurnLbl').style.display=isPlayer?'':'none';
+  document.getElementById('oppTurnLbl').style.display=isPlayer?'none':'';
+
+  // Hand
+  const maxH=G.game.maxHand||7;
+  document.getElementById('handCnt').textContent=player.hand.length;
+  document.getElementById('handRow').innerHTML=player.hand.map((c,i)=>{
+    const col=typeColor(c.type);
+    const canAfford=player.res>=c.cost;
+    const isSel=G.sel===c;
+    const statusIcons=getStatusIcons(c);
+    return`<div class="pc${isSel?' sel':''}" style="border-color:${col};" onclick="selectHand(${i})">
+      <div class="pc-cost">⚡${c.cost}</div>
+      ${statusIcons?`<div class="pc-status">${statusIcons}</div>`:''}
+      <span class="pi">${c.emoji||'🃏'}</span>
+      <div class="pn">${esc(c.name)}</div>
+      <div class="ps">
+        ${c.hp?`<span>❤${c._hp}</span>`:''}${c.atk?`<span>⚔${c._atk}</span>`:''}${c.def?`<span>🛡${c._def}</span>`:''}
+      </div>
+      ${(c.keywords||[]).length?`<div class="pc-kws">${c.keywords.slice(0,2).join(' · ')}</div>`:''}
+      <div style="font-size:7.5px;color:${canAfford?'var(--gold)':'var(--red)'};margin-top:1px;">⚡${c.cost}</div>
+    </div>`;
+  }).join('');
+
+  // Player field
+  document.getElementById('playerFieldRow').innerHTML=player.field.length
+    ?player.field.map((c,i)=>{
+      const col=typeColor(c.type);const isSel=G.sel===c;
+      const statusIcons=getStatusIcons(c);
+      const counters=[];
+      if(c._poisonCounters>0)counters.push('☠'+c._poisonCounters);
+      if(c._otherCounters>0)counters.push('+'+c._otherCounters);
+      return`<div class="pc${isSel?' sel':''}${c._tapped?' tapped':''}${c._frozen?' frozen':''}${c._poisonCounters>0?' poisoned':''}${c._shield?' shielded':''}"
+           style="border-color:${col};" onclick="selectField(${i})" oncontextmenu="showDetail('player',${i});return false;">
+        ${statusIcons?`<div class="pc-status">${statusIcons}</div>`:''}
+        <span class="pi">${c.emoji||'🃏'}</span>
+        <div class="pn">${esc(c.name)}</div>
+        <div class="ps">
+          ${c.hp?`<span>❤${c._hp}</span>`:''}${c.atk?`<span>⚔${c._atk}</span>`:''}
+          ${c.def?`<span>🛡${c._def}</span>`:''}${c.sta?`<span>💨${c._sta}</span>`:''}
+        </div>
+        ${(c.keywords||[]).length?`<div class="pc-kws">${c.keywords.slice(0,2).join(' · ')}</div>`:''}
+        ${counters.length?`<div class="pc-counters">${counters.join(' ')}</div>`:''}
+        ${c._tapped?'<div style="font-size:7px;color:var(--amber);margin-top:1px;">tapped</div>':''}
+      </div>`;
+    }).join('')
+    :'<div style="color:var(--text2);font-size:10px;font-style:italic;padding:8px 0;align-self:center;">Empty field</div>';
+
+  // Opp field
+  document.getElementById('oppFieldRow').innerHTML=opp.field.length
+    ?opp.field.map((c,i)=>{
+      const col=typeColor(c.type);
+      return`<div class="oc" style="border-color:${col};" onclick="targetOpp(${i})" oncontextmenu="showDetail('opp',${i});return false;">
+        <div class="oi">${c.emoji||'🃏'}</div>
+        <div class="on">${esc(c.name)}</div>
+        <div class="os">❤${c._hp} ⚔${c._atk} 🛡${c._def}</div>
+        ${(c.keywords||[]).slice(0,1).map(k=>`<div style="font-size:6.5px;color:var(--accent2);">${k}</div>`).join('')}
+      </div>`;
+    }).join('')
+    :'<div style="color:var(--text2);font-size:10px;font-style:italic;padding:4px 0;align-self:center;">Empty</div>';
+
+  // Opp hand (face down)
+  document.getElementById('oppHandCnt').textContent=opp.hand.length;
+  document.getElementById('oppHandRow').innerHTML=opp.hand.map(()=>'<div class="cback">🂠</div>').join('');
+
+  // Counts
+  document.getElementById('playerGraveCnt').textContent=player.grave.length;
+  document.getElementById('oppGraveCnt').textContent=opp.grave.length;
+  document.getElementById('deckCnt').textContent=player.deck.length;
+  document.getElementById('exileCnt').textContent=G.exile.length;
+
+  // Field slot
+  const fs=document.getElementById('fSlotEl');
+  if(G.fieldSlot){fs.textContent=(G.fieldSlot.emoji||'🃏')+' '+G.fieldSlot.name;fs.classList.add('active');}
+  else{fs.textContent='Empty field effect';fs.classList.remove('active');}
+
+  // Ability panel
+  renderAbilityPanel();
+  render_phaseBtn();
+}
+
+function render_phaseBtn(){
+  if(!G)return;
+  const btn=document.getElementById('phaseBtn');
+  if(!btn)return;
+  const labels={draw:'DRAW PHASE',main:'⚔ TO COMBAT',combat:'END TURN ▶',end:'END TURN ▶'};
+  btn.textContent=labels[G.phase]||'NEXT ▶';
+  btn.style.opacity=(G.phase==='opp')?'0.4':'1';
+}
+
+function getStatusIcons(c){
+  const icons=[];
+  if(c._frozen)icons.push('🧊');
+  if(c._silenced)icons.push('🔇');
+  if(c._stealthed)icons.push('🌑');
+  if(c._shield)icons.push('🛡');
+  if(c._poisonCounters>0)icons.push('☠');
+  return icons.join('');
+}
+
+function renderAbilityPanel(){
+  const panel=document.getElementById('abilityPanel');
+  const btns=document.getElementById('abilityBtns');
+  const nameEl=document.getElementById('abilityCardName');
+  const c=G.sel;
+  if(!c||!G.player.field.includes(c)||!(c.attacks||[]).length){
+    panel.style.display='none';return;
+  }
+  panel.style.display='block';
+  nameEl.textContent=c.name;
+  if(c._silenced){btns.innerHTML='<span style="color:var(--text2);font-size:11px;">🔇 Silenced — abilities unavailable</span>';return;}
+  btns.innerHTML=(c.attacks||[]).map((a,i)=>{
+    const cost=a.cost||0;
+    const canAfford=G.player.res>=cost;
+    const desc=a.desc?` — ${a.desc}`:'';
+    return`<button class="ab-btn" onclick="useAbility(${i})" ${!canAfford?'style="opacity:0.4;"':''}>
+      ${esc(a.name||'Ability')}
+      <span class="ab-val">${esc(a.value||'')} → ${esc(a.target)}</span>
+      ${cost>0?`<span class="ab-cost">⚡${cost}</span>`:''}
+      ${desc?`<span style="font-size:8px;color:var(--text2);margin-left:3px;">${esc(a.desc)}</span>`:''}
+    </button>`;
+  }).join('');
+}
+
+// ════ INTERACTIONS ════
+
+function selectHand(i){
+  if(G.phase==='opp'||G.over)return;
+  if(G.phase!=='main'&&G.phase!=='draw'){
+    glog('You can only play cards in Main Phase.','');G.sel=null;render();return;
+  }
+  const card=G.player.hand[i];
+  if(G.sel===card){playCard(i);}
+  else{
+    G.sel=card;
+    const canAfford=G.player.res>=card.cost;
+    glog('Selected '+card.name+' (⚡'+card.cost+'). '+(canAfford?'Tap again to play.':'Not enough resources (⚡'+G.player.res+').'));
+    render();
+  }
+}
+
+function selectField(i){
+  if(G.phase==='opp'||G.over)return;
+  const card=G.player.field[i];
+  if(G.sel===card){G.sel=null;}
+  else{G.sel=card;glog('Selected '+card.name+' — use abilities below, or tap opp card to attack.');}
+  render();
+}
+
+// hasKeyword helper
+function hasKw(card,kw){ return (card.keywords||[]).includes(kw)||(card.rules||[]).includes(kw.toLowerCase()); }
+
+function playCard(idx){
+  const card=G.player.hand[idx];
+  const isFree=G.game.freeFirstCard&&G.cardsPlayedThisTurn===0;
+  const cost=isFree?0:card.cost;
+  if(G.player.res<cost){glog('⚡ Not enough resources (need '+cost+', have '+G.player.res+').','bad');G.sel=null;render();return;}
+  const rule=getRule(card.type);
+  // Tribute check
+  if(G.game.tributeSystem&&card.level>=5){
+    const tribNeeded=card.level>=8?2:1;
+    if(G.player.field.length<tribNeeded){glog('Tribute required: sacrifice '+tribNeeded+' field card(s) to play this Lv'+card.level+' card.','bad');G.sel=null;render();return;}
+    for(let t=0;t<tribNeeded;t++){
+      const victim=G.player.field.shift();
+      G.player.grave.push(victim);
+      glog('Tributed '+victim.name+'.');
+    }
+  }
+  if(rule==='one_per_field'&&G.player.field.find(c=>c.type===card.type)){glog('Only one '+card.type+' allowed on field!','bad');G.sel=null;render();return;}
+  if(G.player.field.length>=G.game.field&&rule!=='field_effect_slot'&&rule!=='immediate_effect'){glog('Field full! (max '+G.game.field+')','bad');G.sel=null;render();return;}
+  G.player.res-=cost;
+  G.player.hand.splice(idx,1);
+  G.sel=null;G.cardsPlayedThisTurn++;
+
+  // Cascade: draw+play next card free
+  if(hasKw(card,'Cascade')&&G.player.deck.length){
+    const extra=G.player.deck.pop();
+    G.player.hand.unshift(extra);
+    glog(card.name+' Cascade! Drew '+extra.name+' — it plays for free.');
+    // Play it immediately (simplified: just put on field if creature)
+    if(getRule(extra.type)!=='immediate_effect'&&getRule(extra.type)!=='field_effect_slot'){
+      G.player.hand.shift();G.player.field.push(extra);extra._tapped=!hasKw(extra,'Haste')&&!hasKw(extra,'Charge');
+      glog(extra.name+' played via Cascade.');
+    }
+  }
+
+  if(rule==='field_effect_slot'){G.fieldSlot=card;glog(card.name+' → field effect slot.');}
+  else if(rule==='immediate_effect'){applyCardEffect(card,'player');G.player.grave.push(card);glog(card.name+' → immediate effect, graveyard.');}
+  else{
+    G.player.field.push(card);
+    card._leaveFlag=(rule==='leaves_after_use'||rule==='leaves_end_of_turn')?rule:null;
+    // Haste/Charge: can attack immediately
+    card._tapped=!(hasKw(card,'Haste')||hasKw(card,'Charge'));
+    glog(card.name+' played to field.'+(cost>0?(' (⚡'+cost+' spent, '+G.player.res+' left)'):''));
+    // Prowess: other non-creatures give +1 ATK to prowess cards
+    if(card.type!=='Creature'){
+      G.player.field.forEach(c=>{if(hasKw(c,'Prowess')){c._atk++;c._prowessBonus=(c._prowessBonus||0)+1;glog(c.name+' gains +1 ATK (Prowess).');}});
+    }
+  }
+  checkDead();winCheck();render();
+}
+
+function useAbility(atkIdx){
+  const sel=G.sel;
+  if(!sel||!G.player.field.includes(sel)){glog('Select a field card first.','');return;}
+  if(sel._silenced){glog(sel.name+' is Silenced — cannot use abilities.','bad');return;}
+  const ab=(sel.attacks||[])[atkIdx];if(!ab)return;
+  const cost=ab.cost||0;
+  if(G.player.res<cost){glog('⚡ Not enough resources for this ability (need '+cost+').','bad');return;}
+  G.player.res-=cost;
+  applyAbilityEffect(ab,sel,G.player,G.opp);
+  checkDead();winCheck();render();
+}
+
+function applyAbilityEffect(ab,source,myState,enemyState){
+  const v=parseFloat(ab.value)||0;
+  const n=ab.name?'"'+ab.name+'"':'Ability';
+  switch(ab.target){
+    case 'hp':
+      if(enemyState.field.length){
+        // target selected opponent card if any, else first
+        const t=enemyState.field[0];
+        let dmg=Math.abs(v);if(hasKw(source,'Piercing')){}else{dmg=Math.max(0,dmg-t._def);}
+        if(hasKw(t,'Indestructible'))dmg=0;
+        if(t._shield){t._shield=false;glog(t.name+'\'s Shield absorbs the damage!');dmg=0;}
+        t._hp+=v<0?-dmg:v;
+        glog(n+': '+t.name+' HP '+(v>=0?'+':'')+v);
+        if(hasKw(source,'Lifesteal')&&v<0){myState.hp=Math.min(myState.maxHp,myState.hp+Math.abs(v));glog(source.name+' Lifesteal: you gain '+Math.abs(v)+' HP.','good');}
+        if(hasKw(source,'Deathtouch')&&v<0){t._hp=Math.min(t._hp,-999);glog(t.name+' killed by Deathtouch!','bad');}
+      } else glog('No target on opponent field.','');
+      break;
+    case 'atk':if(enemyState.field.length){const t=enemyState.field[0];t._atk+=v;glog(n+': '+t.name+' ATK '+(v>=0?'+':'')+v);}break;
+    case 'def':if(enemyState.field.length){const t=enemyState.field[0];t._def+=v;glog(n+': '+t.name+' DEF '+(v>=0?'+':'')+v);}break;
+    case 'sta':if(enemyState.field.length){const t=enemyState.field[0];t._sta+=v;glog(n+': '+t.name+' STA '+(v>=0?'+':'')+v);}break;
+    case 'player_hp':enemyState.hp+=v;glog(n+': Opp HP '+(v>=0?'+':'')+v,(v<0?'bad':'good'));break;
+    case 'self_hp':myState.hp=Math.min(myState.maxHp,myState.hp+Math.abs(v));glog(n+': You gain '+Math.abs(v)+' HP.','good');break;
+    case 'draw':for(let i=0;i<Math.abs(v);i++)deal('player');glog(n+': Drew '+Math.abs(v)+' card(s).','info');break;
+    case 'res':myState.res+=Math.abs(v);glog(n+': Gained ⚡'+Math.abs(v)+'.','info');break;
+    case 'counter':if(enemyState.field.length){const t=enemyState.field[0];t._otherCounters=(t._otherCounters||0)+Math.abs(v);glog(n+': '+t.name+' gets '+Math.abs(v)+' counter(s).');}break;
+    case 'freeze':if(enemyState.field.length){const t=enemyState.field[0];t._frozen=true;glog(n+': '+t.name+' is Frozen!','info');}break;
+    case 'silence':if(enemyState.field.length){const t=enemyState.field[0];t._silenced=true;glog(n+': '+t.name+' is Silenced!','info');}break;
+    case 'exile':if(enemyState.field.length){const t=enemyState.field.shift();G.exile.push(t);glog(n+': '+t.name+' exiled!','info');}break;
+    case 'bounce':if(enemyState.field.length){const t=enemyState.field.shift();enemyState.hand.push(t);glog(n+': '+t.name+' returned to opponent\'s hand.','info');}break;
+    case 'copy':if(enemyState.field.length){const t=enemyState.field[0];const copy=liveCard(t);copy._iid=uid();myState.field.push(copy);glog(n+': Copied '+t.name+'!','info');}break;
+    default:glog(n+' used.');
+  }
+}
+
+function targetOpp(i){
+  if(G.phase==='opp'||G.over)return;
+  if(G.phase!=='combat'){glog('Switch to Combat Phase to attack.','');return;}
+  const sel=G.sel;
+  if(!sel){glog('Select one of your field cards first.','');return;}
+  if(!G.player.field.includes(sel)){glog(sel.name+' is in your hand — play it first.','bad');return;}
+  if(hasKw(sel,'Defender')){glog(sel.name+' has Defender — cannot attack!','bad');return;}
+  const rule=getRule(sel.type);
+  if(rule==='cant_attack'||rule==='blocks_only'){glog(sel.name+' cannot attack!','bad');return;}
+  if(sel._tapped){glog(sel.name+' already attacked this turn.','bad');return;}
+  if(sel._frozen){glog(sel.name+' is Frozen and cannot attack!','bad');return;}
+  const maxAtk=(!G.game.maxOneAttack&&rule==='can_attack_twice')?2:1;
+  if(sel._atkCount>=maxAtk){glog(sel.name+' has no attacks left.','bad');return;}
+
+  const opp=G.opp;
+  // Flying: can only be blocked by flying
+  const target=opp.field[i];
+  if(hasKw(sel,'Flying')&&!hasKw(target,'Flying')){
+    glog(sel.name+' (Flying) bypasses '+target.name+' — attack goes direct!','info');
+    const dmg=Math.max(0,sel._atk);opp.hp-=dmg;
+    sel._atkCount++;sel._tapped=!hasKw(sel,'Vigilance')&&sel._atkCount>=(maxAtk);
+    glog('⚔ '+sel.name+' deals '+dmg+' direct damage!','imp');
+    if(hasKw(sel,'Lifesteal')&&dmg>0){G.player.hp=Math.min(G.player.maxHp,G.player.hp+dmg);glog(sel.name+' Lifesteal +'+dmg+' HP.','good');}
+    G.sel=null;winCheck();render();return;
+  }
+  // Taunt must be attacked first
+  const taunts=opp.field.filter(c=>hasKw(c,'Taunt'));
+  if(taunts.length&&!taunts.includes(target)){glog('A Taunt card must be attacked first!','bad');return;}
+  // Stealth: can't be targeted until it attacks
+  if(hasKw(target,'Stealth')&&target._stealthed){glog(target.name+' has Stealth — cannot be targeted!','bad');return;}
+
+  resolve(sel,target,opp);
+  G.sel=null;
+  if(rule==='leaves_after_use'){G.player.field=G.player.field.filter(c=>c!==sel);G.player.grave.push(sel);glog(sel.name+' leaves field after attacking.');}
+  if(target._stealthed)target._stealthed=false; // stealth breaks after first attack
+  checkDead();winCheck();render();
+}
+
+function attackDirect(){
+  if(G.phase==='opp'||G.over)return;
+  if(G.phase!=='combat'){glog('Switch to Combat Phase to attack.','');return;}
+  if(!G.game.allowDirect&&G.game.allowDirect!==undefined){glog('Direct attacks are disabled in this game.','bad');return;}
+  const sel=G.sel;
+  if(!sel){glog('Select a field card first.','');return;}
+  if(!G.player.field.includes(sel)){glog(sel.name+' not on field yet.','bad');return;}
+  if(hasKw(sel,'Defender')){glog(sel.name+' cannot attack!','bad');return;}
+  const rule=getRule(sel.type);
+  if(rule==='cant_attack'||rule==='blocks_only'){glog(sel.name+' cannot attack!','bad');return;}
+  if(sel._tapped){glog(sel.name+' already attacked.','bad');return;}
+  if(sel._frozen){glog(sel.name+' is Frozen.','bad');return;}
+  if(G.game.mustClearField!==false&&G.opp.field.length>0){glog('Clear the opponent\'s field first ('+G.opp.field.length+' card(s) remain).','bad');return;}
+
+  const dmg=hasKw(sel,'Piercing')?sel._atk:Math.max(0,sel._atk);
+  G.opp.hp-=dmg;
+  sel._atkCount++;
+  sel._tapped=!hasKw(sel,'Vigilance')&&sel._atkCount>=( (!G.game.maxOneAttack&&getRule(sel.type)==='can_attack_twice')?2:1);
+  glog('⚔ '+sel.name+' attacks opponent directly for '+dmg+'!','imp');
+  if(hasKw(sel,'Lifesteal')&&dmg>0){G.player.hp=Math.min(G.player.maxHp,G.player.hp+dmg);glog('Lifesteal: +'+dmg+' HP.','good');}
+  G.sel=null;winCheck();render();
+}
+
+// ════ COMBAT RESOLUTION ════
+function resolve(atk,def,defOwner){
+  // Indestructible
+  const atkIndestr=hasKw(atk,'Indestructible');
+  const defIndestr=hasKw(def,'Indestructible');
+
+  // First strike
+  const atkFirst=hasKw(atk,'Piercing')||getRule(atk.type)==='first_strike';
+
+  let dmgToDef=hasKw(atk,'Piercing')?atk._atk:Math.max(0,atk._atk-def._def);
+  let dmgToAtk=Math.max(0,def._atk-atk._def);
+
+  // Shield absorbs first hit
+  if(def._shield){def._shield=false;glog(def.name+'\'s Shield absorbs the hit!','info');dmgToDef=0;}
+  if(atk._shield){atk._shield=false;glog(atk.name+'\'s Shield absorbs counter!','info');dmgToAtk=0;}
+
+  // Deathtouch: any damage is lethal
+  if(hasKw(atk,'Deathtouch')&&dmgToDef>0)dmgToDef=Math.max(def._hp+1,dmgToDef);
+
+  if(!defIndestr)def._hp-=dmgToDef;
+  if(!atkIndestr)atk._hp-=dmgToAtk;
+
+  atk._atkCount=(atk._atkCount||0)+1;
+  atk._tapped=!hasKw(atk,'Vigilance')&&atk._atkCount>=( (!G.game.maxOneAttack&&getRule(atk.type)==='can_attack_twice')?2:1);
+  // Stealth: breaks after attack
+  if(atk._stealthed)atk._stealthed=false;
+
+  glog('⚔ '+atk.name+' ('+atk._atk+'/'+atk._def+') vs '+def.name+' ('+def._atk+'/'+def._def+'): deals '+dmgToDef+', takes '+dmgToAtk,'imp');
+
+  // Lifesteal
+  if(hasKw(atk,'Lifesteal')&&dmgToDef>0){G.player.hp=Math.min(G.player.maxHp,G.player.hp+dmgToDef);glog(atk.name+' Lifesteal: +'+dmgToDef+' HP.','good');}
+  // Poison
+  if(hasKw(atk,'Poison')&&dmgToDef>0){def._poisonCounters=(def._poisonCounters||0)+1;glog(def.name+' gains a poison counter ('+def._poisonCounters+' total).','bad');}
+  // Trample: excess damage carries over
+  if(hasKw(atk,'Trample')&&def._hp<0){const excess=Math.abs(def._hp);defOwner.hp-=excess;glog(atk.name+' Trample: '+excess+' excess damage to opponent!','bad');}
+  // Freeze on hit
+  if(hasKw(atk,'Freeze')&&dmgToDef>0){def._frozen=true;glog(def.name+' is Frozen!','info');}
+  // Burn retaliation
+  if(hasKw(def,'Burn')&&dmgToAtk===0){atk._hp-=1;glog(atk.name+' takes 1 Burn damage.','bad');}
+  // Reborn
+  // (handled in checkDead)
+}
+
+// apply spell/immediate effect
+function applyCardEffect(card,who){
+  const enemy=who==='player'?G.opp:G.player;
+  (card.attacks||[]).forEach(a=>{applyAbilityEffect(a,card,G[who],enemy);});
+}
+
+// check dead cards
+function checkDead(){
+  [G.player,G.opp].forEach(side=>{
+    const dead=side.field.filter(c=>{
+      if(hasKw(c,'Indestructible'))return false;
+      return c._hp<=0||(c.sta>0&&c._sta<=0);
+    });
+    dead.forEach(c=>{
+      if(c._reborn&&!c._rebornUsed){
+        c._hp=1;c._reborn=false;c._rebornUsed=true;
+        glog(c.name+' Reborn — returns with 1 HP!','info');
+      } else {
+        glog('☠ '+c.name+' destroyed → graveyard','bad');
+        side.grave.push(c);
+        side.field=side.field.filter(x=>x!==c);
+      }
+    });
+  });
+}
+
+function winCheck(){
+  if(G.over)return;
+  if(G.opp.hp<=0){G.over=true;glog('🏆 YOU WIN! Opponent HP reached 0.','good');toast('🏆 Victory!','win');}
+  if(G.player.hp<=0){G.over=true;glog('💀 DEFEATED. Your HP reached 0.','bad');toast('💀 Defeated...','loss');}
+}
+
+function endOfTurnCleanup(side){
+  const rem=[];
+  side.field.forEach(c=>{
+    const r=getRule(c.type)||c._leaveFlag;
+    if(r==='leaves_end_of_turn'){rem.push(c);glog(c.name+' leaves field (end of turn).');}
+    c._tapped=false;c._atkCount=0;c._frozen=false;// unfreeze at end of turn
+  });
+  rem.forEach(c=>{side.field=side.field.filter(x=>x!==c);side.grave.push(c);});
+}
+
+// ════ AI TURN ════
+function aiTurn(){
+  if(!G||G.over)return;
+  const ai=G.opp,you=G.player,game=G.game;
+  const style=game.aiStyle||'balanced';
+
+  // Refresh resources
+  if(!game.resourceCarryOver)ai.res=game.res;else ai.res+=game.res;
+  const drawN=game.drawPerTurn||1;
+  for(let i=0;i<drawN;i++)deal('opp');
+
+  // Regen for opp field
+  ai.field.forEach(c=>{if(hasKw(c,'Regen')&&c._hp<c.hp)c._hp=Math.min(c.hp,c._hp+1);});
+  // Poison
+  ai.field.forEach(c=>{if(c._poisonCounters>0)c._hp-=c._poisonCounters;});
+  checkDead();winCheck();if(G.over){render();return;}
+
+  // ── PLAY CARDS ──
+  let hand=[...ai.hand];
+  // Sort by style
+  if(style==='aggro') hand.sort((a,b)=>(b.atk||0)-(a.atk||0));
+  else if(style==='control') hand.sort((a,b)=>(b.hp||0)-(a.hp||0)||(a.cost||0)-(b.cost||0));
+  else if(style==='defensive') hand.sort((a,b)=>(b.def||0)-(a.def||0));
+  else if(style==='combo') hand=[]; // hoard until can dump all
+  else if(style==='random') hand=shuffle(hand);
+  else hand.sort((a,b)=>(b.atk||0)-(a.atk||0)||(a.cost||0)-(b.cost||0));
+
+  // combo: play everything at once if can afford majority
+  if(style==='combo'){
+    const totalCost=ai.hand.reduce((s,c)=>s+c.cost,0);
+    if(ai.res>=totalCost*0.6||ai.hand.length>=5)hand=[...ai.hand].sort((a,b)=>a.cost-b.cost);
+  }
+
+  for(const c of hand){
+    if(ai.res<c.cost)continue;
+    const rule=getRule(c.type);
+    if(rule==='one_per_field'&&ai.field.find(f=>f.type===c.type))continue;
+    if(ai.field.length>=game.field&&rule!=='field_effect_slot'&&rule!=='immediate_effect')continue;
+    ai.res-=c.cost;ai.hand=ai.hand.filter(x=>x!==c);
+    if(rule==='field_effect_slot'){G.fieldSlot=c;glog('Opp plays '+c.name+' → field slot.');}
+    else if(rule==='immediate_effect'){applyCardEffect(c,'opp');ai.grave.push(c);glog('Opp plays '+c.name+' (immediate).');}
+    else{
+      ai.field.push(c);
+      c._tapped=!(hasKw(c,'Haste')||hasKw(c,'Charge'));
+      glog('Opp plays '+c.name+'.');
+    }
+  }
+  checkDead();winCheck();if(G.over){render();return;}
+
+  // ── ATTACK ──
+  setTimeout(()=>{
+    if(!G||G.over)return;
+    const attackers=ai.field.filter(c=>{
+      if(c._tapped||c._frozen)return false;
+      if(hasKw(c,'Defender'))return false;
+      const r=getRule(c.type);return r!=='cant_attack'&&r!=='blocks_only';
+    });
+
+    const facePct=you.hp/you.maxHp*100;
+    const goFace=style==='aggro'||(facePct<=(game.aiFaceThreshold||30))||you.field.length===0;
+
+    for(const atk of attackers){
+      if(G.over)break;
+      const taunts=you.field.filter(c=>hasKw(c,'Taunt'));
+      const targets=taunts.length?taunts:you.field;
+
+      if(!goFace&&targets.length>0){
+        // pick target by strategy
+        let target;
+        const prio=game.aiTarget||'weakest';
+        if(prio==='weakest')target=[...targets].sort((a,b)=>a._hp-b._hp)[0];
+        else if(prio==='strongest')target=[...targets].sort((a,b)=>b._atk-a._atk)[0];
+        else if(prio==='taunt')target=taunts[0]||targets[Math.floor(Math.random()*targets.length)];
+        else target=targets[0|Math.random()*targets.length];
+
+        // Flying bypass
+        if(hasKw(atk,'Flying')&&!hasKw(target,'Flying')){
+          const dmg=Math.max(0,atk._atk);you.hp-=dmg;atk._tapped=true;
+          glog('Opp '+atk.name+' (Flying) flies over — deals '+dmg+' direct!','bad');
+        } else {
+          resolve(atk,target,you);
+          checkDead();winCheck();
+        }
+      } else if(game.allowDirect!==false){
+        if(style==='defensive'&&you.field.length>0){
+          // defensive AI won't attack direct unless field clear
+        } else {
+          const dmg=Math.max(0,atk._atk);
+          you.hp-=dmg;atk._tapped=true;
+          glog('Opp '+atk.name+' attacks you directly for '+dmg+'!','bad');
+          if(hasKw(atk,'Lifesteal')&&dmg>0)ai.hp=Math.min(ai.maxHp,ai.hp+dmg);
+          winCheck();
+        }
+      }
+      if(G.over)break;
+    }
+
+    endOfTurnCleanup(ai);
+    G.phase='draw';
+    G.turn++;
+    glog('── Your Turn '+G.turn+' begins ──','phase');
+    doDrawPhase();
+  },650);
+}
+
+// ════ FUSION PLAY ════
+function openFusionPlay(){
+  if(!G||G.phase==='opp'){return;}
+  const gameId=G.game.id;
+  const gameFusions=D.fusions.filter(f=>!f.gameId||f.gameId===gameId);
+  if(!gameFusions.length){toast('No fusion recipes for this game.');return;}
+  const list=document.getElementById('fusePlayList');
+  list.innerHTML=gameFusions.map(f=>{
+    const recipe=f.recipe||[];
+    const fieldNames=G.player.field.map(c=>c.id||c.name);
+    // check if recipe satisfied (by card id on field)
+    const satisfied=recipe.every(reqId=>{
+      return G.player.field.some(fc=>fc.id===reqId);
+    });
+    const ingredients=recipe.map(id=>{
+      const c=D.cards.find(x=>x.id===id);
+      const onField=G.player.field.some(fc=>fc.id===id);
+      return`<span class="rtag" style="opacity:${onField?1:0.4};">${c?c.emoji+' '+c.name:'Unknown'}${onField?' ✓':' ✗'}</span>`;
+    }).join(' + ');
+    return`<div class="gcrd" style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3>${f.emoji||'🔮'} ${esc(f.name)}</h3>
+        ${satisfied?`<button class="btn btn-gold btn-sm" onclick="doFusion('${f.id}')">⚡ Fuse</button>`:'<span style="font-size:10px;color:var(--text2);">Missing cards</span>'}
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:5px;">Recipe: ${ingredients}</div>
+      <div style="font-size:11px;color:var(--text2);">Result: ❤${f.hp} ⚔${f.atk} 🛡${f.def}</div>
+    </div>`;
+  }).join('');
+  openModal('mo-fuseplay');
+}
+
+function doFusion(fusionId){
+  const f=D.fusions.find(x=>x.id===fusionId);if(!f)return;
+  const recipe=f.recipe||[];
+  // Remove recipe cards from field
+  const sacrificed=[];
+  for(const reqId of recipe){
+    const idx=G.player.field.findIndex(fc=>fc.id===reqId);
+    if(idx<0){toast('Missing ingredient on field!');return;}
+    sacrificed.push(G.player.field.splice(idx,1)[0]);
+  }
+  sacrificed.forEach(c=>{G.player.grave.push(c);glog('Sacrificed '+c.name+' for fusion.');});
+  // Create and play fusion card
+  const fusCard=liveCard({...f,_fusion:true,gameId:f.gameId||G.game.id});
+  G.player.field.push(fusCard);
+  glog('🔮 Fusion Summon: '+f.name+'! (❤'+f.hp+' ⚔'+f.atk+' 🛡'+f.def+')','good');
+  toast('🔮 '+f.name+' summoned!','info');
+  closeModal('mo-fuseplay');
+  checkDead();winCheck();render();
+}
+
+function resignGame(){
+  if(!G)return;
+  if(!confirm('Resign and return to game select?'))return;
+  G=null;
+  document.getElementById('playTable').style.display='none';
+  document.getElementById('playSelect').style.display='block';
+  renderPlaySelect();
+}
+
+function doDrawCard(){
+  if(!G||G.phase==='opp'||G.over)return;
+  deal('player');render();
+}
+
+// ════ VIEWERS ════
+function viewGrave(who){
+  if(!G)return;
+  const g=G[who].grave;
+  if(!g.length){toast('Graveyard is empty.');return;}
+  document.getElementById('detailT').textContent=(who==='player'?'Your':'Opponent\'s')+' Graveyard';
+  document.getElementById('detailB').innerHTML=g.map(c=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:18px;">${c.emoji||'🃏'}</span>
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:12px;">${esc(c.name)}</div>
+        <div style="font-size:11px;color:var(--text2);">${c.type} · ❤${c.hp} ⚔${c.atk} 🛡${c.def}</div>
+      </div>
+    </div>`).join('');
+  openModal('mo-detail');
+}
+
+function viewExile(){
+  if(!G)return;
+  const g=G.exile;
+  if(!g.length){toast('Exile is empty.');return;}
+  document.getElementById('detailT').textContent='Exile Zone';
+  document.getElementById('detailB').innerHTML=g.map(c=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:18px;">${c.emoji||'🃏'}</span>
+      <div style="font-family:'Cinzel',serif;font-size:12px;">${esc(c.name)}</div>
+    </div>`).join('');
+  openModal('mo-detail');
+}
+
+function showDetail(who,i){
+  if(!G)return;
+  const c=G[who]?.field[i];if(!c)return;
+  document.getElementById('detailT').textContent=c.name+(c._fusion?' [FUSION]':'');
+  document.getElementById('detailB').innerHTML=`
+    <div style="font-size:26px;margin-bottom:6px;">${c.emoji||'🃏'}</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">${c.type}${c.level>1?' · Level '+c.level:''}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;font-family:'Cinzel',serif;font-size:11px;">
+      ${c.hp?`<div>❤ HP: ${c._hp}/${c.hp}</div>`:''}
+      ${c.atk?`<div>⚔ ATK: ${c._atk}${c._atk!==c.atk?' (base '+c.atk+')':''}</div>`:''}
+      ${c.def?`<div>🛡 DEF: ${c._def}</div>`:''}
+      ${c.sta?`<div>💨 STA: ${c._sta}</div>`:''}
+      ${c.cost?`<div>⚡ Cost: ${c.cost}</div>`:''}
+      ${c.mov?`<div>👟 MOV: ${c.mov}</div>`:''}
+    </div>
+    ${c._poisonCounters>0?`<div style="color:var(--green);font-size:11px;margin-bottom:6px;">☠ Poison counters: ${c._poisonCounters}</div>`:''}
+    ${c._frozen?'<div style="color:#50a0dc;font-size:11px;margin-bottom:6px;">🧊 Frozen</div>':''}
+    ${c._silenced?'<div style="color:var(--text2);font-size:11px;margin-bottom:6px;">🔇 Silenced</div>':''}
+    ${c.desc?`<p style="font-style:italic;color:var(--text2);margin-bottom:10px;font-size:13px;">${esc(c.desc)}</p>`:''}
+    ${(c.keywords||[]).length?`<div style="margin-bottom:8px;">${c.keywords.map(k=>`<span class="kw kw-${k}">${k}</span>`).join('')}</div>`:''}
+    ${(c.attacks||[]).length?`<div style="font-family:'Cinzel',serif;font-size:9.5px;color:var(--text2);margin-bottom:5px;">ATTACKS & ABILITIES</div>`:''}
+    ${(c.attacks||[]).map(a=>`
+      <div style="background:var(--bg3);border-radius:3px;padding:6px 9px;margin-bottom:5px;">
+        <div style="font-family:'Cinzel',serif;font-size:11px;">${esc(a.name||'Unnamed')}
+          <span style="color:var(--red);">${esc(a.value||'')}</span> → <span style="color:var(--accent2);">${esc(a.target)}</span>
+          ${a.cost?`<span style="color:var(--gold);font-size:9px;"> ⚡${a.cost}</span>`:''}
+        </div>
+        ${a.desc?`<div style="font-size:11px;color:var(--text2);">${esc(a.desc)}</div>`:''}
+      </div>`).join('')}
+    ${(c.rules||[]).length?`<div style="margin-top:6px;">${c.rules.map(r=>`<span class="rtag">${esc(r)}</span>`).join('')}</div>`:''}
+  `;
+  openModal('mo-detail');
+}
+
+function fieldSlotClick(){
+  if(!G)return;
+  if(G.fieldSlot){showDetail('player',-99);
+    document.getElementById('detailT').textContent=G.fieldSlot.name+' [Field Effect]';
+    document.getElementById('detailB').innerHTML=`<div style="font-size:26px;">${G.fieldSlot.emoji||'🃏'}</div>
+    <div style="font-size:13px;color:var(--text2);margin-top:8px;">${esc(G.fieldSlot.desc||'')}</div>`;
+    openModal('mo-detail');
+  }
+}
+
+// ════════════════════════════
+//  BACKUP
+// ════════════════════════════
+function chkStr(){
+  const pw=document.getElementById('expPw').value;
+  const el=document.getElementById('strDiv');
+  if(!pw){el.textContent='';return;}
+  let s=0;if(pw.length>=8)s++;if(pw.length>=14)s++;if(/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw))s++;if(/[^A-Za-z0-9]/.test(pw))s++;
+  const lbl=['','Weak','Fair','Good','Strong','Very Strong'];
+  const col=['','var(--red)','var(--amber)','var(--amber)','var(--green)','var(--green)'];
+  el.textContent='● '+lbl[s];el.style.color=col[s]||'var(--red)';
+}
+async function deriveKey(pw,salt){
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:310000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encT(pt,pw){
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(pw,salt);
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(pt));
+  const buf=new Uint8Array(28+ct.byteLength);buf.set(salt,0);buf.set(iv,16);buf.set(new Uint8Array(ct),28);
+  return btoa(String.fromCharCode(...buf));
+}
+async function decT(b64,pw){
+  const buf=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  const key=await deriveKey(pw,buf.slice(0,16));
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(16,28)},key,buf.slice(28)));
+}
+async function doExport(){
+  const pw=document.getElementById('expPw').value;
+  const ts=new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  const payload=JSON.stringify({version:2,exported:new Date().toISOString(),data:D});
+  let content,filename;
+  if(pw){try{content=JSON.stringify({forge_enc:true,v:2,payload:await encT(payload,pw)});filename=`forge_${ts}.enc.json`;}catch(e){toast('Encryption failed');return;}}
+  else{content=payload;filename=`forge_${ts}.json`;}
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([content],{type:'application/json'})),download:filename});
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+async function doImport(){
+  const file=document.getElementById('impFile').files[0];
+  const st=document.getElementById('impSt');
+  if(!file){st.textContent='No file selected.';st.style.color='var(--amber)';return;}
+  st.textContent='Reading…';st.style.color='var(--text2)';
+  let parsed;try{parsed=JSON.parse(await file.text());}catch(e){st.textContent='✕ Invalid file.';st.style.color='var(--red)';return;}
+  let imported;
+  if(parsed.forge_enc){
+    const pw=document.getElementById('impPw').value;
+    if(!pw){st.textContent='✕ Enter password.';st.style.color='var(--amber)';return;}
+    try{imported=JSON.parse(await decT(parsed.payload,pw)).data;}
+    catch(e){st.textContent='✕ Wrong password.';st.style.color='var(--red)';return;}
+  }else if(parsed.data){imported=parsed.data;}
+  else{st.textContent='✕ Unrecognised format.';st.style.color='var(--red)';return;}
+  let ac=0,ag=0,af=0;
+  const ci=new Set(D.cards.map(x=>x.id)),gi=new Set(D.games.map(x=>x.id)),fi=new Set(D.fusions.map(x=>x.id));
+  (imported.cards||[]).forEach(c=>{if(!ci.has(c.id)){D.cards.push(c);ac++;}});
+  (imported.games||[]).forEach(g=>{if(!gi.has(g.id)){D.games.push(g);ag++;}});
+  (imported.fusions||[]).forEach(f=>{if(!fi.has(f.id)){D.fusions.push(f);af++;}});
+  persist();refreshSelects();renderCards();renderGames();renderFusions();
+  st.style.color='var(--green)';st.textContent=`✓ ${ac} cards, ${ag} games, ${af} fusions imported`;
+}
+function clearAll(){
+  if(!confirm('Delete ALL Forge data?'))return;
+  if(!confirm('This cannot be undone. Continue?'))return;
+  D={cards:[],games:[],fusions:[]};persist();closeModal('mo-backup');
+  refreshSelects();renderCards();renderGames();renderFusions();
+}
+
+// ════════════════════════════
+//  CHRONICLE MIGRATION
+// ════════════════════════════
+function migrateChronicle(){
+  try{
+    const raw=localStorage.getItem('chronicle_data');if(!raw)return 0;
+    const d=JSON.parse(raw);const cg=d.cardgame;if(!cg)return 0;
+    let n=0;
+    const ci=new Set(D.cards.map(x=>x.id)),gi=new Set(D.games.map(x=>x.id));
+    (cg.cards||[]).forEach(c=>{if(!ci.has(c.id)){D.cards.push(c);n++;}});
+    (cg.games||[]).forEach(g=>{if(!gi.has(g.id)){D.games.push(g);n++;}});
+    if(n>0)persist();return n;
+  }catch(e){return 0;}
+}
+
+// ════════════════════════════
+//  INIT
+// ════════════════════════════
+hydrate();
+if(!localStorage.getItem('forge_migrated_v2')){
+  const n=migrateChronicle();
+  if(n>0){localStorage.setItem('forge_migrated_v2','1');toast('✓ Imported '+n+' items from Chronicle','info');}
+  localStorage.setItem('forge_migrated_v2','1');
+}
+refreshSelects();
+renderCards();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./forge_sw.js').then(r=>{
+      r.addEventListener('updatefound',()=>{
+        const nw=r.installing;
+        nw.addEventListener('statechange',()=>{
+          if(nw.state==='installed'&&navigator.serviceWorker.controller){
+            if(confirm('Forge has been updated. Reload?'))window.location.reload();
+          }
+        });
+      });
+    }).catch(e=>console.warn('Forge SW:',e));
+  });
+}
+
+
+// ════════════════════════════════════════════════════════════════
+//  FORGE EXPANSION — Resource Types, Custom Zones, Grid, Arena, Lanes
+//  Injected after main engine
+// ════════════════════════════════════════════════════════════════
+
+// ── RESOURCE TYPE BUILDER (Game Editor) ──
+const DEFAULT_RES_TYPES = [
+  {name:'',icon:'⚡',color:'#c9a84c'},
+  {name:'',icon:'🌿',color:'#55aa77'},
+  {name:'',icon:'🔥',color:'#cc5555'},
+  {name:'',icon:'💧',color:'#4488cc'},
+  {name:'',icon:'⚔',color:'#9090aa'},
+];
+
+function buildResTypeEditor(gameObj) {
+  const el = document.getElementById('resTypeBuilder');
+  if (!el) return;
+  const existing = (gameObj && gameObj.resTypes) ? gameObj.resTypes : [{name:'',icon:'⚡',color:'#c9a84c'}];
+  const types = existing.concat(DEFAULT_RES_TYPES.slice(existing.length)).slice(0,5);
+  el.innerHTML = types.map((t,i) => `
+    <div style="display:flex;gap:6px;align-items:center;background:var(--bg3);border-radius:3px;padding:6px 10px;">
+      <input type="text" id="rt-icon-${i}" value="${esc(t.icon||'⚡')}" placeholder="⚡" maxlength="2"
+        style="width:36px;text-align:center;font-size:18px;padding:4px;">
+      <input type="text" id="rt-name-${i}" value="${esc(t.name||'')}" placeholder="Resource ${i+1} name (blank=disabled)"
+        style="flex:1;font-size:12px;">
+      <input type="color" id="rt-col-${i}" value="${t.color||'#c9a84c'}" style="width:32px;height:32px;border:none;background:none;cursor:pointer;">
+    </div>`).join('');
+}
+
+function getResTypes() {
+  const types = [];
+  for (let i=0; i<5; i++) {
+    const name = document.getElementById(`rt-name-${i}`)?.value.trim() || '';
+    const icon = document.getElementById(`rt-icon-${i}`)?.value.trim() || DEFAULT_RES_TYPES[i].icon;
+    const color = document.getElementById(`rt-col-${i}`)?.value || DEFAULT_RES_TYPES[i].color;
+    types.push({name, icon, color});
+  }
+  return types;
+}
+
+// ── ZONE TOGGLE READER ──
+function getZoneConfig() {
+  return {
+    assistant: document.getElementById('zt-assistant')?.checked || false,
+    collector: document.getElementById('zt-collector')?.checked || false,
+    construct: document.getElementById('zt-construct')?.checked || false,
+    sanctuary: document.getElementById('zt-sanctuary')?.checked || false,
+  };
+}
+function setZoneConfig(zc) {
+  if (!zc) return;
+  ['assistant','collector','construct','sanctuary'].forEach(k => {
+    const el = document.getElementById('zt-'+k);
+    if (el) el.checked = !!zc[k];
+  });
+}
+
+// Patch openAddGame / openEditGame to init resource builder and zones
+const _origOpenAddGame = openAddGame;
+openAddGame = function() {
+  _origOpenAddGame();
+  buildResTypeEditor(null);
+  setZoneConfig(null);
+  const gpm = document.getElementById('gPlayMode');
+  if (gpm) gpm.value = 'classic';
+};
+
+const _origOpenEditGame = openEditGame;
+openEditGame = function(id) {
+  _origOpenEditGame(id);
+  const g = D.games.find(x=>x.id===id);
+  if (g) {
+    buildResTypeEditor(g);
+    setZoneConfig(g.zoneConfig||{});
+    const gpm = document.getElementById('gPlayMode');
+    if (gpm) gpm.value = g.playMode || 'classic';
+  }
+};
+
+// Patch saveGame to include resource types and zones
+const _origSaveGame = saveGame;
+saveGame = function() {
+  // Call original but intercept before persist
+  const name = document.getElementById('gN').value.trim();
+  if (!name) { toast('Game name required'); return; }
+  const obj = {
+    id: editGameId||uid(), name,
+    hp: intEl('gHp'), hand: Math.min(intEl('gHand'),7),
+    res: intEl('gRes'), field: intEl('gFld'),
+    drawPerTurn: intEl('gDraw')||1, maxHand: intEl('gMaxH')||7,
+    aiStyle: document.getElementById('gAI').value,
+    aiTarget: document.getElementById('gAITarget').value,
+    aiFaceThreshold: intEl('gAIFace'),
+    desc: document.getElementById('gDs').value.trim(),
+    typeRules: getTypeRuleList(),
+    playMode: document.getElementById('gPlayMode')?.value || 'classic',
+    resTypes: getResTypes(),
+    zoneConfig: getZoneConfig(),
+    ...getRuleToggleValues(),
+    ...getWinCondValues()
+  };
+  if (editGameId) { const i=D.games.findIndex(x=>x.id===editGameId); if(i>=0)D.games[i]=obj; }
+  else D.games.push(obj);
+  persist(); closeModal('mo-game'); renderGames(); refreshSelects();
+};
+
+// ── PATCH renderPlaySelect to show playMode and custom zones info ──
+const _origRenderPlaySelect = renderPlaySelect;
+renderPlaySelect = function() {
+  document.getElementById('playSelect').style.display='block';
+  document.getElementById('playTable').style.display='none';
+  const list = document.getElementById('playGameList');
+  if (!D.games.length) { list.innerHTML='<div class="empty">No game configs — create one in Games tab.</div>'; return; }
+  list.innerHTML = D.games.map(g => {
+    const n = D.cards.filter(c=>c.gameId===g.id).length;
+    const warn = n<4?`<div style="font-size:11px;color:var(--amber);margin-top:6px;">⚠ Need at least 4 cards assigned to this game.</div>`:'';
+    const mode = g.playMode || 'classic';
+    const modeLabels = {classic:'Classic Battle',grid:'Grid Battle (6×6)',arena:'Arena',lanes:'Lane Battle (3 lanes)'};
+    const activeZones = Object.entries(g.zoneConfig||{}).filter(([k,v])=>v).map(([k])=>k).join(', ');
+    const resLabels = (g.resTypes||[]).filter(r=>r.name).map(r=>`${r.icon} ${r.name}`).join(' · ');
+    return `<div class="gcrd">
+      <h3>${esc(g.name)}</h3>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:5px;line-height:1.8;">
+        ${n} cards · HP ${g.hp} · Draw ${g.drawPerTurn||1}/turn · AI: ${g.aiStyle||'balanced'}<br>
+        Mode: <span style="color:var(--accent2);">${modeLabels[mode]||mode}</span>
+        ${resLabels?`<br>Resources: ${resLabels}`:''}
+        ${activeZones?`<br>Extra zones: ${activeZones}`:''}
+      </div>
+      ${warn}
+      ${n>=4?`<button class="btn btn-gold" style="width:100%;margin-top:5px;" onclick="startGameMode('${g.id}')">▶ Playtest</button>`:''}
+    </div>`;
+  }).join('');
+};
+
+// ── GAME START ROUTER ──
+function startGameMode(gameId) {
+  const game = D.games.find(x=>x.id===gameId);
+  if (!game) return;
+  const mode = game.playMode || 'classic';
+  if (mode === 'grid') startGridGame(gameId);
+  else if (mode === 'arena') startArenaGame(gameId);
+  else if (mode === 'lanes') startLanesGame(gameId);
+  else startGame(gameId);
+}
+
+// ════════════════════════════════════════════════════════════════
+//  NAMED RESOURCES — display in play
+// ════════════════════════════════════════════════════════════════
+function getResDisplay(game, resObj) {
+  // resObj: {0: 3, 1: 1, ...} or just a number for legacy
+  const types = game.resTypes || [];
+  const active = types.filter(t=>t.name);
+  if (!active.length) {
+    // legacy: single resource
+    const v = typeof resObj === 'object' ? (resObj[0]||0) : (resObj||0);
+    return `⚡${v}`;
+  }
+  return active.map((t,i) => {
+    const v = typeof resObj === 'object' ? (resObj[i]||0) : 0;
+    return `<span style="color:${t.color||'var(--gold)'};">${t.icon||'⚡'}${v} ${t.name}</span>`;
+  }).join(' ');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  CUSTOM ZONE RENDERING (assistant, collector, construct, sanctuary)
+// ════════════════════════════════════════════════════════════════
+function renderCustomZones(side, prefix, zones, editable) {
+  if (!G || !zones) return '';
+  const sideData = G[side];
+  let html = '';
+  
+  if (zones.assistant) {
+    const ac = sideData.assistantZone;
+    html += `<div style="margin:4px 13px;">
+      <div class="pt-lbl">🤝 Assistant Zone</div>
+      <div style="display:flex;gap:6px;min-height:70px;padding:2px 0;">
+        ${ac ? renderSmallCard(ac, `${side}Assist`, editable) 
+             : `<div style="width:70px;height:64px;border:1px dashed var(--border2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text2);text-align:center;cursor:pointer;" onclick="${editable?`playToZone('${side}','assistant')`:''}">Play here</div>`}
+      </div>
+    </div>`;
+  }
+  if (zones.collector) {
+    const cc = sideData.collectorZone || [];
+    html += `<div style="margin:4px 13px;">
+      <div class="pt-lbl">📦 Collector Zone <span style="color:var(--text2);">(${cc.length})</span></div>
+      <div style="display:flex;gap:4px;overflow-x:auto;min-height:50px;padding:2px 0;">
+        ${cc.map((c,i)=>renderSmallCard(c,`${side}Collect${i}`,editable)).join('')}
+        ${editable?`<div style="width:50px;height:50px;border:1px dashed var(--border2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text2);cursor:pointer;" onclick="playToZone('${side}','collector')">+</div>`:''}
+      </div>
+    </div>`;
+  }
+  if (zones.construct) {
+    const cs = sideData.constructZone || [];
+    html += `<div style="margin:4px 13px;background:rgba(153,85,204,0.08);border:1px solid rgba(153,85,204,0.25);border-radius:4px;padding:6px 8px;">
+      <div class="pt-lbl" style="color:var(--purple);">🔧 Construct Zone (fusions stage here)</div>
+      <div style="display:flex;gap:4px;overflow-x:auto;min-height:60px;padding:2px 0;">
+        ${cs.map((c,i)=>renderSmallCard(c,`${side}Constr${i}`,editable)).join('')}
+        ${editable?`<div style="min-width:60px;height:60px;border:1px dashed rgba(153,85,204,0.4);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--purple);cursor:pointer;" onclick="deployConstruct()">Deploy→Field</div>`:''}
+      </div>
+    </div>`;
+  }
+  if (zones.sanctuary) {
+    const sc = sideData.sanctuaryZone;
+    html += `<div style="margin:4px 13px;">
+      <div class="pt-lbl">🏛 Sanctuary (protected)</div>
+      <div style="display:flex;gap:6px;min-height:70px;padding:2px 0;">
+        ${sc ? renderSmallCard(sc, `${side}Sanc`, false) 
+             : `<div style="width:70px;height:64px;border:1px dashed var(--border2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text2);text-align:center;cursor:pointer;" onclick="${editable?`playToZone('${side}','sanctuary')`:''}">Protected slot</div>`}
+      </div>
+    </div>`;
+  }
+  return html;
+}
+
+function renderSmallCard(c, key, clickable) {
+  if (!c) return '';
+  const col = typeColor(c.type);
+  return `<div style="min-width:58px;max-width:64px;background:var(--bg3);border:1.5px solid ${col};border-radius:4px;padding:4px;text-align:center;flex-shrink:0;${clickable?'cursor:pointer;':''}font-size:7px;">
+    <div style="font-size:14px;">${c.emoji||'🃏'}</div>
+    <div style="font-family:'Cinzel',serif;font-size:7px;line-height:1.2;">${esc(c.name)}</div>
+    ${c._hp?`<div style="color:var(--red);">❤${c._hp}</div>`:''}
+  </div>`;
+}
+
+function playToZone(side, zone) {
+  if (!G || G.phase==='opp') return;
+  const sel = G.sel;
+  if (!sel || !G.player.hand.includes(sel)) { glog('Select a hand card first.',''); return; }
+  const idx = G.player.hand.indexOf(sel);
+  G.player.hand.splice(idx,1);
+  G.sel = null;
+  if (zone === 'assistant') { G.player.assistantZone = sel; glog(sel.name+' → Assistant Zone.'); }
+  else if (zone === 'collector') { (G.player.collectorZone = G.player.collectorZone||[]).push(sel); glog(sel.name+' → Collector Zone.'); }
+  else if (zone === 'construct') { (G.player.constructZone = G.player.constructZone||[]).push(sel); glog(sel.name+' → Construct Zone (staged).','info'); }
+  else if (zone === 'sanctuary') { G.player.sanctuaryZone = sel; glog(sel.name+' → Sanctuary (protected).','good'); }
+  render();
+}
+
+function deployConstruct() {
+  if (!G || G.phase==='opp') return;
+  const cs = G.player.constructZone || [];
+  if (!cs.length) { glog('No cards in Construct Zone.',''); return; }
+  const card = cs.shift();
+  G.player.field.push(card);
+  glog('🔧 '+card.name+' deployed from Construct Zone to field!','good');
+  render();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  GRID BATTLE (6×6)
+// ════════════════════════════════════════════════════════════════
+let GG = null; // grid game state
+
+const GRID_COLS = 6, GRID_ROWS = 6;
+
+function startGridGame(gameId) {
+  const game = D.games.find(x=>x.id===gameId);
+  if (!game) return;
+  const pool = D.cards.filter(c=>c.gameId===gameId&&!c._fusion);
+  if (pool.length < 4) { toast('Need ≥4 cards'); return; }
+  const mkDeck = () => shuffle(pool.map(liveCard));
+
+  GG = {
+    game, turn: 1, phase: 'main', over: false,
+    log: [], exile: [],
+    sel: null,        // selected card on grid or hand: {who, row, col}
+    moveMode: false,  // true when moving a card
+    grid: Array.from({length:GRID_ROWS}, ()=>Array(GRID_COLS).fill(null)),
+    player: { hp:game.hp, maxHp:game.hp, res:game.res, hand:[], grave:[], deck:mkDeck() },
+    opp:    { hp:game.hp, maxHp:game.hp, res:game.res, hand:[], grave:[], deck:mkDeck() }
+  };
+
+  // Deal opening hands
+  const hs = Math.min(game.hand, 7);
+  for (let i=0;i<hs;i++) { ggDeal('player'); ggDeal('opp'); }
+
+  // Place 2 AI cards on their front row (row 0-1)
+  GG.opp.hand.slice(0,2).forEach((c,i) => {
+    GG.grid[0][i*2+1] = {...c, _who:'opp'};
+    GG.opp.hand.splice(GG.opp.hand.indexOf(c),1);
+  });
+
+  showGridUI();
+  ggLog('⚔ Grid Battle begins! Place cards on your front row (rows 4-5).', 'phase');
+  renderGrid();
+}
+
+function ggDeal(who) {
+  const s = GG[who];
+  if (!s.deck.length) return;
+  if (s.hand.length >= (GG.game.maxHand||7)) return;
+  s.hand.push(s.deck.pop());
+}
+
+function ggLog(msg, cls='') {
+  if (!GG) return;
+  GG.log.push({msg,cls});
+  const el = document.getElementById('ggLog');
+  if (el) el.innerHTML = GG.log.slice(-30).reverse().map(e=>`<div class="ll ${e.cls}">${esc(e.msg)}</div>`).join('');
+}
+
+function showGridUI() {
+  document.getElementById('playSelect').style.display = 'none';
+  document.getElementById('playTable').style.display = 'none';
+  const gt = document.getElementById('gridTable');
+  if (gt) gt.style.display = 'block';
+}
+
+function renderGrid() {
+  if (!GG) return;
+
+  // HP bars
+  const setPBar = (barId, valId, cur, max) => {
+    const pct = Math.max(0, cur/max*100);
+    const el = document.getElementById(barId);
+    if (el) el.style.width = pct+'%';
+    const vel = document.getElementById(valId);
+    if (vel) vel.textContent = cur;
+  };
+  setPBar('ggPlayerHpBar','ggPlayerHpVal', GG.player.hp, GG.player.maxHp);
+  setPBar('ggOppHpBar','ggOppHpVal', GG.opp.hp, GG.opp.maxHp);
+  document.getElementById('ggPlayerRes').textContent = GG.player.res;
+
+  // Grid
+  const gc = document.getElementById('gridCells');
+  if (!gc) return;
+  let html = '';
+  for (let r=0; r<GRID_ROWS; r++) {
+    for (let c=0; c<GRID_COLS; c++) {
+      const card = GG.grid[r][c];
+      const isOppZone = r <= 1;
+      const isPlayerZone = r >= 4;
+      const isMidZone = r===2 || r===3;
+      const isSel = GG.sel && GG.sel.row===r && GG.sel.col===c;
+      let zoneBg = isOppZone ? 'rgba(180,40,40,0.08)' : isPlayerZone ? 'rgba(60,120,80,0.08)' : 'rgba(30,30,50,0.3)';
+      let cellStyle = `background:${zoneBg};border:1px solid var(--border);border-radius:3px;width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:all 0.15s;`;
+      if (isSel) cellStyle += 'border-color:var(--gold);box-shadow:0 0 8px rgba(201,168,76,0.5);';
+      if (GG.moveMode && GG.sel) {
+        const selCard = GG.grid[GG.sel.row][GG.sel.col];
+        if (selCard && canMoveTo(selCard, GG.sel.row, GG.sel.col, r, c)) {
+          cellStyle += 'border-color:var(--green);border-style:dashed;';
+        }
+      }
+      
+      let cardHtml = '';
+      if (card) {
+        const col = typeColor(card.type);
+        const isOpp = card._who === 'opp';
+        cardHtml = `<div style="width:100%;height:100%;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:2px;${card._tapped?'opacity:0.5;':''}" >
+          <div style="font-size:${window.innerWidth<400?'14px':'16px'};">${card.emoji||'🃏'}</div>
+          <div style="font-family:'Cinzel',serif;font-size:6px;text-align:center;line-height:1.1;color:${isOpp?'var(--red)':'var(--green)'};">${esc(card.name.slice(0,6))}</div>
+          <div style="font-size:6px;color:var(--text2);">❤${card._hp} ⚔${card._atk}</div>
+          ${card._tapped?'<div style="font-size:5px;color:var(--amber);">tap</div>':''}
+        </div>`;
+      }
+      html += `<div style="${cellStyle}" onclick="gridCellClick(${r},${c})">${cardHtml}</div>`;
+    }
+  }
+  gc.innerHTML = html;
+
+  // Hand
+  const gh = document.getElementById('ggHand');
+  if (gh) {
+    gh.innerHTML = GG.player.hand.map((c,i) => {
+      const col = typeColor(c.type);
+      const isSel = GG.sel && GG.sel.handIdx === i;
+      return `<div class="pc${isSel?' sel':''}" style="border-color:${col};min-width:66px;" onclick="ggSelectHand(${i})">
+        <div class="pc-cost">⚡${c.cost}</div>
+        <span class="pi">${c.emoji||'🃏'}</span>
+        <div class="pn">${esc(c.name)}</div>
+        <div class="ps">${c.hp?`<span>❤${c._hp}</span>`:''}${c.atk?`<span>⚔${c._atk}</span>`:''}${c.mov?`<span>👟${c.mov}</span>`:''}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('ggHandCnt').textContent = GG.player.hand.length;
+  }
+
+  document.getElementById('ggGraveCnt').textContent = GG.player.grave.length;
+  document.getElementById('ggDeckCnt').textContent = GG.player.deck.length;
+  document.getElementById('ggTurn').textContent = 'Turn '+GG.turn;
+}
+
+function canMoveTo(card, fromR, fromC, toR, toC) {
+  if (card._who === 'opp') return false;
+  if (card._tapped) return false;
+  const mov = card.mov || card._mov || 1;
+  const dist = Math.abs(toR-fromR) + Math.abs(toC-fromC);
+  if (dist > mov) return false;
+  if (GG.grid[toR][toC] && GG.grid[toR][toC]._who !== 'opp') return false; // blocked by own card
+  return true;
+}
+
+function gridCellClick(r, c) {
+  if (!GG || GG.over || GG.phase==='opp') return;
+  const cell = GG.grid[r][c];
+  const sel = GG.sel;
+
+  // Hand card selected — place it
+  if (sel && sel.handIdx !== undefined) {
+    if (r < 4) { ggLog('Place your cards on rows 4-5 (your zone) or move them after.',''); return; }
+    if (cell) { ggLog('Cell occupied.',''); return; }
+    const card = GG.player.hand[sel.handIdx];
+    if (GG.player.res < card.cost) { ggLog('⚡ Not enough resources.','bad'); GG.sel=null; renderGrid(); return; }
+    GG.player.res -= card.cost;
+    GG.player.hand.splice(sel.handIdx,1);
+    const placed = {...card, _who:'player', _tapped:!(hasKw(card,'Haste')||hasKw(card,'Charge'))};
+    GG.grid[r][c] = placed;
+    GG.sel = null;
+    ggLog(card.name+' placed at ('+r+','+c+').','good');
+    renderGrid(); return;
+  }
+
+  // Own card selected for move — move it or attack
+  if (sel && sel.row !== undefined) {
+    const selCard = GG.grid[sel.row][sel.col];
+    if (!selCard || selCard._who !== 'player') { GG.sel=null; renderGrid(); return; }
+
+    if (cell && cell._who === 'opp') {
+      // Attack!
+      const dist = Math.abs(r-sel.row)+Math.abs(c-sel.col);
+      if (dist > 1) { ggLog(selCard.name+' is too far to attack (must be adjacent).','bad'); return; }
+      if (selCard._tapped) { ggLog(selCard.name+' already attacked.','bad'); return; }
+      if (selCard._frozen) { ggLog(selCard.name+' is Frozen.','bad'); return; }
+      ggResolve(selCard, cell, r, c);
+      GG.sel = null;
+      ggCheckDead(); ggWinCheck(); renderGrid(); return;
+    }
+
+    if (!cell) {
+      // Move
+      if (!canMoveTo(selCard, sel.row, sel.col, r, c)) { ggLog('Cannot move there (too far or blocked).',''); return; }
+      GG.grid[r][c] = selCard;
+      GG.grid[sel.row][sel.col] = null;
+      selCard._moved = true;
+      GG.sel = null;
+      ggLog(selCard.name+' moved to ('+r+','+c+').','info');
+      renderGrid(); return;
+    }
+
+    // Tap own card = select it
+    if (cell._who === 'player') { GG.sel={row:r,col:c}; renderGrid(); return; }
+    GG.sel = null; renderGrid(); return;
+  }
+
+  // Select cell
+  if (cell) {
+    if (cell._who === 'player') { GG.sel={row:r,col:c}; ggLog('Selected '+cell.name+' · MOV:'+( cell.mov||1)+' · ATK:'+cell._atk,''); }
+    else { GG.sel={row:r,col:c}; ggLog('Opponent\'s '+cell.name+': ❤'+cell._hp+' ⚔'+cell._atk+' 🛡'+cell._def,''); }
+    renderGrid();
+  } else {
+    GG.sel = null; renderGrid();
+  }
+}
+
+function ggSelectHand(i) {
+  if (!GG || GG.phase==='opp') return;
+  if (GG.sel && GG.sel.handIdx===i) { GG.sel=null; }
+  else { GG.sel = {handIdx:i}; ggLog('Selected '+GG.player.hand[i].name+' — tap a cell in rows 4-5 to place.',''); }
+  renderGrid();
+}
+
+function ggResolve(atk, def, defR, defC) {
+  const dmgToDef = hasKw(atk,'Piercing') ? atk._atk : Math.max(0, atk._atk - def._def);
+  const dmgToAtk = Math.max(0, def._atk - atk._def);
+  if (!hasKw(def,'Indestructible')) def._hp -= dmgToDef;
+  if (!hasKw(atk,'Indestructible')) atk._hp -= dmgToAtk;
+  atk._tapped = !hasKw(atk,'Vigilance');
+  ggLog('⚔ '+atk.name+' attacks '+def.name+': deals '+dmgToDef+', takes '+dmgToAtk,'imp');
+  if (hasKw(atk,'Lifesteal') && dmgToDef>0) { GG.player.hp=Math.min(GG.player.maxHp,GG.player.hp+dmgToDef); ggLog('Lifesteal +'+dmgToDef,'good'); }
+  if (hasKw(atk,'Poison') && dmgToDef>0) { def._poisonCounters=(def._poisonCounters||0)+1; }
+  if (hasKw(atk,'Trample') && def._hp<0) { const excess=Math.abs(def._hp); GG.opp.hp-=excess; ggLog(atk.name+' Trample: '+excess+' to opp HP!','bad'); }
+}
+
+function ggCheckDead() {
+  for (let r=0; r<GRID_ROWS; r++) {
+    for (let c=0; c<GRID_COLS; c++) {
+      const card = GG.grid[r][c];
+      if (!card) continue;
+      if (hasKw(card,'Indestructible')) continue;
+      if (card._hp <= 0 || (card.sta>0 && card._sta<=0)) {
+        if (card._reborn && !card._rebornUsed) {
+          card._hp=1; card._reborn=false; card._rebornUsed=true;
+          ggLog(card.name+' Reborn!','info');
+        } else {
+          ggLog('☠ '+card.name+' destroyed','bad');
+          const side = card._who==='player' ? GG.player : GG.opp;
+          side.grave.push(card);
+          GG.grid[r][c] = null;
+        }
+      }
+    }
+  }
+}
+
+function ggWinCheck() {
+  if (GG.over) return;
+  // Cards reaching opposite back row deal damage
+  for (let c=0;c<GRID_COLS;c++) {
+    const playerCard = GG.grid[0][c];
+    if (playerCard && playerCard._who==='player') {
+      GG.opp.hp -= playerCard._atk;
+      ggLog('💥 '+playerCard.name+' breaches opp base! -'+playerCard._atk+' HP!','good');
+      GG.player.grave.push(playerCard);
+      GG.grid[0][c] = null;
+    }
+    const oppCard = GG.grid[GRID_ROWS-1][c];
+    if (oppCard && oppCard._who==='opp') {
+      GG.player.hp -= oppCard._atk;
+      ggLog('💥 Opp '+oppCard.name+' breaches your base! -'+oppCard._atk+' HP!','bad');
+      GG.opp.grave.push(oppCard);
+      GG.grid[GRID_ROWS-1][c] = null;
+    }
+  }
+  if (GG.opp.hp<=0) { GG.over=true; ggLog('🏆 YOU WIN!','good'); toast('🏆 Victory!','win'); }
+  if (GG.player.hp<=0) { GG.over=true; ggLog('💀 DEFEATED.','bad'); toast('💀 Defeated...','loss'); }
+}
+
+function ggEndTurn() {
+  if (!GG||GG.over) return;
+  GG.phase = 'opp';
+  // Untap and cleanup player cards
+  for (let r=0;r<GRID_ROWS;r++) for (let c=0;c<GRID_COLS;c++) {
+    const card=GG.grid[r][c];
+    if (card && card._who==='player') { card._tapped=false; card._moved=false; card._atkCount=0; card._frozen=false; }
+    if (card && card._who==='opp') { card._tapped=false; card._moved=false; }
+  }
+  ggLog('── Opponent\'s Turn ──','phase');
+  renderGrid();
+  setTimeout(ggAiTurn, 500);
+}
+
+function ggAiTurn() {
+  if (!GG||GG.over) return;
+  const ai = GG.opp, style = GG.game.aiStyle||'balanced';
+  ai.res = GG.game.res;
+  ggDeal('opp');
+
+  // AI plays cards from hand onto their zone (rows 0-1)
+  const aiCards = [];
+  for (let r=0;r<2;r++) for (let c=0;c<GRID_COLS;c++) if (GG.grid[r][c]===null) aiCards.push({r,c});
+
+  for (const card of [...ai.hand]) {
+    if (ai.res < card.cost) continue;
+    const slot = aiCards.shift();
+    if (!slot) break;
+    ai.res -= card.cost;
+    ai.hand = ai.hand.filter(x=>x!==card);
+    GG.grid[slot.r][slot.c] = {...card, _who:'opp', _tapped:false};
+    ggLog('Opp plays '+card.name+' at ('+slot.r+','+slot.c+').','');
+  }
+
+  // AI moves cards toward player
+  for (let r=GRID_ROWS-1;r>=0;r--) {
+    for (let c=0;c<GRID_COLS;c++) {
+      const card = GG.grid[r][c];
+      if (!card || card._who!=='opp' || card._tapped) continue;
+      const mov = card.mov || card._mov || 1;
+
+      // Try to attack adjacent player cards first
+      const adjCells = [[r+1,c],[r,c-1],[r,c+1],[r-1,c]].filter(([rr,cc])=>rr>=0&&rr<GRID_ROWS&&cc>=0&&cc<GRID_COLS);
+      const playerAdj = adjCells.find(([rr,cc])=>GG.grid[rr][cc]&&GG.grid[rr][cc]._who==='player');
+      if (playerAdj) {
+        const target = GG.grid[playerAdj[0]][playerAdj[1]];
+        ggResolve(card, target, playerAdj[0], playerAdj[1]);
+        card._tapped = true;
+        ggCheckDead(); ggWinCheck();
+      } else {
+        // Move toward player (advance downward)
+        let moved = false;
+        for (let step=0; step<mov && !moved; step++) {
+          const nr = r+1;
+          if (nr>=GRID_ROWS) break;
+          if (!GG.grid[nr][c]) {
+            GG.grid[nr][c] = card;
+            GG.grid[r][c] = null;
+            moved = true;
+          }
+        }
+      }
+    }
+  }
+
+  ggCheckDead(); ggWinCheck();
+  setTimeout(() => {
+    if (!GG||GG.over) { renderGrid(); return; }
+    GG.phase = 'main';
+    GG.turn++;
+    GG.player.res = GG.game.res;
+    ggDeal('player');
+    // Regen
+    for (let r=0;r<GRID_ROWS;r++) for (let c=0;c<GRID_COLS;c++) {
+      const card=GG.grid[r][c];
+      if (card&&card._who==='player'&&hasKw(card,'Regen')&&card._hp<card.hp) card._hp=Math.min(card.hp,card._hp+1);
+      if (card&&card._poisonCounters>0) card._hp-=card._poisonCounters;
+    }
+    ggCheckDead(); ggWinCheck();
+    ggLog('── Your Turn '+GG.turn+' · ⚡'+GG.player.res+' ──','phase');
+    renderGrid();
+  }, 600);
+}
+
+function ggDirectAttack() {
+  if (!GG||GG.over||GG.phase==='opp') return;
+  if (GG.sel && GG.sel.row!==undefined) {
+    const card = GG.grid[GG.sel.row][GG.sel.col];
+    if (card && card._who==='player' && !card._tapped) {
+      // Check if on front row (row 0 = opp zone breach)
+      if (GG.sel.row===0) {
+        GG.opp.hp -= card._atk;
+        card._tapped = true;
+        ggLog(card.name+' attacks opp directly for '+card._atk+'!','good');
+        GG.sel = null;
+        ggWinCheck(); renderGrid();
+      } else glog('Move your card to row 0 first to attack directly.','');
+    }
+  }
+}
+
+function resignGridGame() {
+  if (!confirm('Resign grid game?')) return;
+  GG = null;
+  const gt = document.getElementById('gridTable');
+  if (gt) gt.style.display = 'none';
+  renderPlaySelect();
+  document.getElementById('playSelect').style.display = 'block';
+}
+
+// ════════════════════════════════════════════════════════════════
+//  ARENA MODE (perimeter slots around a central zone)
+// ════════════════════════════════════════════════════════════════
+let GA = null; // arena game state
+
+// Arena layouts: 'compact' = 2 per side, 'wide' = 3 top/bottom 2 sides
+function getArenaSlots(layout) {
+  if (layout === 'wide') {
+    return {
+      top:   [{r:0,c:1},{r:0,c:2},{r:0,c:3}],
+      left:  [{r:1,c:0},{r:2,c:0}],
+      right: [{r:1,c:4},{r:2,c:4}],
+      bottom:[{r:3,c:1},{r:3,c:2},{r:3,c:3}]
+    };
+  }
+  return {
+    top:   [{r:0,c:1},{r:0,c:3}],
+    left:  [{r:1,c:0},{r:2,c:0}],
+    right: [{r:1,c:4},{r:2,c:4}],
+    bottom:[{r:3,c:1},{r:3,c:3}]
+  };
+}
+
+function startArenaGame(gameId) {
+  const game = D.games.find(x=>x.id===gameId);
+  if (!game) return;
+  const pool = D.cards.filter(c=>c.gameId===gameId&&!c._fusion);
+  if (pool.length < 4) { toast('Need ≥4 cards'); return; }
+  const mkDeck = () => shuffle(pool.map(liveCard));
+
+  const layout = game.arenaLayout || 'compact';
+  const slots = getArenaSlots(layout);
+
+  GA = {
+    game, turn:1, phase:'main', over:false,
+    log:[], exile:[],
+    layout, slots,
+    sel: null,
+    // 5x5 grid for arena: perimeter used
+    arena: Array.from({length:5},()=>Array(5).fill(null)),
+    centralCard: null, // centre slot
+    player: { hp:game.hp, maxHp:game.hp, res:game.res, hand:[], grave:[], deck:mkDeck() },
+    opp:    { hp:game.hp, maxHp:game.hp, res:game.res, hand:[], grave:[], deck:mkDeck() }
+  };
+
+  const hs = Math.min(game.hand, 7);
+  for (let i=0;i<hs;i++) { gaDeal('player'); gaDeal('opp'); }
+
+  // AI places initial cards on top slots
+  slots.top.forEach((s,i) => {
+    if (GA.opp.hand[i]) {
+      GA.arena[s.r][s.c] = {...GA.opp.hand[i], _who:'opp', _tapped:false};
+      GA.opp.hand.splice(i,1);
+    }
+  });
+
+  document.getElementById('playSelect').style.display='none';
+  document.getElementById('playTable').style.display='none';
+  const at = document.getElementById('arenaTable');
+  if (at) at.style.display = 'block';
+
+  gaLog('⚔ Arena Battle begins! Place cards on bottom slots (your side).','phase');
+  renderArena();
+}
+
+function gaDeal(who) {
+  const s = GA[who];
+  if (!s.deck.length) return;
+  if (s.hand.length >= (GA.game.maxHand||7)) return;
+  s.hand.push(s.deck.pop());
+}
+
+function gaLog(msg,cls='') {
+  if (!GA) return;
+  GA.log.push({msg,cls});
+  const el = document.getElementById('gaLog');
+  if (el) el.innerHTML = GA.log.slice(-30).reverse().map(e=>`<div class="ll ${e.cls}">${esc(e.msg)}</div>`).join('');
+}
+
+function renderArena() {
+  if (!GA) return;
+
+  const setPBar = (barId,valId,cur,max) => {
+    const el=document.getElementById(barId); if(el) el.style.width=Math.max(0,cur/max*100)+'%';
+    const ve=document.getElementById(valId); if(ve) ve.textContent=cur;
+  };
+  setPBar('gaPlayerHpBar','gaPlayerHpVal',GA.player.hp,GA.player.maxHp);
+  setPBar('gaOppHpBar','gaOppHpVal',GA.opp.hp,GA.opp.maxHp);
+  document.getElementById('gaPlayerRes').textContent = GA.player.res;
+
+  const ac = document.getElementById('arenaCells');
+  if (!ac) return;
+
+  const slots = GA.slots;
+  const allPlayerSlots = new Set(slots.bottom.map(s=>`${s.r}-${s.c}`));
+  const allOppSlots = new Set(slots.top.map(s=>`${s.r}-${s.c}`));
+  const sideSlots = new Set([...slots.left,...slots.right].map(s=>`${s.r}-${s.c}`));
+  const allSlots = new Set([...slots.top,...slots.bottom,...slots.left,...slots.right].map(s=>`${s.r}-${s.c}`));
+
+  let html = '';
+  for (let r=0;r<5;r++) {
+    for (let c=0;c<5;c++) {
+      const key = `${r}-${c}`;
+      const isCenter = r===2&&c===2;
+      const isSlot = allSlots.has(key);
+      const isPlayer = allPlayerSlots.has(key);
+      const isOpp = allOppSlots.has(key);
+      const isSide = sideSlots.has(key);
+      const card = GA.arena[r][c];
+      const isSel = GA.sel && GA.sel.r===r && GA.sel.c===c;
+
+      if (!isSlot && !isCenter) {
+        html += '<div style="background:transparent;border:1px solid transparent;border-radius:3px;width:100%;aspect-ratio:1;"></div>';
+        continue;
+      }
+
+      let bg = isCenter ? 'rgba(201,168,76,0.12)' : isPlayer?'rgba(60,120,80,0.12)':isOpp?'rgba(180,40,40,0.1)':'rgba(80,80,120,0.1)';
+      let border = isSel ? 'var(--gold)' : isCenter ? 'rgba(201,168,76,0.4)' : isSlot ? 'var(--border2)' : 'var(--border)';
+
+      let cardHtml = '';
+      if (isCenter && GA.centralCard) {
+        const cc = GA.centralCard;
+        cardHtml = `<div style="text-align:center;font-size:10px;"><div style="font-size:18px;">${cc.emoji||'🏆'}</div><div style="font-family:'Cinzel',serif;font-size:6px;">${esc(cc.name)}</div></div>`;
+      } else if (isCenter) {
+        cardHtml = `<div style="font-size:18px;opacity:0.5;">⚔</div>`;
+      } else if (card) {
+        const isCardOpp = card._who==='opp';
+        cardHtml = `<div style="text-align:center;padding:2px;">
+          <div style="font-size:${window.innerWidth<400?'13px':'15px'};">${card.emoji||'🃏'}</div>
+          <div style="font-family:'Cinzel',serif;font-size:5.5px;color:${isCardOpp?'var(--red)':'var(--green)'};">${esc(card.name.slice(0,6))}</div>
+          <div style="font-size:5px;color:var(--text2);">❤${card._hp} ⚔${card._atk}</div>
+        </div>`;
+      } else if (isSlot) {
+        const label = isPlayer?'Your slot':isOpp?'Opp':'Side';
+        cardHtml = `<div style="font-size:8px;color:var(--text2);text-align:center;opacity:0.5;">${label}</div>`;
+      }
+
+      html += `<div style="background:${bg};border:1.5px solid ${border};border-radius:4px;width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;" onclick="arenaCellClick(${r},${c})">${cardHtml}</div>`;
+    }
+  }
+  ac.innerHTML = html;
+
+  // Hand
+  const gh = document.getElementById('gaHand');
+  if (gh) {
+    gh.innerHTML = GA.player.hand.map((c,i) => {
+      const col = typeColor(c.type);
+      const isSel = GA.sel && GA.sel.handIdx===i;
+      return `<div class="pc${isSel?' sel':''}" style="border-color:${col};min-width:66px;" onclick="gaSelectHand(${i})">
+        <div class="pc-cost">⚡${c.cost}</div>
+        <span class="pi">${c.emoji||'🃏'}</span>
+        <div class="pn">${esc(c.name)}</div>
+        <div class="ps">${c.hp?`<span>❤${c._hp}</span>`:''}${c.atk?`<span>⚔${c._atk}</span>`:''}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('gaHandCnt').textContent = GA.player.hand.length;
+  }
+  document.getElementById('gaGraveCnt').textContent = GA.player.grave.length;
+}
+
+function arenaCellClick(r, c) {
+  if (!GA||GA.over||GA.phase==='opp') return;
+  const allPlayerSlots = new Set(GA.slots.bottom.map(s=>`${s.r}-${s.c}`));
+  const allOppSlots = new Set(GA.slots.top.map(s=>`${s.r}-${s.c}`));
+  const allSlots = new Set([...GA.slots.top,...GA.slots.bottom,...GA.slots.left,...GA.slots.right].map(s=>`${s.r}-${s.c}`));
+  const key = `${r}-${c}`;
+  const cell = GA.arena[r][c];
+  const sel = GA.sel;
+
+  if (sel && sel.handIdx !== undefined) {
+    // place from hand
+    if (!allPlayerSlots.has(key) && !(GA.slots.left.concat(GA.slots.right).find(s=>s.r===r&&s.c===c))) {
+      gaLog('Place cards on your bottom or side slots.','bad'); return;
+    }
+    if (cell) { gaLog('Slot occupied.','bad'); return; }
+    const card = GA.player.hand[sel.handIdx];
+    if (GA.player.res < card.cost) { gaLog('⚡ Not enough resources.','bad'); GA.sel=null; renderArena(); return; }
+    GA.player.res -= card.cost;
+    GA.player.hand.splice(sel.handIdx,1);
+    GA.arena[r][c] = {...card, _who:'player', _tapped:false};
+    GA.sel = null;
+    gaLog(card.name+' placed in arena.','good');
+    renderArena(); return;
+  }
+
+  if (sel && sel.r !== undefined) {
+    const selCard = GA.arena[sel.r][sel.c];
+    if (cell && cell._who==='opp') {
+      // Check adjacency (including diagonal)
+      const dr = Math.abs(r-sel.r), dc = Math.abs(c-sel.c);
+      if (dr>1||dc>1) { gaLog('Must be adjacent to attack.','bad'); return; }
+      if (selCard._tapped) { gaLog(selCard.name+' already attacked.','bad'); return; }
+      gaArenaResolve(selCard, cell, r, c);
+      GA.sel=null;
+      gaCheckDead(); gaWinCheck(); renderArena(); return;
+    }
+    if (!cell && allSlots.has(key)) {
+      // move
+      GA.arena[r][c] = selCard;
+      GA.arena[sel.r][sel.c] = null;
+      GA.sel = null;
+      gaLog(selCard.name+' moved.','info');
+      renderArena(); return;
+    }
+    GA.sel=null; renderArena(); return;
+  }
+
+  if (cell) { GA.sel={r,c}; gaLog('Selected '+cell.name+' ('+cell._who+') — ❤'+cell._hp+' ⚔'+cell._atk,''); }
+  else { GA.sel=null; }
+  renderArena();
+}
+
+function gaSelectHand(i) {
+  if (GA.sel && GA.sel.handIdx===i) GA.sel=null;
+  else { GA.sel={handIdx:i}; gaLog('Selected '+GA.player.hand[i].name+' — tap a bottom/side slot to place.',''); }
+  renderArena();
+}
+
+function gaArenaResolve(atk, def, defR, defC) {
+  const dmgToDef = hasKw(atk,'Piercing')?atk._atk:Math.max(0,atk._atk-def._def);
+  const dmgToAtk = Math.max(0,def._atk-atk._def);
+  if (!hasKw(def,'Indestructible'))def._hp-=dmgToDef;
+  if (!hasKw(atk,'Indestructible'))atk._hp-=dmgToAtk;
+  atk._tapped=!hasKw(atk,'Vigilance');
+  gaLog('⚔ '+atk.name+' vs '+def.name+': deals '+dmgToDef+', takes '+dmgToAtk,'imp');
+  if(hasKw(atk,'Lifesteal')&&dmgToDef>0){GA.player.hp=Math.min(GA.player.maxHp,GA.player.hp+dmgToDef);gaLog('Lifesteal +'+dmgToDef,'good');}
+  if(hasKw(atk,'Trample')&&def._hp<0){GA.opp.hp-=Math.abs(def._hp);gaLog('Trample!','bad');}
+}
+
+function gaCheckDead() {
+  for (let r=0;r<5;r++) for (let c=0;c<5;c++) {
+    const card=GA.arena[r][c];
+    if (!card||hasKw(card,'Indestructible'))continue;
+    if (card._hp<=0) {
+      if (card._reborn&&!card._rebornUsed){card._hp=1;card._reborn=false;card._rebornUsed=true;gaLog(card.name+' Reborn!','info');}
+      else { gaLog('☠ '+card.name+' destroyed','bad');
+        (card._who==='player'?GA.player:GA.opp).grave.push(card);
+        GA.arena[r][c]=null; }
+    }
+  }
+}
+
+function gaWinCheck() {
+  if (GA.over) return;
+  if (GA.opp.hp<=0){GA.over=true;gaLog('🏆 YOU WIN!','good');toast('🏆 Victory!','win');}
+  if (GA.player.hp<=0){GA.over=true;gaLog('💀 DEFEATED.','bad');toast('💀 Defeated...','loss');}
+}
+
+function gaDirectAttack() {
+  if (!GA||GA.over||GA.phase==='opp') return;
+  if (!GA.sel||GA.sel.r===undefined) { gaLog('Select an arena card to attack directly.',''); return; }
+  const card = GA.arena[GA.sel.r][GA.sel.c];
+  if (!card||card._who!=='player'||card._tapped) { gaLog('Select an untapped player card.',''); return; }
+  if (GA.opp.field && GA.opp.field.length>0) { gaLog('Opp has field cards — clear them first.','bad'); return; }
+  const allOppSlots = [...GA.slots.top,...GA.slots.left,...GA.slots.right];
+  const oppCards = allOppSlots.filter(s=>GA.arena[s.r][s.c]&&GA.arena[s.r][s.c]._who==='opp');
+  if (oppCards.length>0) { gaLog('Opp has '+(oppCards.length)+' cards — clear them first.','bad'); return; }
+  GA.opp.hp -= Math.max(0,card._atk);
+  card._tapped=true;
+  gaLog(card.name+' attacks opp directly for '+card._atk+'!','good');
+  GA.sel=null;
+  gaWinCheck(); renderArena();
+}
+
+function gaEndTurn() {
+  if (!GA||GA.over) return;
+  GA.phase='opp';
+  for (let r=0;r<5;r++) for (let c=0;c<5;c++) {
+    const card=GA.arena[r][c];
+    if (card) {card._tapped=false;card._frozen=false;}
+  }
+  gaLog('── Opponent\'s Turn ──','phase');
+  renderArena();
+  setTimeout(gaAiTurn,500);
+}
+
+function gaAiTurn() {
+  if (!GA||GA.over) return;
+  const ai=GA.opp;
+  ai.res=GA.game.res;
+  gaDeal('opp');
+
+  const oppSlots=[...GA.slots.top,...GA.slots.left,...GA.slots.right].filter(s=>!GA.arena[s.r][s.c]);
+  for (const card of [...ai.hand]) {
+    if (ai.res<card.cost) continue;
+    const slot=oppSlots.shift();if(!slot)break;
+    ai.res-=card.cost;ai.hand=ai.hand.filter(x=>x!==card);
+    GA.arena[slot.r][slot.c]={...card,_who:'opp',_tapped:false};
+    gaLog('Opp plays '+card.name,'');
+  }
+
+  setTimeout(()=>{
+    if (!GA||GA.over) return;
+    // AI attacks player cards
+    const playerSlots=[...GA.slots.bottom,...GA.slots.left,...GA.slots.right].filter(s=>GA.arena[s.r]&&GA.arena[s.r][s.c]&&GA.arena[s.r][s.c]._who==='player');
+    const oppCards=[...GA.slots.top,...GA.slots.left,...GA.slots.right].filter(s=>GA.arena[s.r][s.c]&&GA.arena[s.r][s.c]._who==='opp'&&!GA.arena[s.r][s.c]._tapped);
+
+    for (const os of oppCards) {
+      const atk=GA.arena[os.r][os.c];
+      if (playerSlots.length) {
+        const ps=playerSlots[0];
+        const def=GA.arena[ps.r][ps.c];
+        gaArenaResolve(atk,def,ps.r,ps.c);
+        gaCheckDead();gaWinCheck();
+      } else {
+        GA.player.hp-=Math.max(0,atk._atk);atk._tapped=true;
+        gaLog('Opp '+atk.name+' attacks you directly for '+atk._atk+'!','bad');
+        gaWinCheck();
+      }
+      if (GA.over) break;
+    }
+
+    for (let r=0;r<5;r++) for (let c=0;c<5;c++){const card=GA.arena[r][c];if(card){card._tapped=false;card._frozen=false;}}
+    GA.phase='main';GA.turn++;GA.player.res=GA.game.res;gaDeal('player');
+    gaLog('── Your Turn '+GA.turn+' ──','phase');
+    renderArena();
+  },600);
+}
+
+function resignArenaGame(){
+  if(!confirm('Resign arena game?'))return;
+  GA=null;
+  const at=document.getElementById('arenaTable');if(at)at.style.display='none';
+  document.getElementById('playSelect').style.display='block';
+}
+
+// ════════════════════════════════════════════════════════════════
+//  LANE BATTLE (3 lanes)
+// ════════════════════════════════════════════════════════════════
+let GL = null;
+
+function startLanesGame(gameId) {
+  const game = D.games.find(x=>x.id===gameId);
+  if (!game) return;
+  const pool = D.cards.filter(c=>c.gameId===gameId&&!c._fusion);
+  if (pool.length<4) { toast('Need ≥4 cards'); return; }
+  const mkDeck=()=>shuffle(pool.map(liveCard));
+
+  GL = {
+    game,turn:1,phase:'main',over:false,log:[],exile:[],
+    sel:null,
+    lanes: [
+      {name:'Left',player:null,opp:null,playerBuff:0,oppBuff:0},
+      {name:'Centre',player:null,opp:null,playerBuff:0,oppBuff:0},
+      {name:'Right',player:null,opp:null,playerBuff:0,oppBuff:0}
+    ],
+    playerHand:[], playerGrave:[],playerDeck:mkDeck(),
+    player:{hp:game.hp,maxHp:game.hp,res:game.res,hand:[],grave:[],deck:mkDeck()},
+    opp:{hp:game.hp,maxHp:game.hp,res:game.res,hand:[],grave:[],deck:mkDeck()}
+  };
+
+  const hs=Math.min(game.hand,7);
+  for(let i=0;i<hs;i++){glDeal('player');glDeal('opp');}
+  // AI places in lanes
+  GL.lanes.forEach((lane,i)=>{if(GL.opp.hand[i]){lane.opp={...GL.opp.hand[i],_who:'opp',_tapped:false};GL.opp.hand.splice(i,1);}});
+
+  document.getElementById('playSelect').style.display='none';
+  document.getElementById('playTable').style.display='none';
+  const lt=document.getElementById('lanesTable');if(lt)lt.style.display='block';
+  glLog('⚔ Lane Battle — 3 lanes, win 2 to win the game!','phase');
+  renderLanes();
+}
+
+function glDeal(who){const s=GL[who];if(!s.deck.length)return;if(s.hand.length>=(GL.game.maxHand||7))return;s.hand.push(s.deck.pop());}
+function glLog(msg,cls=''){if(!GL)return;GL.log.push({msg,cls});const el=document.getElementById('glLog');if(el)el.innerHTML=GL.log.slice(-30).reverse().map(e=>`<div class="ll ${e.cls}">${esc(e.msg)}</div>`).join('');}
+
+function renderLanes(){
+  if(!GL)return;
+  const setPBar=(barId,valId,cur,max)=>{const el=document.getElementById(barId);if(el)el.style.width=Math.max(0,cur/max*100)+'%';const ve=document.getElementById(valId);if(ve)ve.textContent=cur;};
+  setPBar('glPlayerHpBar','glPlayerHpVal',GL.player.hp,GL.player.maxHp);
+  setPBar('glOppHpBar','glOppHpVal',GL.opp.hp,GL.opp.maxHp);
+  document.getElementById('glPlayerRes').textContent=GL.player.res;
+
+  const lc=document.getElementById('lanesCols');
+  if(!lc)return;
+  lc.innerHTML=GL.lanes.map((lane,i)=>{
+    const pw=lane.playerWon,ow=lane.oppWon;
+    const laneColor=pw?'var(--green)':ow?'var(--red)':'var(--border)';
+    const selLane=GL.sel&&GL.sel.lane===i;
+    return`<div style="flex:1;display:flex;flex-direction:column;gap:5px;background:var(--bg2);border:2px solid ${laneColor};border-radius:5px;padding:6px;min-width:90px;">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--text2);text-align:center;letter-spacing:0.08em;">${lane.name}</div>
+      ${pw?'<div style="text-align:center;font-size:10px;color:var(--green);">YOU WON</div>':ow?'<div style="text-align:center;font-size:10px;color:var(--red);">OPP WON</div>':''}
+      <!-- Opp slot -->
+      <div style="background:rgba(180,40,40,0.08);border:1px solid var(--border);border-radius:4px;min-height:70px;display:flex;align-items:center;justify-content:center;padding:3px;cursor:pointer;" onclick="laneOppClick(${i})">
+        ${lane.opp?`<div style="text-align:center;font-size:8px;">
+          <div style="font-size:16px;">${lane.opp.emoji||'🃏'}</div>
+          <div style="font-family:'Cinzel',serif;font-size:7px;color:var(--red);">${esc(lane.opp.name.slice(0,7))}</div>
+          <div style="color:var(--text2);">❤${lane.opp._hp} ⚔${lane.opp._atk}</div>
+        </div>`:'<div style="font-size:9px;color:var(--text2);">Empty</div>'}
+      </div>
+      <!-- VS -->
+      <div style="text-align:center;font-size:10px;color:var(--border2);">— VS —</div>
+      <!-- Player slot -->
+      <div style="background:rgba(60,120,80,0.08);border:2px solid ${selLane&&!GL.sel.handIdx!==undefined?'var(--gold)':'var(--border)'};border-radius:4px;min-height:70px;display:flex;align-items:center;justify-content:center;padding:3px;cursor:pointer;" onclick="lanePlayerClick(${i})">
+        ${lane.player?`<div style="text-align:center;font-size:8px;">
+          <div style="font-size:16px;">${lane.player.emoji||'🃏'}</div>
+          <div style="font-family:'Cinzel',serif;font-size:7px;color:var(--green);">${esc(lane.player.name.slice(0,7))}</div>
+          <div style="color:var(--text2);">❤${lane.player._hp} ⚔${lane.player._atk}${lane.player._tapped?' [tap]':''}</div>
+        </div>`:'<div style="font-size:9px;color:var(--text2);">Your slot<br><span style="font-size:7px;">tap to place</span></div>'}
+      </div>
+    </div>`;
+  }).join('');
+
+  const gh=document.getElementById('glHand');
+  if(gh){
+    gh.innerHTML=GL.player.hand.map((c,i)=>{
+      const col=typeColor(c.type);const isSel=GL.sel&&GL.sel.handIdx===i;
+      return`<div class="pc${isSel?' sel':''}" style="border-color:${col};min-width:66px;" onclick="glSelectHand(${i})">
+        <div class="pc-cost">⚡${c.cost}</div>
+        <span class="pi">${c.emoji||'🃏'}</span>
+        <div class="pn">${esc(c.name)}</div>
+        <div class="ps">${c.hp?`<span>❤${c._hp}</span>`:''}${c.atk?`<span>⚔${c._atk}</span>`:''}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('glHandCnt').textContent=GL.player.hand.length;
+  }
+  document.getElementById('glGraveCnt').textContent=GL.player.grave.length;
+
+  // Win check display
+  const pw=GL.lanes.filter(l=>l.playerWon).length;
+  const ow=GL.lanes.filter(l=>l.oppWon).length;
+  const ls=document.getElementById('laneScore');
+  if(ls)ls.textContent=`You ${pw} — Opp ${ow}`;
+}
+
+function glSelectHand(i){
+  if(GL.sel&&GL.sel.handIdx===i)GL.sel=null;
+  else{GL.sel={handIdx:i};glLog('Selected '+GL.player.hand[i].name+' — tap a lane to place.','');}
+  renderLanes();
+}
+
+function lanePlayerClick(i){
+  if(!GL||GL.over||GL.phase==='opp')return;
+  if(GL.sel&&GL.sel.handIdx!==undefined){
+    const card=GL.player.hand[GL.sel.handIdx];
+    if(GL.player.res<card.cost){glLog('⚡ Not enough.','bad');GL.sel=null;renderLanes();return;}
+    if(GL.lanes[i].player){glLog('Lane already has your card.','bad');return;}
+    GL.player.res-=card.cost;GL.player.hand.splice(GL.sel.handIdx,1);
+    GL.lanes[i].player={...card,_who:'player',_tapped:!(hasKw(card,'Haste')||hasKw(card,'Charge'))};
+    GL.sel=null;glLog(card.name+' placed in '+GL.lanes[i].name+' lane.','good');
+  }else if(GL.lanes[i].player){
+    GL.sel={lane:i};glLog(GL.lanes[i].player.name+' selected in '+GL.lanes[i].name+' lane — tap Attack or use abilities.','');
+  }
+  renderLanes();
+}
+
+function laneOppClick(i){
+  if(!GL||GL.over||GL.phase==='opp')return;
+  if(!GL.sel||GL.sel.lane===undefined){glLog('Select your lane card first, then tap an opp card to attack.','');return;}
+  const playerCard=GL.lanes[GL.sel.lane].player;
+  if(!playerCard||playerCard._tapped){glLog('Card already attacked or none selected.','bad');return;}
+  const oppCard=GL.lanes[i].opp;
+  if(!oppCard){
+    // Direct attack on that lane's opp HP... reduce opp total HP
+    GL.opp.hp-=Math.max(0,playerCard._atk);
+    playerCard._tapped=true;
+    glLog(playerCard.name+' attacks '+(GL.lanes[i].name)+' lane directly for '+playerCard._atk+'!','good');
+    GL.sel=null;glWinCheck();renderLanes();return;
+  }
+  glResolve(playerCard,oppCard,i);GL.sel=null;glCheckLaneWin(i);glWinCheck();renderLanes();
+}
+
+function glResolve(atk,def,laneIdx){
+  const dmgToDef=hasKw(atk,'Piercing')?atk._atk:Math.max(0,atk._atk-def._def);
+  const dmgToAtk=Math.max(0,def._atk-atk._def);
+  if(!hasKw(def,'Indestructible'))def._hp-=dmgToDef;
+  if(!hasKw(atk,'Indestructible'))atk._hp-=dmgToAtk;
+  atk._tapped=!hasKw(atk,'Vigilance');
+  glLog('⚔ '+atk.name+' vs '+def.name+': deals '+dmgToDef+', takes '+dmgToAtk,'imp');
+  if(hasKw(atk,'Lifesteal')&&dmgToDef>0){GL.player.hp=Math.min(GL.player.maxHp,GL.player.hp+dmgToDef);}
+  if(atk._hp<=0&&!hasKw(atk,'Indestructible')){if(atk._reborn&&!atk._rebornUsed){atk._hp=1;atk._reborn=false;atk._rebornUsed=true;}else{GL.player.grave.push(atk);GL.lanes[laneIdx].player=null;glLog('☠ '+atk.name+' destroyed','bad');}}
+  if(def._hp<=0&&!hasKw(def,'Indestructible')){if(def._reborn&&!def._rebornUsed){def._hp=1;def._reborn=false;def._rebornUsed=true;}else{GL.opp.grave.push(def);GL.lanes[laneIdx].opp=null;glLog('☠ '+def.name+' destroyed','bad');}}
+}
+
+function glCheckLaneWin(i){
+  const lane=GL.lanes[i];
+  if(!lane.opp&&lane.player&&!lane.playerWon){lane.playerWon=true;glLog('🏅 You won the '+lane.name+' lane!','good');}
+  if(!lane.player&&lane.opp&&!lane.oppWon){lane.oppWon=true;glLog('💢 Opp won the '+lane.name+' lane!','bad');}
+}
+
+function glWinCheck(){
+  if(GL.over)return;
+  const pw=GL.lanes.filter(l=>l.playerWon).length;
+  const ow=GL.lanes.filter(l=>l.oppWon).length;
+  if(pw>=2){GL.over=true;glLog('🏆 YOU WIN — 2 lanes controlled!','good');toast('🏆 Victory!','win');}
+  if(ow>=2){GL.over=true;glLog('💀 DEFEATED — opp controls 2 lanes.','bad');toast('💀 Defeated...','loss');}
+  if(GL.opp.hp<=0){GL.over=true;glLog('🏆 YOU WIN — Opp HP reached 0!','good');toast('🏆 Victory!','win');}
+  if(GL.player.hp<=0){GL.over=true;glLog('💀 DEFEATED.','bad');toast('💀 Defeated...','loss');}
+}
+
+function glEndTurn(){
+  if(!GL||GL.over)return;
+  GL.phase='opp';
+  GL.lanes.forEach(lane=>{if(lane.player){lane.player._tapped=false;lane.player._frozen=false;}});
+  glLog('── Opponent\'s Turn ──','phase');renderLanes();
+  setTimeout(glAiTurn,500);
+}
+
+function glAiTurn(){
+  if(!GL||GL.over)return;
+  const ai=GL.opp;ai.res=GL.game.res;glDeal('opp');
+  // AI plays into empty lanes
+  GL.lanes.forEach((lane,i)=>{
+    if(!lane.opp&&ai.hand.length&&ai.res>=ai.hand[0].cost){
+      const card=ai.hand.shift();ai.res-=card.cost;
+      lane.opp={...card,_who:'opp',_tapped:false};
+      glLog('Opp plays '+card.name+' in '+lane.name+'.','');
+    }
+  });
+  setTimeout(()=>{
+    if(!GL||GL.over)return;
+    // AI attacks
+    GL.lanes.forEach((lane,i)=>{
+      if(!lane.opp||lane.opp._tapped)return;
+      if(lane.player){glResolve(lane.opp,lane.player,i);}
+      else{GL.player.hp-=Math.max(0,lane.opp._atk);lane.opp._tapped=true;glLog('Opp '+lane.opp.name+' attacks your HP directly for '+lane.opp._atk+'!','bad');}
+      glCheckLaneWin(i);glWinCheck();
+    });
+    GL.lanes.forEach(lane=>{if(lane.opp){lane.opp._tapped=false;}});
+    GL.phase='main';GL.turn++;GL.player.res=GL.game.res;glDeal('player');
+    glLog('── Your Turn '+GL.turn+' ──','phase');renderLanes();
+  },600);
+}
+
+function resignLanesGame(){if(!confirm('Resign lanes game?'))return;GL=null;const lt=document.getElementById('lanesTable');if(lt)lt.style.display='none';document.getElementById('playSelect').style.display='block';}
+
+// ════════════════════════════════════════════════════════════════
+//  PATCH showTab to show mode-specific headers
+// ════════════════════════════════════════════════════════════════
+const _origShowTab = showTab;
+showTab = function(name) {
+  _origShowTab(name);
+  const modeNames = {cards:'Card Builder',fusion:'Fusion & Crafting',games:'Game Setup',play:'Playtest',guide:'Guide & Keywords'};
+  document.getElementById('hSub').textContent = modeNames[name] || '';
+  if (name==='play') renderPlaySelect();
+};
+
+// ════════════════════════════════════════════════════════════════
+//  PATCH startGame (classic) to use startGameMode for play button
+// ════════════════════════════════════════════════════════════════
+// (startGameMode is already defined above and routes to the right engine)
+
+console.log('Forge Expansion loaded — Grid, Arena, Lanes, Resources, Custom Zones');
+
+</script>
+
+<div id="gridTable">
+  <div style="background:#110e18;border-bottom:1px solid var(--border);padding:7px 12px;">
+    <div class="pt-lbl" style="color:var(--red);">Opponent</div>
+    <div class="gg-hp-row"><span class="hp-lbl">HP</span><div class="hp-track" style="flex:1;"><div id="ggOppHpBar" class="hp-fill" style="background:var(--red);width:100%;"></div></div><span class="hp-val" id="ggOppHpVal">20</span></div>
+  </div>
+  <div class="grid-container" id="gridCells"></div>
+  <div style="border-top:1px solid var(--border);padding:7px 12px;">
+    <div class="gg-hp-row"><span class="hp-lbl">HP</span><div class="hp-track" style="flex:1;"><div id="ggPlayerHpBar" class="hp-fill" style="background:var(--green);width:100%;"></div></div><span class="hp-val" id="ggPlayerHpVal">20</span><span class="res-lbl">&#x26A1;<span id="ggPlayerRes">0</span></span></div>
+    <div class="pt-lbl">Hand (<span id="ggHandCnt">0</span>) <span id="ggTurn" style="color:var(--gold);font-family:Cinzel,serif;font-size:9px;margin-left:8px;">Turn 1</span></div>
+    <div class="hrow" id="ggHand"></div>
+    <div class="prow"><div class="pbox">Grave<br><b id="ggGraveCnt">0</b></div><div class="pbox">Deck<br><b id="ggDeckCnt">0</b></div></div>
+  </div>
+  <div style="padding:5px 12px;"><div class="pt-lbl">Log</div><div class="blog" id="ggLog"></div></div>
+  <div class="abar">
+    <button class="btn btn-gold" onclick="ggEndTurn()">END TURN</button>
+    <button class="btn" style="border-color:var(--red);color:var(--red);" onclick="ggDirectAttack()">Direct</button>
+    <button class="btn btn-danger" onclick="resignGridGame()">Resign</button>
+  </div>
+</div>
+<div id="arenaTable">
+  <div style="background:#110e18;border-bottom:1px solid var(--border);padding:7px 12px;">
+    <div class="pt-lbl" style="color:var(--red);">Opponent</div>
+    <div class="gg-hp-row"><span class="hp-lbl">HP</span><div class="hp-track" style="flex:1;"><div id="gaOppHpBar" class="hp-fill" style="background:var(--red);width:100%;"></div></div><span class="hp-val" id="gaOppHpVal">20</span></div>
+  </div>
+  <div class="arena-grid" id="arenaCells"></div>
+  <div style="border-top:1px solid var(--border);padding:7px 12px;">
+    <div class="gg-hp-row"><span class="hp-lbl">HP</span><div class="hp-track" style="flex:1;"><div id="gaPlayerHpBar" class="hp-fill" style="background:var(--green);width:100%;"></div></div><span class="hp-val" id="gaPlayerHpVal">20</span><span class="res-lbl">&#x26A1;<span id="gaPlayerRes">0</span></span></div>
+    <div class="pt-lbl">Hand (<span id="gaHandCnt">0</span>)</div>
+    <div class="hrow" id="gaHand"></div>
+    <div class="prow"><div class="pbox">Grave<br><b id="gaGraveCnt">0</b></div></div>
+  </div>
+  <div style="padding:5px 12px;"><div class="pt-lbl">Log</div><div class="blog" id="gaLog"></div></div>
+  <div class="abar">
+    <button class="btn btn-gold" onclick="gaEndTurn()">END TURN</button>
+    <button class="btn" style="border-color:var(--red);color:var(--red);" onclick="gaDirectAttack()">Direct</button>
+    <button class="btn btn-danger" onclick="resignArenaGame()">Resign</button>
+  </div>
+</div>
+<div id="lanesTable">
+  <div style="background:#110e18;border-bottom:1px solid var(--border);padding:7px 12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <div class="pt-lbl" style="color:var(--red);">Opponent</div>
+      <span style="font-family:Cinzel,serif;font-size:10px;color:var(--gold);" id="laneScore">You 0 - Opp 0</span>
+    </div>
+    <div class="gg-hp-row"><span class="hp-lbl">HP</span><div class="hp-track" style="flex:1;"><div id="glOppHpBar" class="hp-fill" style="background:var(--red);width:100%;"></div></div><span class="hp-val" id="glOppHpVal">20</span></div>
+  </div>
+  <div class="lanes-cols" id="lanesCols"></div>
+  <div style="border-top:1px solid var(--border);padding:7px 12px;">
+    <div class="gg-hp-row"><span class="hp-lbl">HP</span><div class="hp-track" style="flex:1;"><div id="glPlayerHpBar" class="hp-fill" style="background:var(--green);width:100%;"></div></div><span class="hp-val" id="glPlayerHpVal">20</span><span class="res-lbl">&#x26A1;<span id="glPlayerRes">0</span></span></div>
+    <div class="pt-lbl">Hand (<span id="glHandCnt">0</span>)</div>
+    <div class="hrow" id="glHand"></div>
+    <div class="prow"><div class="pbox">Grave<br><b id="glGraveCnt">0</b></div></div>
+  </div>
+  <div style="padding:5px 12px;"><div class="pt-lbl">Log</div><div class="blog" id="glLog"></div></div>
+  <div class="abar">
+    <button class="btn btn-gold" onclick="glEndTurn()">END TURN</button>
+    <button class="btn btn-danger" onclick="resignLanesGame()">Resign</button>
+  </div>
+</div>
+</body>
+</html>
