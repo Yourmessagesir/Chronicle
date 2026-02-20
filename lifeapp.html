@@ -370,6 +370,14 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
 <!-- PERSONA -->
 <section class="section" id="sec-persona">
   <div id="activePersonaArea"></div>
+  <!-- MOOD CHECK -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:14px;">
+    <div class="section-label" style="margin-bottom:8px;">Mood Check</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;font-style:italic;">Rate how you feel right now — Chronicle finds your closest persona and shows the gap.</p>
+    <div id="moodSliders"></div>
+    <button class="btn btn-gold" style="width:100%;margin-top:8px;" onclick="runMoodCheck()">Compare to Personas</button>
+    <div id="moodResult" style="margin-top:10px;"></div>
+  </div>
   <div class="divider">All Personas</div>
   <div id="personaList"></div>
   <button class="btn btn-gold" style="width:100%;margin-top:8px;" onclick="openAddPersona()">+ New Persona</button>
@@ -399,9 +407,22 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
       </div>
       <div style="margin-top:8px;" id="bookStatsDisplay"></div>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <button class="btn btn-gold" onclick="openAddChapter()" style="flex:1;">+ New Chapter</button>
-      <button class="btn" onclick="toggleFullView()" id="fullViewBtn" style="flex:1;">Full View</button>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="openAddChapter()" style="flex:1;min-width:120px;">+ Chapter</button>
+      <button class="btn" onclick="toggleFullView()" id="fullViewBtn" style="flex:1;min-width:80px;">Full View</button>
+      <button class="btn" onclick="toggleTimeline()" id="timelineBtn" style="flex:1;min-width:80px;">📍 Timeline</button>
+      <button class="btn" onclick="toggleCheatSheet()" id="cheatBtn" style="flex:1;min-width:80px;">✏ Tips</button>
+    </div>
+    <div id="timelinePanel" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div class="section-label" style="margin:0;">Plot Timeline</div>
+        <button class="btn" style="font-size:10px;padding:3px 10px;" onclick="openAddPlotPoint()">+ Add</button>
+      </div>
+      <div id="plotPointsList"></div>
+    </div>
+    <div id="cheatSheetPanel" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:12px;">
+      <div class="section-label" style="margin-bottom:10px;">Writing Tips</div>
+      <div id="cheatSheetContent"></div>
     </div>
     <div id="chapterListEl"></div>
     <div id="fullViewArea" style="display:none;">
@@ -523,7 +544,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
   <iframe id="forgeFrame" src="./forge.html"
     style="width:100%;height:calc(100vh - 120px);border:none;background:var(--bg);"
     allow="same-origin"></iframe>
-  <!-- Hidden legacy views kept so old JS functions don't throw errors -->
+  <!-- Hidden legacy views kept so old JS functions don\'t throw errors -->
   <div id="cg-view-builder" style="display:none"></div>
   <div id="cg-view-games" style="display:none"></div>
   <div id="cg-view-play" style="display:none"></div>
@@ -736,7 +757,6 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
     <div class="field"><label>Role / Archetype</label><input type="text" id="pRole" placeholder="e.g. The Strategist, Work Mode..."></div>
     <div class="divider">Attributes</div>
     <div id="statFields"></div>
-    <div class="field"><label>Notes</label><textarea id="pNotes" placeholder="Notes about this persona..."></textarea></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('modal-persona')">Cancel</button>
       <button class="btn btn-gold" onclick="savePersona()">Save</button>
@@ -749,7 +769,6 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
   <div class="modal">
     <h2 id="editPersonaTitle">Edit Persona</h2>
     <div id="editStatFields"></div>
-    <div class="field" style="margin-top:12px;"><label>Notes</label><textarea id="editPNotes"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-danger" onclick="deletePersona()">Delete</button>
       <button class="btn" onclick="closeModal('modal-edit-persona')">Cancel</button>
@@ -981,8 +1000,8 @@ let data = {
   passwords:[]
 };
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const STATS=['Happiness','Confidence','Energy','Anger','Anxiety','Focus','Creativity','Motivation'];
-const STAT_COLORS={Happiness:'#55aa77',Confidence:'#c9a84c',Energy:'#e8c97a',Anger:'#cc5555',Anxiety:'#cc8844',Focus:'#5588cc',Creativity:'#9955cc',Motivation:'#55aacc'};
+const STATS=['Happiness','Sadness','Anger','Anxiety','Fear','Disgust','Surprise','Confidence','Energy','Focus','Creativity','Motivation','Calm','Loneliness','Excitement','Gratitude','Overwhelm','Pride','Shame','Curiosity','Contentment','Guilt','Jealousy','Awe'];
+const STAT_COLORS={Happiness:'#55aa77',Sadness:'#5566aa',Anger:'#cc4444',Anxiety:'#cc8844',Fear:'#9944cc',Disgust:'#668844',Surprise:'#ee8833',Confidence:'#c9a84c',Energy:'#e8c97a',Focus:'#5588cc',Creativity:'#9955cc',Motivation:'#55aacc',Calm:'#66bbcc',Loneliness:'#7766aa',Excitement:'#ff9944',Gratitude:'#77bb55',Overwhelm:'#bb5544',Pride:'#ccaa33',Shame:'#996677',Curiosity:'#44aaaa',Contentment:'#448866',Guilt:'#887755',Jealousy:'#669944',Awe:'#8888cc'};
 let currentWeekOffset=0, editingPersonaId=null, editingPersonId=null, editingChapterId=null, editingPwId=null, cgEditCardId=null, cgEditGameId=null, cgs=null;
 let vaultUnlocked=false, vaultKey=null;
 
@@ -1253,32 +1272,30 @@ function renderPersona(){
 }
 
 function buildPersonaCard(p){
-  return`<div class="persona-active-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div class="persona-name">${escHtml(p.name)}</div><div class="persona-class">${escHtml(p.role||'')}</div></div><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="editPersona('${p.id}')">Edit</button></div>${STATS.map(s=>{const v=p.stats?.[s]??50;return`<div class="stat-row"><span class="stat-label">${s}</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${v}%;background:${STAT_COLORS[s]};"></div></div><span class="stat-value">${v}</span></div>`;}).join('')}${p.notes?`<div style="margin-top:12px;font-size:14px;color:var(--text2);font-style:italic;">${escHtml(p.notes)}</div>`:''}</div>`;
+  return`<div class="persona-active-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div class="persona-name">${escHtml(p.name)}</div><div class="persona-class">${escHtml(p.role||'')}</div></div><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="editPersona('${p.id}')">Edit</button></div>${STATS.map(s=>{const v=p.stats?.[s]??50;return`<div class="stat-row"><span class="stat-label">${s}</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${v}%;background:${STAT_COLORS[s]};"></div></div><span class="stat-value">${v}</span></div>`;}).join('')}</div>`;
 }
 
 function openAddPersona(){
   editingPersonaId=null;
-  ['pName','pRole','pNotes'].forEach(id=>document.getElementById(id).value='');
+  ['pName','pRole'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('statFields').innerHTML=STATS.map(s=>`<div class="field"><label>${s} <span id="sv-${s}" style="color:var(--gold);float:right;">50</span></label><input type="range" min="0" max="100" value="50" id="sr-${s}" oninput="document.getElementById('sv-${s}').textContent=this.value"></div>`).join('');
   openModal('modal-persona');
 }
 function savePersona(){
   const name=document.getElementById('pName').value.trim();if(!name)return;
   const stats={};STATS.forEach(s=>stats[s]=parseInt(document.getElementById('sr-'+s).value));
-  data.personas.push({id:uid(),name,role:document.getElementById('pRole').value.trim(),notes:document.getElementById('pNotes').value.trim(),stats,active:!data.personas.length});
+  data.personas.push({id:uid(),name,role:document.getElementById('pRole').value.trim(),stats,active:!data.personas.length});
   save();closeModal('modal-persona');renderPersona();
 }
 function editPersona(id){
   editingPersonaId=id;const p=data.personas.find(x=>x.id===id);if(!p)return;
   document.getElementById('editPersonaTitle').textContent=p.name;
-  document.getElementById('editPNotes').value=p.notes||'';
   document.getElementById('editStatFields').innerHTML=STATS.map(s=>{const v=p.stats?.[s]??50;return`<div class="field"><label>${s} <span id="esv-${s}" style="color:var(--gold);float:right;">${v}</span></label><input type="range" min="0" max="100" value="${v}" id="esr-${s}" oninput="document.getElementById('esv-${s}').textContent=this.value"></div>`;}).join('');
   openModal('modal-edit-persona');
 }
 function saveEditPersona(){
   const p=data.personas.find(x=>x.id===editingPersonaId);if(!p)return;
   STATS.forEach(s=>p.stats[s]=parseInt(document.getElementById('esr-'+s).value));
-  p.notes=document.getElementById('editPNotes').value.trim();
   save();closeModal('modal-edit-persona');renderPersona();
 }
 function deletePersona(){
@@ -1288,6 +1305,65 @@ function deletePersona(){
   save();closeModal('modal-edit-persona');renderPersona();
 }
 function setActivePersona(id){data.personas.forEach(p=>p.active=p.id===id);save();renderPersona();}
+
+// ════════════════════════════════════
+//  MOOD CHECK
+// ════════════════════════════════════
+const MOOD_QUICK=['Happiness','Sadness','Anger','Anxiety','Calm','Energy','Excitement','Loneliness','Overwhelm','Contentment','Gratitude','Focus'];
+function initMoodSliders(){
+  const el=document.getElementById('moodSliders');if(!el)return;
+  el.innerHTML=MOOD_QUICK.map(s=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+    <span style="font-size:11px;color:${STAT_COLORS[s]};min-width:84px;">${s}</span>
+    <input type="range" min="0" max="100" value="50" id="msr-${s}" style="flex:1;accent-color:${STAT_COLORS[s]};" oninput="document.getElementById('msv-${s}').textContent=this.value">
+    <span id="msv-${s}" style="font-size:11px;color:var(--gold);min-width:24px;text-align:right;">50</span>
+  </div>`).join('');
+}
+function runMoodCheck(){
+  if(!data.personas.length){
+    document.getElementById('moodResult').innerHTML='<p style="font-size:12px;color:var(--text2);font-style:italic;">No personas yet to compare against.</p>';
+    return;
+  }
+  const mood={};
+  MOOD_QUICK.forEach(s=>{const el=document.getElementById('msr-'+s);mood[s]=el?+el.value:50;});
+  // Score by average absolute difference across shared stats (lower = closer)
+  const scored=data.personas.map(p=>{
+    let total=0,n=0;
+    MOOD_QUICK.forEach(s=>{total+=Math.abs((mood[s]??50)-(p.stats?.[s]??50));n++;});
+    return{p,dist:n?total/n:100};
+  }).sort((a,b)=>a.dist-b.dist);
+  const {p:best,dist}=scored[0];
+  const matchPct=Math.max(0,100-Math.round(dist));
+  const col=dist<15?'var(--green)':dist<30?'var(--gold)':'var(--red)';
+  // Top differences
+  const diffs=MOOD_QUICK.map(s=>{
+    const mv=mood[s]??50, pv=best.stats?.[s]??50, d=mv-pv;
+    return{s,d,mv,pv};
+  }).filter(x=>Math.abs(x.d)>8).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,5);
+  document.getElementById('moodResult').innerHTML=`
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);">${escHtml(best.name)}</div>
+          <div style="font-size:11px;color:var(--text2);font-style:italic;">${escHtml(best.role||'')}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:'Cinzel',serif;font-size:26px;color:${col};line-height:1;">${matchPct}%</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:.06em;">MATCH</div>
+        </div>
+      </div>
+      ${diffs.length
+        ? '<div style="font-family:Cinzel,serif;font-size:9px;color:var(--text3);letter-spacing:.08em;margin-bottom:6px;">KEY DIFFERENCES</div>'
+          +diffs.map(({s,d})=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="font-size:11px;color:${STAT_COLORS[s]};min-width:84px;">${s}</span>
+            <div style="flex:1;height:5px;background:var(--bg2);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:${Math.min(100,Math.abs(d))}%;background:${STAT_COLORS[s]};opacity:.6;border-radius:3px;"></div>
+            </div>
+            <span style="font-size:11px;min-width:30px;text-align:right;color:${d>0?'var(--green)':'var(--red)'};">${d>0?'+':''}${Math.round(d)}</span>
+          </div>`).join('')
+        : '<div style="font-size:12px;color:var(--green2);font-style:italic;">Very close match &#x2014; you\'re aligned with this persona right now.</div>'}
+      ${scored.length>1?`<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);">${scored.slice(1).map(x=>`${escHtml(x.p.name)} ${Math.max(0,100-Math.round(x.dist))}%`).join(' &nbsp;·&nbsp; ')}</div>`:''}
+    </div>`;
+}
 
 // ════════════════════════════════════
 //  PEOPLE
@@ -1446,6 +1522,152 @@ function deleteChapter(){
   if(!confirm('Delete this chapter?'))return;
   const b=getActiveBook();b.chapters=(b.chapters||[]).filter(x=>x.id!==editingChapterId);
   save();closeEditor();
+}
+
+// ── Timeline ──
+let timelineOpen=false,cheatOpen=false;
+function toggleTimeline(){
+  timelineOpen=!timelineOpen;
+  const p=document.getElementById('timelinePanel'),b=document.getElementById('timelineBtn');
+  p.style.display=timelineOpen?'block':'none';
+  if(b){b.style.color=timelineOpen?'var(--gold)':'';b.style.borderColor=timelineOpen?'var(--gold)':'';}
+  if(timelineOpen)renderPlotPoints();
+}
+function renderPlotPoints(){
+  const b=getActiveBook();
+  const pts=b.plotPoints||[];
+  const el=document.getElementById('plotPointsList');if(!el)return;
+  if(!pts.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);font-style:italic;text-align:center;padding:14px 0;">No plot points yet.</div>';return;}
+  const TC={Setup:'#5588cc',Rising:'#cc8844',Climax:'#cc4444',Falling:'#9944cc',Resolution:'#44aa66',Subplot:'#5577aa',Twist:'#cc44aa',Note:'#778899'};
+  const icons={Setup:'🌅',Rising:'📈',Climax:'⚡',Falling:'📉',Resolution:'🏁',Subplot:'🔀',Twist:'🌀',Note:'📌'};
+  el.innerHTML='<div style="position:relative;padding-left:4px;">'
+    +'<div style="position:absolute;left:18px;top:15px;bottom:15px;width:2px;background:var(--border);"></div>'
+    +pts.map((pt,i)=>{
+      const col=TC[pt.type||'Note']||'#778899';
+      const icon=icons[pt.type||'Note']||'📌';
+      return`<div style="display:flex;gap:10px;margin-bottom:10px;position:relative;">
+        <div style="width:36px;height:36px;border-radius:50%;background:${col}22;border:2px solid ${col};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;z-index:1;">${icon}</div>
+        <div style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:8px 10px;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px;">
+            <div style="min-width:0;">
+              <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(pt.title||'Untitled')}</div>
+              <div style="font-size:9px;color:${col};letter-spacing:.05em;margin-top:1px;">${escHtml(pt.type||'Note')}${pt.chapter?' · '+escHtml(pt.chapter):''}</div>
+            </div>
+            <button onclick="deletePlotPoint(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0;flex-shrink:0;line-height:1;">✕</button>
+          </div>
+          ${pt.notes?`<div style="font-size:12px;color:var(--text2);margin-top:5px;font-style:italic;line-height:1.5;">${escHtml(pt.notes)}</div>`:''}
+        </div>
+      </div>`;
+    }).join('')+'</div>';
+}
+function openAddPlotPoint(){
+  const el=document.getElementById('plotPointsList');
+  if(el.querySelector('.pp-form'))return;
+  const form=document.createElement('div');
+  form.className='pp-form';
+  form.style.cssText='background:var(--bg3);border:1px solid var(--gold);border-radius:6px;padding:12px;margin-bottom:10px;';
+  form.innerHTML=`
+    <div class="field" style="margin-bottom:7px;"><label style="font-size:10px;">TITLE</label><input type="text" id="ppTitle" placeholder="e.g. The Inciting Incident…" style="background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:4px;font-size:13px;width:100%;box-sizing:border-box;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:7px;">
+      <div class="field" style="flex:1;margin:0;"><label style="font-size:10px;">TYPE</label>
+        <select id="ppType" style="background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:6px 8px;border-radius:4px;font-size:12px;width:100%;">
+          <option>Setup</option><option>Rising</option><option>Climax</option><option>Falling</option><option>Resolution</option><option>Subplot</option><option>Twist</option><option>Note</option>
+        </select>
+      </div>
+      <div class="field" style="flex:1;margin:0;"><label style="font-size:10px;">CHAPTER / ACT</label><input type="text" id="ppChapter" placeholder="e.g. Ch. 3, Act 2…" style="background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:4px;font-size:12px;width:100%;box-sizing:border-box;"></div>
+    </div>
+    <div class="field" style="margin-bottom:10px;"><label style="font-size:10px;">NOTES</label><textarea id="ppNotes" rows="2" placeholder="Brief description…" style="background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:4px;font-size:12px;width:100%;resize:vertical;box-sizing:border-box;"></textarea></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-gold" style="flex:1;" onclick="savePlotPoint()">Add to Timeline</button>
+      <button class="btn" onclick="this.closest('.pp-form').remove()">Cancel</button>
+    </div>`;
+  el.insertBefore(form,el.firstChild);
+  document.getElementById('ppTitle').focus();
+}
+function savePlotPoint(){
+  const title=document.getElementById('ppTitle')?.value.trim();if(!title)return;
+  const b=getActiveBook();if(!b.plotPoints)b.plotPoints=[];
+  b.plotPoints.push({title,type:document.getElementById('ppType').value,chapter:document.getElementById('ppChapter').value.trim(),notes:document.getElementById('ppNotes').value.trim(),created:Date.now()});
+  save();renderPlotPoints();
+}
+function deletePlotPoint(i){
+  if(!confirm('Remove this plot point?'))return;
+  const b=getActiveBook();b.plotPoints.splice(i,1);
+  save();renderPlotPoints();
+}
+
+// ── Writing Cheat Sheet ──
+function toggleCheatSheet(){
+  cheatOpen=!cheatOpen;
+  const p=document.getElementById('cheatSheetPanel'),b=document.getElementById('cheatBtn');
+  p.style.display=cheatOpen?'block':'none';
+  if(b){b.style.color=cheatOpen?'var(--gold)':'';b.style.borderColor=cheatOpen?'var(--gold)':'';}
+  if(cheatOpen)renderCheatSheet();
+}
+function renderCheatSheet(){
+  const el=document.getElementById('cheatSheetContent');if(!el)return;
+  const tips=[
+    {icon:'📏',title:'Chapter Length',items:[
+      '<strong>Sweet spot: ~3,000 words</strong> — long enough to develop a scene, short enough to maintain pace.',
+      '<strong>Fast genres</strong> (thriller, YA): 1,500–2,500 words per chapter.',
+      '<strong>Literary / epic fiction</strong>: 3,000–5,000 words acceptable.',
+      'Under 1,000 words — use sparingly for shock cuts or time skips.',
+      'Never pad to hit a count. End the chapter when the scene is done.',
+    ]},
+    {icon:'🏗',title:'Scene Structure',items:[
+      'Every scene: <strong>Goal → Conflict → Outcome</strong>. Missing any one of these and the scene drags.',
+      'End on a hook, reversal, or open question — never full resolution.',
+      'Alternate high-tension and quieter recovery scenes. Readers need to breathe.',
+      'If nothing changes in the scene, cut it.',
+    ]},
+    {icon:'💬',title:'Dialogue',items:[
+      'Real people don\'t speak in complete sentences — use fragments, interruptions, silence.',
+      'Each character needs a distinct voice (vocabulary, rhythm, what they avoid saying).',
+      '<strong>Subtext rules</strong>: characters rarely say exactly what they mean.',
+      'Ground dialogue with action beats instead of constant "he said/she said".',
+      'Read every line aloud. If you stumble, so will the reader.',
+    ]},
+    {icon:'⏱',title:'Pacing',items:[
+      'Short sentences and paragraphs accelerate. Long ones decelerate.',
+      'White space on the page signals pace — dense blocks feel heavy and slow.',
+      'Flashbacks and backstory stall momentum; place them deliberately.',
+      'Use sentence length as a tool, not decoration.',
+    ]},
+    {icon:'🎭',title:'Show vs Tell',items:[
+      'Show emotions through <strong>physical sensation and action</strong>, not labels.',
+      '"Her hands shook" beats "She was nervous."',
+      'Telling is fine for transitions, time skips, and minor characters &#x2014; don\'t be dogmatic.',
+      'The camera rule: if a camera couldn\'t capture it, you\'re telling.',
+    ]},
+    {icon:'🖊',title:'First Drafts',items:[
+      '<strong>Write fast, edit slow.</strong> Do not revise mid-chapter.',
+      'Silence your inner critic — every first draft is supposed to be rough.',
+      'Consistent daily output beats marathon sessions. 500 words/day = a novel in a year.',
+      'Leave a note at your stopping point so you know exactly where to resume.',
+    ]},
+    {icon:'⚠',title:'Common Mistakes',items:[
+      'Starting with weather, waking up, or a mirror — open with action or tension.',
+      'Naming every walk-on character. Only name people who matter.',
+      'Adverb overload: "whispered softly" → "murmured".',
+      'Head-hopping POV mid-scene.',
+      'Explaining what the reader already knows.',
+    ]},
+    {icon:'✂',title:'Editing Pass Order',items:[
+      '<strong>1. Structure</strong> — does each chapter do its job in the story?',
+      '<strong>2. Scene</strong> — Goal → Conflict → Outcome present in each?',
+      '<strong>3. Line</strong> — cut every word that isn\'t earning its place.',
+      '<strong>4. Dialogue</strong> — read aloud, fix anything clunky.',
+      '<strong>5. Proofread</strong> — always last, never first.',
+    ]},
+  ];
+  el.innerHTML=tips.map((s,i)=>`
+    ${i?'<div style="border-top:1px solid var(--border);margin:10px 0;"></div>':''}
+    <div>
+      <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold);letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:6px;">
+        <span>${s.icon}</span>${s.title}
+      </div>
+      ${s.items.map(item=>`<div style="font-size:12px;color:var(--text);line-height:1.65;padding:3px 0 3px 12px;border-left:2px solid var(--border2);margin-bottom:2px;">${item}</div>`).join('')}
+    </div>`).join('');
 }
 
 function toggleFullView(){
@@ -2352,6 +2574,7 @@ initBoards();
 getActiveComic(); // migrate + init
 initRpg();
 renderCalendar();renderPersona();renderPeople();renderBook();
+initMoodSliders();
 if(!data.cardgame)data.cardgame={cards:[],games:[]};
 initCardGame();
 
