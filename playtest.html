@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Playtest — Card Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c10;--bg2:#111520;--bg3:#181c28;--bg4:#202438;
+  --border:#252a3a;--border2:#323850;
+  --gold:#c9a84c;--gold2:#e8c96a;--gold3:#f5e0a0;
+  --red:#cc3333;--red2:#ff5555;
+  --green:#33aa55;--green2:#55cc77;
+  --blue:#3377cc;--blue2:#5599ee;
+  --purple:#7744cc;--purple2:#9966ee;
+  --text:#ccc8b8;--text2:#807870;--text3:#504840;
+  --phase:#c9a84c;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',serif;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+header{background:var(--bg2);border-bottom:1px solid var(--border);height:44px;display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;}
+header h1{font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);letter-spacing:.1em;}
+.btn{padding:5px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:4px;cursor:pointer;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.07em;transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--gold);color:var(--gold2);}
+.btn.primary{background:var(--gold);color:#1a1400;border-color:var(--gold);font-weight:700;}
+.btn.primary:hover{background:var(--gold2);}
+.btn.danger{border-color:var(--red);color:var(--red);}
+.btn.sm{padding:3px 8px;font-size:8px;}
+/* ── SETUP SCREEN ── */
+#setupScreen{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;align-items:center;}
+#setupScreen h2{font-family:'Cinzel',serif;font-size:18px;color:var(--gold2);letter-spacing:.1em;margin-bottom:4px;}
+#setupScreen p{color:var(--text2);font-size:13px;margin-bottom:20px;}
+.setup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;width:100%;max-width:900px;}
+.setup-card{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:14px;cursor:pointer;transition:all .18s;}
+.setup-card:hover{border-color:var(--gold2);transform:translateY(-2px);}
+.setup-card h3{font-family:'Cinzel',serif;font-size:12px;color:var(--gold2);margin-bottom:4px;}
+.setup-card .sc-meta{font-size:11px;color:var(--text2);display:flex;gap:10px;flex-wrap:wrap;}
+.setup-card .sc-mode{display:inline-block;padding:2px 7px;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;font-family:'Cinzel',serif;font-size:9px;color:var(--text2);}
+.setup-section{font-family:'Cinzel',serif;font-size:10px;color:var(--text3);letter-spacing:.12em;width:100%;max-width:900px;margin:16px 0 8px;border-bottom:1px solid var(--border);padding-bottom:4px;}
+/* ── GAME SCREEN ── */
+#gameScreen{flex:1;overflow:hidden;display:none;flex-direction:column;}
+/* top bar */
+#gameBar{background:var(--bg2);border-bottom:1px solid var(--border);height:38px;display:flex;align-items:center;padding:0 10px;gap:8px;flex-shrink:0;}
+#phaseBar{display:flex;gap:4px;align-items:center;}
+.phase-pip{padding:3px 8px;border-radius:12px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:.07em;color:var(--text3);border:1px solid var(--border);background:var(--bg3);cursor:pointer;}
+.phase-pip.active{border-color:var(--gold);color:var(--gold2);background:rgba(201,168,76,.12);}
+#turnLabel{font-family:'Cinzel',serif;font-size:10px;color:var(--text2);margin-left:4px;}
+/* ── PLAY AREA ── */
+#playArea{flex:1;overflow:hidden;display:flex;gap:0;}
+#boardWrap{flex:1;overflow:auto;position:relative;background:repeating-conic-gradient(rgba(20,23,32,.9) 0% 25%,rgba(13,15,20,.9) 0% 50%) 0 0/30px 30px;}
+#board{position:relative;}
+/* zones on board */
+.play-zone{position:absolute;border:1.5px solid;border-radius:5px;display:flex;flex-direction:column;overflow:hidden;}
+.pz-header{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.07em;padding:3px 6px;display:flex;align-items:center;gap:4px;flex-shrink:0;background:rgba(0,0,0,.3);}
+.pz-header .pz-icon{font-size:10px;}
+.pz-header .pz-label{flex:1;}
+.pz-header .pz-count{opacity:.6;font-size:7px;}
+.pz-cards{flex:1;overflow:hidden;display:flex;flex-wrap:wrap;gap:3px;padding:4px;align-content:flex-start;}
+.pz-cards.horizontal{flex-direction:row;align-items:center;}
+.pz-cards.vertical{flex-direction:column;}
+/* ── MINI CARD ── */
+.mc{width:52px;height:72px;border:1.5px solid var(--border2);border-radius:4px;background:var(--bg3);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px;transition:all .12s;position:relative;flex-shrink:0;}
+.mc:hover{border-color:var(--gold);transform:scale(1.06);z-index:10;}
+.mc.selected{border-color:var(--gold2)!important;box-shadow:0 0 8px rgba(201,168,76,.5);}
+.mc.tapped{transform:rotate(15deg);opacity:.75;}
+.mc.tapped:hover{transform:rotate(15deg) scale(1.06);}
+.mc.face-down{background:var(--bg4);}
+.mc .mc-emoji{font-size:16px;}
+.mc .mc-name{font-family:'Cinzel',serif;font-size:5.5px;color:var(--gold2);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;}
+.mc .mc-stats{font-size:7px;color:var(--text2);display:flex;gap:3px;}
+.mc .mc-kw{font-size:5px;color:var(--text3);text-align:center;}
+.mc .mc-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:6px;pointer-events:none;}
+.mc .status-icons{position:absolute;top:1px;right:1px;display:flex;flex-wrap:wrap;gap:1px;}
+.mc .si{width:8px;height:8px;border-radius:50%;font-size:5px;display:flex;align-items:center;justify-content:center;}
+/* ── RIGHT PANEL ── */
+#rightSidebar{width:200px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+#infoPanel{flex:1;overflow-y:auto;padding:8px;}
+#infoPanel::-webkit-scrollbar{width:3px;}
+#infoPanel::-webkit-scrollbar-thumb{background:var(--border2);}
+.info-card-preview{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;margin-bottom:8px;}
+.icp-name{font-family:'Cinzel',serif;font-size:11px;color:var(--gold2);margin-bottom:4px;}
+.icp-stat{display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px;}
+.icp-stat span:first-child{color:var(--text2);}
+.icp-text{font-size:10px;color:var(--text2);margin-top:4px;font-style:italic;line-height:1.4;}
+.atk-btn{width:100%;text-align:left;padding:5px 8px;background:var(--bg4);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;font-size:10px;margin-bottom:4px;transition:all .12s;font-family:'Crimson Pro',serif;}
+.atk-btn:hover{border-color:var(--gold);color:var(--gold2);}
+.atk-btn .ab-name{font-family:'Cinzel',serif;font-size:9px;color:var(--gold2);}
+.atk-btn .ab-fx{font-size:8px;color:var(--text2);}
+.atk-btn .ab-cost{float:right;font-size:8px;color:var(--text3);}
+/* ── LOG ── */
+#logPanel{height:130px;background:var(--bg);border-top:1px solid var(--border);flex-shrink:0;overflow-y:auto;padding:4px 8px;}
+#logPanel::-webkit-scrollbar{width:3px;}
+#logPanel::-webkit-scrollbar-thumb{background:var(--border2);}
+.ll{font-size:10px;padding:1px 0;border-bottom:1px solid rgba(255,255,255,.03);}
+.ll.good{color:var(--green2);}
+.ll.bad{color:var(--red2);}
+.ll.phase{color:var(--gold2);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.06em;}
+.ll.atk{color:var(--blue2);}
+/* ── HP BARS ── */
+.hp-bar-wrap{margin:3px 0;width:100%;}
+.hp-bar{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;}
+.hp-fill{height:100%;border-radius:3px;transition:width .3s;}
+/* toast */
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border2);padding:7px 16px;border-radius:16px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;}
+#toast.show{opacity:1;}
+#toast.win{border-color:var(--gold);color:var(--gold2);}
+#toast.bad{border-color:var(--red);color:var(--red2);}
+#toast.good{border-color:var(--green);color:var(--green2);}
+/* ── PLAYER STAT BARS ── */
+#playerBars{display:flex;gap:8px;padding:6px 10px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
+.pstat-bar{background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:5px 10px;display:flex;align-items:center;gap:8px;min-width:160px;}
+.pstat-bar.active{border-color:var(--gold);}
+.psb-name{font-family:'Cinzel',serif;font-size:9px;color:var(--gold2);min-width:50px;}
+.psb-hp{font-size:11px;min-width:40px;}
+.psb-res{font-size:10px;color:var(--blue2);}
+.psb-hand{font-size:10px;color:var(--text2);}
+/* grid overlay */
+.grid-cell{position:absolute;border:1px solid rgba(255,255,255,.04);pointer-events:none;}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ SETUP SCREEN ═══════════ -->
+<div id="setupScreen">
+  <h2>⚔ PLAYTEST</h2>
+  <p>Select a game config to start playtesting. Layouts are loaded from the Layout Builder.</p>
+  <div class="setup-section">GAME CONFIGS</div>
+  <div class="setup-grid" id="gameConfigList"></div>
+  <div class="setup-section">SAVED LAYOUTS</div>
+  <div class="setup-grid" id="layoutConfigList"></div>
+</div>
+
+<!-- ═══════════ GAME SCREEN ═══════════ -->
+<div id="gameScreen">
+  <header>
+    <h1 id="gameTitle">PLAYTEST</h1>
+    <div id="phaseBar"></div>
+    <span id="turnLabel"></span>
+    <div style="flex:1"></div>
+    <button class="btn sm" id="phaseBtn" onclick="advancePhase()">NEXT PHASE ▶</button>
+    <button class="btn sm" onclick="endTurn()">END TURN ⏭</button>
+    <button class="btn sm danger" onclick="resignGame()">✕ RESIGN</button>
+  </header>
+  <div id="playerBars"></div>
+  <div id="playArea">
+    <div id="boardWrap"><div id="board"></div></div>
+    <div id="rightSidebar">
+      <div style="padding:6px 8px;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:9px;color:var(--text3);letter-spacing:.08em;">SELECTED CARD</div>
+      <div id="infoPanel"><div style="color:var(--text3);font-size:10px;padding:8px;font-style:italic;">Select a card to see details and actions.</div></div>
+    </div>
+  </div>
+  <div id="logPanel"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  SHARED DATA
+// ═══════════════════════════════════════════════════
+const STORE='cardforge_v3';
+const LB_STORE='cardforge_layouts_v2';
+const ACTIVE_LAYOUT_STORE='cardforge_active_layout';
+
+let D={cards:[],decks:[],fusions:[],games:[]};
+let savedLayouts=[];
+function loadData(){
+  try{const s=localStorage.getItem(STORE);if(s)D=JSON.parse(s);}catch(e){}
+  try{savedLayouts=JSON.parse(localStorage.getItem(LB_STORE)||'[]');}catch(e){}
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg,cls=''){
+  const t=document.getElementById('toast');t.textContent=msg;t.className='show '+(cls||'');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.className='',2500);
+}
+
+// ═══════════════════════════════════════════════════
+//  SETUP SCREEN
+// ═══════════════════════════════════════════════════
+function renderSetup(){
+  const gcEl=document.getElementById('gameConfigList');
+  const lcEl=document.getElementById('layoutConfigList');
+  if(!D.games.length){
+    gcEl.innerHTML='<div style="color:var(--text3);font-size:12px;grid-column:1/-1;font-style:italic;padding:10px;">No game configs found. Create one in Card Forge first.</div>';
+  } else {
+    gcEl.innerHTML=D.games.map(g=>`
+      <div class="setup-card" onclick="startGame('${g.id}')">
+        <h3>${esc(g.name)}</h3>
+        <div class="sc-meta">
+          <span class="sc-mode">${esc(g.mode||'standard')}</span>
+          <span>HP: ${g.startHp}</span>
+          <span>Hand: ${g.maxHand}</span>
+          <span>${g.players||2}P</span>
+        </div>
+        ${g.notes?`<div style="margin-top:5px;font-size:10px;color:var(--text3);">${esc(g.notes.slice(0,60))}</div>`:''}
+      </div>
+    `).join('');
+  }
+  // layouts
+  const activeLayout=JSON.parse(localStorage.getItem(ACTIVE_LAYOUT_STORE)||'null');
+  const allLayouts=activeLayout?[activeLayout,...savedLayouts]:savedLayouts;
+  if(!allLayouts.length){
+    lcEl.innerHTML='<div style="color:var(--text3);font-size:12px;grid-column:1/-1;font-style:italic;padding:10px;">No layouts found. Use the Layout Builder to create one.</div>';
+  } else {
+    lcEl.innerHTML=allLayouts.map(l=>`
+      <div class="setup-card" onclick="startGameWithLayout(null,'${l.id}')">
+        <h3>${l.id===activeLayout?.id?'📍 ':''} ${esc(l.name)}</h3>
+        <div class="sc-meta">
+          <span class="sc-mode">${esc(l.mode||'any')}</span>
+          <span>${l.zones?.length||0} zones</span>
+          <span>${l.players||2}P</span>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════
+let G=null;
+
+function mkPlayer(id,name,isAI){
+  return {id,name,isAI,
+    hp:0,maxHp:0,res:0,maxRes:0,
+    hand:[],deck:[],graveyard:[],exile:[],
+    field:[],assistant:null,collector:null,
+    score:0, poisonCounters:0,
+    crystalHp:0,
+  };
+}
+function liveCard(c){
+  return {...c,
+    _id:'lc_'+Math.random().toString(36).slice(2),
+    _hp:c.hp||1, _atk:c.atk||0, _def:c.def||0,
+    _move:c.move||1, _movesLeft:c.move||1,
+    _tapped:false, _atkCount:0,
+    _shield:hasKw(c,'Shield'),
+    _reborn:hasKw(c,'Reborn'),
+    _rebornUsed:false,
+    _frozen:false, _silenced:false,
+    _stealthed:hasKw(c,'Stealth'),
+    _poisonCounters:0, _prowessBonus:0,
+    _x:0,_y:0, // for grid/traverse modes
+  };
+}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
+function hasKw(card,kw){return !card._silenced&&((card.keywords||[]).includes(kw));}
+
+// ═══════════════════════════════════════════════════
+//  START GAME
+// ═══════════════════════════════════════════════════
+function startGame(gameId, layoutOverride){
+  const game=D.games.find(g=>g.id===gameId);
+  if(!game)return toast('Game config not found.','bad');
+  // pick layout: from override, active layout, or default
+  const activeLayout=layoutOverride||JSON.parse(localStorage.getItem(ACTIVE_LAYOUT_STORE)||'null')||null;
+  _initGame(game, activeLayout);
+}
+function startGameWithLayout(gameId, layoutId){
+  const allLayouts=[...savedLayouts];
+  const activeLayout=JSON.parse(localStorage.getItem(ACTIVE_LAYOUT_STORE)||'null');
+  if(activeLayout)allLayouts.unshift(activeLayout);
+  const layout=allLayouts.find(l=>l.id===layoutId)||null;
+  if(gameId){
+    startGame(gameId, layout);
+  } else {
+    // just use layout with first available game, or create a default game state
+    const game=D.games[0]||{id:'default',name:'Default',mode:layout?.mode||'standard',
+      startHp:30,maxHand:5,maxField:5,resPerTurn:3,maxRes:10,players:2,
+      aiStyle:'aggressive',aiDiff:'medium',crystalHp:20,gridSize:6,
+      winConds:[{id:'hp0',on:true}],rules:{fusionEnabled:true,resourceSystem:true},
+      phases:['Draw','Main','Combat','End']};
+    _initGame(game, layout);
+  }
+}
+function _initGame(game, layout){
+  const numPlayers=game.players||2;
+  const players=[];
+  for(let i=0;i<numPlayers;i++){
+    const p=mkPlayer('p'+(i+1), i===0?'You':'Opp '+(i+1), i>0);
+    p.hp=game.startHp||30; p.maxHp=game.startHp||30;
+    p.res=game.resPerTurn||3; p.maxRes=game.maxRes||10;
+    p.crystalHp=game.crystalHp||20;
+    // build deck from all cards for this game, or all cards
+    const pool=D.cards.filter(c=>!c._fusion&&(c.gameId===game.id||!c.gameId));
+    const deckCards=pool.length?shuffle([...pool,...pool,...pool]).slice(0,30):[];
+    p.deck=deckCards.map(liveCard);
+    // draw opening hand
+    for(let j=0;j<(game.maxHand||5)&&p.deck.length;j++) p.hand.push(p.deck.pop());
+    players.push(p);
+  }
+  G={
+    game, layout, players,
+    turn:0, activePlayer:0,
+    phase:0, phases:game.phases?.length?game.phases:['Draw','Main','Combat','End'],
+    log:[], over:false, winner:null,
+    selCard:null, selOwner:null, selLocation:null,
+    // grid/traverse state
+    grid:null,
+    // lane state
+    lanes:null,
+    // combo state
+    comboStack:[],comboScore:0,
+    // fusions
+    fusions:D.fusions.filter(f=>!f.gameId||f.gameId===game.id),
+    constructStage:[],
+  };
+  if(game.mode==='grid'||game.mode==='traverse')initGrid(game);
+  if(game.mode==='lanes')initLanes(game);
+  showGameScreen(game, layout);
+  glog(`⚔ ${game.name} — ${game.mode} mode started!`,'phase');
+  glog(`Turn 1: ${G.players[0].name}`,'phase');
+  doDrawPhase();
+}
+
+// ═══════════════════════════════════════════════════
+//  GRID INIT (grid + traverse modes)
+// ═══════════════════════════════════════════════════
+function initGrid(game){
+  const size=game.gridSize||6;
+  G.grid={size, cells:[]};
+  for(let r=0;r<size;r++){
+    G.grid.cells.push([]);
+    for(let c=0;c<size;c++) G.grid.cells[r].push(null);
+  }
+  if(game.mode==='traverse'){
+    // Place crystals
+    G.crystals={p1:{r:size-1,c:Math.floor(size/2),hp:game.crystalHp||20,maxHp:game.crystalHp||20},
+                p2:{r:0,c:Math.floor(size/2),hp:game.crystalHp||20,maxHp:game.crystalHp||20}};
+    // Scatter item tiles
+    G.items=[];
+    for(let i=0;i<Math.floor(size*size*0.15);i++){
+      G.items.push({r:1+Math.floor(Math.random()*(size-2)),c:Math.floor(Math.random()*size),
+        name:'Item',emoji:'💰',effect:'gain_res',value:2,collected:false});
+    }
+  }
+}
+function initLanes(game){
+  G.lanes=[
+    {name:'LEFT LANE',player:null,opp:null,playerWon:false,oppWon:false},
+    {name:'CENTER',player:null,opp:null,playerWon:false,oppWon:false},
+    {name:'RIGHT LANE',player:null,opp:null,playerWon:false,oppWon:false},
+  ];
+  // AI starts with cards in lanes
+  const ai=G.players[1];
+  G.lanes.forEach((lane,i)=>{
+    if(ai.hand[i]){lane.opp={...ai.hand[i],_who:'opp'};ai.hand.splice(i,1);}
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  SHOW GAME SCREEN
+// ═══════════════════════════════════════════════════
+function showGameScreen(game, layout){
+  document.getElementById('setupScreen').style.display='none';
+  const gs=document.getElementById('gameScreen');gs.style.display='flex';
+  document.getElementById('gameTitle').textContent='⚔ '+game.name.toUpperCase();
+  renderPhaseBar();
+  renderPlayerBars();
+  buildBoard(layout, game);
+  renderBoard();
+  renderInfoPanel();
+}
+
+// ═══════════════════════════════════════════════════
+//  PHASES
+// ═══════════════════════════════════════════════════
+function renderPhaseBar(){
+  const el=document.getElementById('phaseBar');
+  el.innerHTML=G.phases.map((p,i)=>`<span class="phase-pip${i===G.phase?' active':''}">${p}</span>`).join('');
+  document.getElementById('turnLabel').textContent=`T${G.turn+1} · ${G.players[G.activePlayer].name}`;
+}
+function advancePhase(){
+  if(G.over)return;
+  G.phase++;
+  if(G.phase>=G.phases.length){endTurn();return;}
+  const phase=G.phases[G.phase];
+  glog(`── ${phase} Phase ──`,'phase');
+  renderPhaseBar();
+  if(phase==='Draw')doDrawPhase();
+  if(phase==='Combat'){glog('Combat: select your cards to attack.','');}
+  if(phase==='Move'){glog('Move: select a card and a destination cell.','');}
+  if(phase==='Collect'){glog('Collect: cards with Collector keyword can grab nearby items.','');}
+  if(phase==='Combo'){glog('Combo: play cards onto the stack to build combos.','');}
+  renderBoard();renderInfoPanel();
+}
+function doDrawPhase(){
+  const p=G.players[G.activePlayer];
+  if(p.deck.length){
+    p.hand.push(p.deck.pop());
+    glog(`${p.name} draws. (${p.deck.length} remaining)`);
+  } else {
+    glog(`${p.name} has no cards left to draw!`,'bad');
+    if(winCond('deckout'))return checkWin();
+  }
+  // Resource refresh
+  p.res=Math.min(p.maxRes, (G.game.rules?.stackResources?p.res:0)+G.game.resPerTurn);
+  // Start of turn effects
+  applyStartOfTurnEffects(p);
+  renderPlayerBars();
+}
+function applyStartOfTurnEffects(p){
+  // Regen
+  p.field.forEach(c=>{
+    if(hasKw(c,'Regen')&&c._hp<c.hp){c._hp=Math.min(c.hp,c._hp+1);glog(`${c.name} regenerates.`,'good');}
+  });
+  // Poison on enemy at start of your turn
+  const opp=G.players.find(x=>x.id!==p.id);
+  opp?.field.forEach(c=>{
+    if(c._poisonCounters>0){c._hp-=c._poisonCounters;glog(`${c.name} takes ${c._poisonCounters} poison dmg.`,'bad');}
+  });
+  // Burn retaliates
+  opp?.field.forEach(c=>{
+    if(hasKw(c,'Burn')){c._hp-=1;glog(`${c.name} takes 1 Burn dmg.`,'bad');}
+  });
+  checkDead();
+  // Untap all player cards
+  p.field.forEach(c=>{c._tapped=false;c._atkCount=0;c._movesLeft=c._move||1;c._frozen=false;});
+  if(G.grid){
+    const pw=p.id;
+    for(let r=0;r<G.grid.size;r++)for(let c=0;c<G.grid.size;c++){
+      const card=G.grid.cells[r][c];
+      if(card&&card._owner===pw){card._tapped=false;card._movesLeft=card._move||1;card._frozen=false;}
+    }
+  }
+}
+function winCond(id){return G.game.winConds?.find(w=>w.id===id&&w.on);}
+function endTurn(){
+  if(G.over)return;
+  const p=G.players[G.activePlayer];
+  // Discard to hand limit
+  while(p.hand.length>(G.game.maxHand||7)){
+    const discarded=p.hand.shift();
+    p.graveyard.push(discarded);
+    glog(`${p.name} discards ${discarded.name} (hand limit).`);
+  }
+  G.activePlayer=(G.activePlayer+1)%G.players.length;
+  if(G.activePlayer===0)G.turn++;
+  G.phase=0;
+  glog(`── Turn ${G.turn+1}: ${G.players[G.activePlayer].name} ──`,'phase');
+  renderPhaseBar();
+  doDrawPhase();
+  renderBoard(); renderPlayerBars(); renderInfoPanel();
+  // AI takes turn if active player is AI
+  if(G.players[G.activePlayer].isAI){
+    setTimeout(aiTurn, 600);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  KEYWORD COMBAT RESOLVER (shared for all modes)
+// ═══════════════════════════════════════════════════
+function resolveCombat(attacker, defender, atkOwner, defOwner){
+  if(!attacker||!defender)return;
+  if(G.game.mode==='traverse'&&atkOwner&&defOwner&&atkOwner.id===defOwner.id)return;
+  // First strike
+  let atkFirst=hasKw(attacker,'FirstStrike')&&G.game.rules?.firstStrike;
+  let defFirst=hasKw(defender,'FirstStrike')&&G.game.rules?.firstStrike;
+  let atkDmg=Math.max(0,attacker._atk-(hasKw(attacker,'Piercing')?0:defender._def));
+  let defDmg=Math.max(0,defender._atk-(hasKw(defender,'Piercing')?0:attacker._def));
+  // Indestructible
+  const atkIndes=hasKw(attacker,'Indestructible');
+  const defIndes=hasKw(defender,'Indestructible');
+  // Shield
+  if(defender._shield&&atkDmg>0){defender._shield=false;glog(`${defender.name}'s Shield absorbs the hit!`);atkDmg=0;}
+  if(attacker._shield&&defDmg>0){attacker._shield=false;glog(`${attacker.name}'s Shield absorbs the hit!`);defDmg=0;}
+  // Apply damage
+  if(!defIndes){
+    if(hasKw(attacker,'Deathtouch')&&atkDmg>0)defender._hp=0;
+    else defender._hp-=atkDmg;
+  }
+  if(!atkIndes){
+    if(hasKw(defender,'Deathtouch')&&defDmg>0)attacker._hp=0;
+    else attacker._hp-=defDmg;
+  }
+  glog(`${attacker.name}(${attacker._hp}) ⚔ ${defender.name}(${defender._hp})`,'atk');
+  // Lifesteal
+  if(hasKw(attacker,'Lifesteal')&&atkDmg>0&&atkOwner){atkOwner.hp=Math.min(atkOwner.maxHp,atkOwner.hp+atkDmg);glog(`${attacker.name} Lifesteal +${atkDmg} HP.`,'good');}
+  if(hasKw(defender,'Lifesteal')&&defDmg>0&&defOwner){defOwner.hp=Math.min(defOwner.maxHp,defOwner.hp+defDmg);glog(`${defender.name} Lifesteal +${defDmg} HP.`,'good');}
+  // Trample — excess to player
+  if(hasKw(attacker,'Trample')&&atkDmg>defender.hp&&defOwner){
+    const overflow=atkDmg-Math.max(0,defender.hp);
+    defOwner.hp-=overflow;
+    glog(`Trample! ${overflow} overflow damage to ${defOwner.name}.`,'atk');
+  }
+  // Poison
+  if(hasKw(attacker,'Poison')&&atkDmg>0){defender._poisonCounters++;glog(`${defender.name} is poisoned.`);}
+  if(hasKw(defender,'Poison')&&defDmg>0){attacker._poisonCounters++;glog(`${attacker.name} is poisoned.`);}
+  // Freeze
+  if(hasKw(attacker,'Freeze')&&atkDmg>0){defender._frozen=true;glog(`${defender.name} is frozen.`);}
+  if(hasKw(defender,'Freeze')&&defDmg>0){attacker._frozen=true;glog(`${attacker.name} is frozen.`);}
+  // Reborn
+  [attacker,defender].forEach(c=>{
+    if(c._hp<=0&&c._reborn&&!c._rebornUsed){c._hp=1;c._reborn=false;c._rebornUsed=true;glog(`${c.name} reborn with 1 HP!`,'good');}
+  });
+  attacker._tapped=true;
+  attacker._atkCount++;
+  // Vigilance: doesn't tap
+  if(hasKw(attacker,'Vigilance'))attacker._tapped=false;
+  checkDead();
+  checkWin();
+  renderBoard(); renderPlayerBars(); renderInfoPanel();
+}
+function applyEffects(effects, source, atkOwner, targetCard, targetOwner){
+  effects.forEach(ef=>{
+    const val=Math.abs(ef.value||0);
+    const sign=ef.value>=0?1:-1;
+    switch(ef.type){
+      case 'dmg_hp':
+        if(targetCard){
+          let d=val;
+          if(targetCard._shield&&d>0){targetCard._shield=false;glog(`${targetCard.name}'s Shield absorbs it!`);d=0;}
+          if(!hasKw(targetCard,'Indestructible'))targetCard._hp-=d;
+          if(hasKw(source,'Lifesteal')&&d>0&&atkOwner)atkOwner.hp=Math.min(atkOwner.maxHp,atkOwner.hp+d);
+          glog(`${source.name} deals ${d} to ${targetCard.name}.`,'atk');
+        } else if(targetOwner){targetOwner.hp-=val;glog(`${source.name} deals ${val} direct damage to ${targetOwner.name}.`,'atk');}
+        break;
+      case 'heal_self':if(atkOwner){atkOwner.hp=Math.min(atkOwner.maxHp,atkOwner.hp+val);glog(`+${val} HP to ${atkOwner.name}.`,'good');}break;
+      case 'heal_ally':if(targetCard){targetCard._hp=Math.min(targetCard.hp,targetCard._hp+val);glog(`${targetCard.name} healed ${val}.`,'good');}break;
+      case 'boost_atk':if(targetCard){targetCard._atk+=val;glog(`${targetCard.name} gains +${val} ATK.`,'good');}break;
+      case 'boost_def':if(targetCard){targetCard._def+=val;glog(`${targetCard.name} gains +${val} DEF.`,'good');}break;
+      case 'boost_hp':if(targetCard){targetCard._hp+=val;targetCard.hp+=val;glog(`${targetCard.name} gains +${val} max HP.`,'good');}break;
+      case 'draw':for(let i=0;i<val&&atkOwner&&atkOwner.deck.length;i++){atkOwner.hand.push(atkOwner.deck.pop());}glog(`${source.name}: Draw ${val}.`);break;
+      case 'discard_opp':if(targetOwner&&targetOwner.hand.length){const d=targetOwner.hand.pop();targetOwner.graveyard.push(d);glog(`${targetOwner.name} discards ${d.name}.`,'bad');}break;
+      case 'gain_res':if(atkOwner){atkOwner.res=Math.min(atkOwner.maxRes,atkOwner.res+val);glog(`+${val} resources.`,'good');}break;
+      case 'drain_res':if(targetOwner){targetOwner.res=Math.max(0,targetOwner.res-val);glog(`-${val} resources from ${targetOwner.name}.`,'atk');}break;
+      case 'apply_poison':if(targetCard){targetCard._poisonCounters+=val;glog(`${targetCard.name} gets ${val} poison.`);}break;
+      case 'apply_freeze':if(targetCard){targetCard._frozen=true;glog(`${targetCard.name} frozen.`);}break;
+      case 'apply_burn':if(targetCard&&!hasKw(targetCard,'Burn')){targetCard.keywords=targetCard.keywords||[];targetCard.keywords.push('Burn');glog(`${targetCard.name} has Burn applied.`);}break;
+      case 'apply_silence':if(targetCard){targetCard._silenced=true;glog(`${targetCard.name} silenced.`);}break;
+      case 'destroy':
+        if(targetCard&&!hasKw(targetCard,'Indestructible')){targetCard._hp=-999;glog(`${targetCard.name} destroyed.`,'bad');}break;
+      case 'exile':
+        if(targetCard){targetCard._exiled=true;targetCard._hp=-999;glog(`${targetCard.name} exiled.`,'bad');}break;
+      case 'dmg_atk':if(targetCard){targetCard._atk=Math.max(0,targetCard._atk-val);glog(`${targetCard.name} -${val} ATK.`,'atk');}break;
+    }
+  });
+  checkDead(); renderPlayerBars();
+}
+
+// ═══════════════════════════════════════════════════
+//  PLAY CARD
+// ═══════════════════════════════════════════════════
+function playCardFromHand(playerIdx, handIdx){
+  const p=G.players[playerIdx];
+  const card=p.hand[handIdx];
+  if(!card)return;
+  // Cost check
+  if(G.game.rules?.resourceSystem&&card.cost>p.res){
+    return glog(`Not enough resources to play ${card.name} (need ${card.cost}).`,'bad');
+  }
+  // Tribute check
+  if(G.game.rules?.tributeEnabled&&card.tribute>0&&p.field.length<card.tribute){
+    return glog(`Tribute: sacrifice ${card.tribute} field card(s) first.`,'bad');
+  }
+  if(G.game.rules?.tributeEnabled&&card.tribute>0){
+    for(let i=0;i<card.tribute;i++){
+      const victim=p.field.shift();
+      if(victim){p.graveyard.push(victim);glog(`Tributed ${victim.name}.`);}
+    }
+  }
+  // Deduct cost
+  if(G.game.rules?.resourceSystem)p.res-=card.cost;
+  // Remove from hand
+  p.hand.splice(handIdx,1);
+  const type=(card.type||'').toLowerCase();
+  // Spell / Event / Field effects fire immediately
+  if(type==='spell'||type==='event'||type==='field'){
+    if(card.attacks?.length){
+      card.attacks.forEach(atk=>{
+        const opp=G.players.find(x=>x.id!==p.id);
+        applyEffects(atk.effects||[], card, p, opp?.field[0]||null, opp);
+      });
+    }
+    p.graveyard.push(card);
+    if(type==='field'){G.activeFieldCard=card;glog(`${card.name} — Field effect active!`,'phase');}
+    else glog(`${p.name} plays ${card.name}.`,'good');
+  } else if(type==='resource'){
+    p.res=Math.min(p.maxRes,(p.res||0)+Math.max(1,card.hp));
+    p.graveyard.push(card);
+    glog(`${p.name} plays resource ${card.name}. +${Math.max(1,card.hp)} resources.`,'good');
+  } else if(type==='item'){
+    p.graveyard.push(card);
+    if(card.attacks?.length){
+      const opp=G.players.find(x=>x.id!==p.id);
+      applyEffects(card.attacks[0].effects||[],card,p,null,opp);
+    }
+    glog(`${p.name} uses item ${card.name}.`,'good');
+  } else {
+    // Creature, Construct, etc. — go to field
+    if(G.game.mode==='grid'||G.game.mode==='traverse'){
+      // Placed via grid click later
+      G.selCard={card,playerIdx,source:'hand',handIdx:-1};
+      glog(`Select a grid cell to place ${card.name}.`);
+      renderBoard(); renderInfoPanel();
+      return;
+    }
+    if(p.field.length>=(G.game.maxField||6)){
+      return glog(`Field is full. Destroy or move a card first.`,'bad');
+    }
+    card._tapped=!(hasKw(card,'Haste')||hasKw(card,'Charge'));
+    p.field.push(card);
+    // Cascade
+    if(hasKw(card,'Cascade')&&p.deck.length){
+      const extra=p.deck.pop();
+      glog(`Cascade: drew ${extra.name}!`,'good');
+      if((extra.type||'').toLowerCase()==='creature'||extra.type==='Construct'){
+        extra._tapped=!(hasKw(extra,'Haste')||hasKw(extra,'Charge'));
+        p.field.push(extra);
+        glog(`${extra.name} played via Cascade.`,'good');
+      } else p.hand.push(extra);
+    }
+    // Prowess
+    if(type!=='creature'&&type!=='construct'){
+      p.field.forEach(c=>{if(hasKw(c,'Prowess')){c._atk++;glog(`${c.name} Prowess +1 ATK.`);}});
+    }
+    glog(`${p.name} plays ${card.name} to field.`,'good');
+  }
+  p.res=Math.max(0,p.res);
+  renderBoard(); renderPlayerBars(); renderInfoPanel();
+}
+
+// ═══════════════════════════════════════════════════
+//  ATTACK (standard/lanes/arena)
+// ═══════════════════════════════════════════════════
+function attackTarget(atkPlayerIdx, atkCard, defPlayerIdx, defCard){
+  const atkP=G.players[atkPlayerIdx];
+  const defP=G.players[defPlayerIdx];
+  if(!atkCard||!defCard)return;
+  if(atkCard._tapped){return glog(`${atkCard.name} has already attacked this turn.`,'bad');}
+  if(atkCard._frozen){return glog(`${atkCard.name} is frozen!`,'bad');}
+  if(hasKw(atkCard,'Defender')){return glog(`${atkCard.name} has Defender — cannot attack.`,'bad');}
+  // Flying restriction
+  if(hasKw(defCard,'Flying')&&!hasKw(atkCard,'Flying')&&!hasKw(atkCard,'Piercing')){
+    return glog(`${defCard.name} has Flying — only Flying cards can block it.`,'bad');
+  }
+  // Stealth
+  if(defCard._stealthed){return glog(`${defCard.name} is in stealth — it must attack first.`,'bad');}
+  // Taunt: must attack taunt cards first
+  const taunts=defP.field.filter(c=>hasKw(c,'Taunt'));
+  if(taunts.length&&!hasKw(defCard,'Taunt')){
+    return glog(`Must attack ${taunts[0].name} (Taunt) first!`,'bad');
+  }
+  resolveCombat(atkCard, defCard, atkP, defP);
+}
+function attackDirectly(atkPlayerIdx, atkCard){
+  const atkP=G.players[atkPlayerIdx];
+  const defP=G.players.find((_,i)=>i!==atkPlayerIdx);
+  if(!atkCard||!defP)return;
+  if(atkCard._tapped)return glog(`${atkCard.name} already attacked.`,'bad');
+  if(atkCard._frozen)return glog(`${atkCard.name} is frozen!`,'bad');
+  const taunts=defP.field.filter(c=>hasKw(c,'Taunt'));
+  if(taunts.length)return glog(`Must attack ${taunts[0].name} (Taunt) first!`,'bad');
+  const dmg=Math.max(0,atkCard._atk);
+  defP.hp-=dmg;
+  if(hasKw(atkCard,'Lifesteal'))atkP.hp=Math.min(atkP.maxHp,atkP.hp+dmg);
+  if(hasKw(atkCard,'Trample')){}// already direct
+  atkCard._tapped=true;
+  if(hasKw(atkCard,'Vigilance'))atkCard._tapped=false;
+  glog(`${atkCard.name} attacks ${defP.name} directly for ${dmg}!`,'atk');
+  checkWin(); renderBoard(); renderPlayerBars(); renderInfoPanel();
+}
+
+// ═══════════════════════════════════════════════════
+//  CHECK DEAD / WIN
+// ═══════════════════════════════════════════════════
+function checkDead(){
+  G.players.forEach(p=>{
+    p.field=p.field.filter(c=>{
+      if(c._hp<=0&&!hasKw(c,'Indestructible')){
+        if(c._exiled)p.exile.push(c); else p.graveyard.push(c);
+        glog(`${c.name} destroyed.`);
+        return false;
+      }
+      return true;
+    });
+  });
+  if(G.grid){
+    for(let r=0;r<G.grid.size;r++){
+      for(let c2=0;c2<G.grid.size;c2++){
+        const card=G.grid.cells[r][c2];
+        if(card&&card._hp<=0&&!hasKw(card,'Indestructible')){
+          const owner=G.players.find(p=>p.id===card._owner);
+          if(owner)owner.graveyard.push(card);
+          G.grid.cells[r][c2]=null;
+          glog(`${card.name} destroyed on grid.`);
+        }
+      }
+    }
+  }
+}
+function checkWin(){
+  if(G.over)return;
+  // HP win
+  if(winCond('hp0')){
+    G.players.forEach(p=>{
+      if(p.hp<=0){G.over=true;G.winner=G.players.find(x=>x.id!==p.id);glog(`${p.name} is defeated!`,'bad');}
+    });
+  }
+  // Crystal win (traverse)
+  if(winCond('crystal')&&G.crystals){
+    if(G.crystals.p1.hp<=0){G.over=true;G.winner=G.players[1];glog(`P1 Crystal destroyed!`,'bad');}
+    if(G.crystals.p2.hp<=0){G.over=true;G.winner=G.players[0];glog(`P2 Crystal destroyed!`,'bad');}
+  }
+  // Lanes win
+  if(winCond('lanes2')&&G.lanes){
+    const pw=G.lanes.filter(l=>l.playerWon).length;
+    const ow=G.lanes.filter(l=>l.oppWon).length;
+    if(pw>=2){G.over=true;G.winner=G.players[0];}
+    if(ow>=2){G.over=true;G.winner=G.players[1];}
+  }
+  if(G.over&&G.winner){
+    glog(`🏆 ${G.winner.name} WINS!`,'phase');
+    toast(`🏆 ${G.winner.name} Wins!`,'win');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  LOG
+// ═══════════════════════════════════════════════════
+function glog(msg,cls=''){
+  if(!G)return;
+  G.log.push({msg,cls});
+  const el=document.getElementById('logPanel');
+  if(el)el.innerHTML=G.log.slice(-60).reverse().map(e=>`<div class="ll ${e.cls||''}">${esc(e.msg)}</div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  BOARD BUILDING (layout-driven)
+// ═══════════════════════════════════════════════════
+function buildBoard(layout, game){
+  const board=document.getElementById('board');
+  const bw=document.getElementById('boardWrap');
+  board.innerHTML='';
+  if(layout&&layout.zones&&layout.zones.length){
+    board.style.width=layout.canvasW+'px';
+    board.style.height=layout.canvasH+'px';
+    // Build from layout zones
+    layout.zones.forEach(z=>{
+      const el=document.createElement('div');
+      el.className='play-zone';
+      el.id='pz_'+z.type+'_'+(z.player||'any')+'_'+z.id;
+      el.dataset.zoneId=z.id;
+      el.dataset.zoneType=z.type;
+      el.dataset.zonePlayer=z.player||'any';
+      el.style.cssText=`left:${z.x}px;top:${z.y}px;width:${z.w}px;height:${z.h}px;border-color:${z.border};background:${z.color};`;
+      el.innerHTML=`<div class="pz-header"><span class="pz-icon">${z.icon}</span><span class="pz-label">${esc(z.label)}</span><span class="pz-count" id="pzc_${z.id}"></span></div>
+      <div class="pz-cards" id="pzCards_${z.id}"></div>`;
+      board.appendChild(el);
+    });
+  } else {
+    // Default layout based on game mode
+    buildDefaultLayout(game, board);
+  }
+  // Grid overlay for grid/traverse modes
+  if(game.mode==='grid'||game.mode==='traverse'){
+    buildGridOverlay(game);
+  }
+}
+function buildDefaultLayout(game, board){
+  const mode=game.mode||'standard';
+  const bw=document.getElementById('boardWrap');
+  let w=820,h=580;
+  board.style.width=w+'px'; board.style.height=h+'px';
+  const zones=defaultZones(mode, w, h);
+  zones.forEach(z=>{
+    const el=document.createElement('div');
+    el.className='play-zone';
+    el.id='pz_default_'+z.type+'_'+z.id;
+    el.dataset.zoneType=z.type;
+    el.dataset.zonePlayer=z.player||'any';
+    el.dataset.defaultZoneId=z.id;
+    el.style.cssText=`left:${z.x}px;top:${z.y}px;width:${z.w}px;height:${z.h}px;border-color:${z.border};background:${z.color};`;
+    el.innerHTML=`<div class="pz-header"><span class="pz-icon">${z.icon}</span><span class="pz-label">${esc(z.label)}</span><span class="pz-count" id="pzc_${z.id}"></span></div>
+    <div class="pz-cards" id="pzCards_${z.id}"></div>`;
+    board.appendChild(el);
+  });
+}
+function defaultZones(mode, w, h){
+  if(mode==='lanes') return lanesDefaultZones(w,h);
+  if(mode==='grid'||mode==='traverse') return [];
+  if(mode==='coop') return coopDefaultZones(w,h);
+  // Standard / arena / draft
+  return [
+    {id:'opp_hand',type:'hand',player:'p2',label:"Opp Hand",icon:'🤚',x:10,y:5,w:w-120,h:70,color:'rgba(204,68,68,.08)',border:'#664444'},
+    {id:'opp_deck',type:'draw',player:'p2',label:"Opp Deck",icon:'📚',x:w-110,y:5,w:100,h:70,color:'rgba(201,168,76,.08)',border:'#664444'},
+    {id:'opp_field',type:'battlefield',player:'p2',label:"Opp Field",icon:'⚔',x:10,y:85,w:w-20,h:130,color:'rgba(200,80,80,.05)',border:'#553333'},
+    {id:'middle',type:'field_card',player:'shared',label:"Field / Events",icon:'🌍',x:10,y:225,w:w-20,h:50,color:'rgba(100,180,60,.06)',border:'#406020'},
+    {id:'player_field',type:'battlefield',player:'p1',label:"Your Field",icon:'⚔',x:10,y:285,w:w-20,h:130,color:'rgba(60,120,80,.08)',border:'#335533'},
+    {id:'player_hand',type:'hand',player:'p1',label:"Your Hand",icon:'✋',x:10,y:425,w:w-190,h:140,color:'rgba(68,136,204,.08)',border:'#334466'},
+    {id:'player_deck',type:'draw',player:'p1',label:"Deck",icon:'📚',x:w-180,y:425,w:80,h:65,color:'rgba(201,168,76,.08)',border:'#665533'},
+    {id:'player_discard',type:'discard',player:'p1',label:"Discard",icon:'🗑',x:w-90,y:425,w:80,h:65,color:'rgba(180,60,60,.08)',border:'#553333'},
+    {id:'player_grave',type:'graveyard',player:'p1',label:"Grave",icon:'💀',x:w-180,y:495,w:80,h:70,color:'rgba(100,80,80,.12)',border:'#443333'},
+    {id:'construct_stage',type:'construct_stage',player:'p1',label:"Construct",icon:'🔧',x:w-90,y:495,w:80,h:70,color:'rgba(136,85,204,.1)',border:'#553388'},
+  ];
+}
+function lanesDefaultZones(w,h){
+  const laneW=Math.floor((w-40)/3);
+  const zones=[];
+  ['LEFT','CENTER','RIGHT'].forEach((name,i)=>{
+    const x=10+i*(laneW+10);
+    zones.push({id:`lane_opp_${i}`,type:'lane',player:'p2',label:`${name} (Opp)`,icon:'🔴',x,y:40,w:laneW,h:160,color:'rgba(200,80,80,.08)',border:'#664444'});
+    zones.push({id:`lane_mid_${i}`,type:'score',player:'shared',label:`${name} LANE`,icon:'🛣',x,y:205,w:laneW,h:30,color:'rgba(80,80,80,.1)',border:'#444'});
+    zones.push({id:`lane_pl_${i}`,type:'lane',player:'p1',label:`${name} (You)`,icon:'🟢',x,y:240,w:laneW,h:160,color:'rgba(60,120,80,.08)',border:'#335533'});
+  });
+  zones.push({id:'hand_opp',type:'hand',player:'p2',label:'Opp Hand',icon:'🤚',x:10,y:5,w:w-20,h:30,color:'rgba(200,80,80,.05)',border:'#443333'});
+  zones.push({id:'hand_pl',type:'hand',player:'p1',label:'Your Hand',icon:'✋',x:10,y:405,w:w-20,h:140,color:'rgba(68,136,204,.08)',border:'#334466'});
+  return zones;
+}
+function coopDefaultZones(w,h){
+  return [
+    {id:'combo_stack',type:'combo_stack',player:'shared',label:'COMBO STACK',icon:'🔗',x:10,y:80,w:w-20,h:140,color:'rgba(200,100,200,.1)',border:'#884488'},
+    {id:'p1_hand',type:'hand',player:'p1',label:'P1 Hand',icon:'✋',x:10,y:230,w:Math.floor(w/2)-15,h:120,color:'rgba(68,136,204,.08)',border:'#334466'},
+    {id:'p2_hand',type:'hand',player:'p2',label:'P2 Hand',icon:'✋',x:Math.floor(w/2)+5,y:230,w:Math.floor(w/2)-15,h:120,color:'rgba(204,136,68,.08)',border:'#664433'},
+    {id:'score_display',type:'score',player:'shared',label:'COMBO SCORE',icon:'🏆',x:10,y:10,w:w-20,h:60,color:'rgba(201,168,76,.08)',border:'#665533'},
+    {id:'p1_deck',type:'draw',player:'p1',label:'P1 Deck',icon:'📚',x:10,y:360,w:80,h:70,color:'rgba(201,168,76,.06)',border:'#665533'},
+    {id:'p2_deck',type:'draw',player:'p2',label:'P2 Deck',icon:'📚',x:w-90,y:360,w:80,h:70,color:'rgba(201,168,76,.06)',border:'#665533'},
+  ];
+}
+function buildGridOverlay(game){
+  const size=G.grid.size;
+  const cellSize=72;
+  const board=document.getElementById('board');
+  const gridW=size*cellSize,gridH=size*cellSize;
+  board.style.width=(gridW+20)+'px';
+  board.style.height=(gridH+100)+'px';
+  const gridEl=document.createElement('div');
+  gridEl.id='gridOverlay';
+  gridEl.style.cssText=`position:absolute;left:10px;top:10px;width:${gridW}px;height:${gridH}px;`;
+  for(let r=0;r<size;r++){
+    for(let c=0;c<size;c++){
+      const cell=document.createElement('div');
+      cell.style.cssText=`position:absolute;left:${c*cellSize}px;top:${r*cellSize}px;width:${cellSize}px;height:${cellSize}px;border:1px solid var(--border);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;`;
+      cell.id=`gcell_${r}_${c}`;
+      // Color rows
+      if(r<Math.floor(size/2))cell.style.background='rgba(200,80,80,.04)';
+      else cell.style.background='rgba(60,120,80,.04)';
+      cell.addEventListener('click',()=>gridCellClick(r,c));
+      cell.addEventListener('mouseenter',()=>{if(!G.grid.cells[r][c])cell.style.background='rgba(201,168,76,.1)';});
+      cell.addEventListener('mouseleave',()=>{if(!G.grid.cells[r][c])cell.style.background=r<Math.floor(size/2)?'rgba(200,80,80,.04)':'rgba(60,120,80,.04)';});
+      gridEl.appendChild(cell);
+    }
+  }
+  // Crystal indicators for traverse
+  if(G.game.mode==='traverse'&&G.crystals){
+    [G.crystals.p1,G.crystals.p2].forEach((crys,i)=>{
+      const cx=document.createElement('div');
+      cx.id='crystal_p'+(i+1);
+      cx.style.cssText=`position:absolute;left:${crys.c*cellSize+cellSize/2-20}px;top:${crys.r*cellSize+cellSize/2-20}px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:24px;pointer-events:none;`;
+      cx.textContent='🔮';
+      gridEl.appendChild(cx);
+    });
+  }
+  board.appendChild(gridEl);
+  // Hand zone below grid
+  const handZone=document.createElement('div');
+  handZone.className='play-zone';
+  handZone.id='grid_hand_zone';
+  handZone.style.cssText=`left:10px;top:${gridH+15}px;width:${gridW}px;height:70px;border-color:var(--blue);background:rgba(51,119,204,.08);`;
+  handZone.innerHTML=`<div class="pz-header"><span class="pz-icon">✋</span><span class="pz-label">YOUR HAND — click card then click grid cell</span></div><div class="pz-cards" id="pzCards_grid_hand"></div>`;
+  board.appendChild(handZone);
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDER BOARD
+// ═══════════════════════════════════════════════════
+function renderBoard(){
+  if(!G)return;
+  const mode=G.game.mode;
+  if(mode==='grid'||mode==='traverse'){renderGrid();return;}
+  if(mode==='lanes'){renderLanes();return;}
+  if(mode==='coop'){renderCoop();return;}
+  renderStandard();
+}
+function renderStandard(){
+  if(!G)return;
+  const layout=G.layout;
+  const board=document.getElementById('board');
+  // Clear all card areas
+  board.querySelectorAll('.pz-cards').forEach(el=>el.innerHTML='');
+  board.querySelectorAll('.pz-count').forEach(el=>el.textContent='');
+  const zones=layout?.zones||defaultZones(G.game.mode||'standard',820,580);
+  const p1=G.players[0], p2=G.players[1]||G.players[0];
+  // Map zone types to data
+  zones.forEach(z=>{
+    const el=document.getElementById('pzCards_'+z.id)||document.getElementById('pzCards_'+z.id);
+    const countEl=document.getElementById('pzc_'+z.id);
+    if(!el)return;
+    const player=z.player==='p2'?p2:p1;
+    switch(z.type){
+      case 'hand':
+        const cards=z.player==='p2'?p2.hand:p1.hand;
+        el.innerHTML=cards.map((c,i)=>{
+          const isSel=G.selCard&&G.selCard._id===c._id;
+          const isMyTurn=G.players[G.activePlayer].id===player.id;
+          return `<div class="mc${isSel?' selected':''}" onclick="selectHandCard(${G.players.indexOf(player)},${i})"
+            style="border-color:${isSel?'var(--gold2)':typeColor(c.type)}">
+            <span class="mc-emoji">${c.emoji||'🃏'}</span>
+            <span class="mc-name">${esc(c.name.slice(0,8))}</span>
+            <div class="mc-stats"><span style="color:var(--red2)">${c._hp}</span><span>/</span><span style="color:var(--gold)">${c.cost}</span></div>
+          </div>`;
+        }).join('');
+        if(countEl)countEl.textContent=cards.length;
+        break;
+      case 'battlefield':
+        const field=z.player==='p2'?p2.field:p1.field;
+        el.innerHTML=field.map((c,i)=>renderMiniCard(c,i,z.player,player)).join('');
+        if(countEl)countEl.textContent=field.length;
+        break;
+      case 'draw':
+        const deck=z.player==='p2'?p2.deck:p1.deck;
+        el.innerHTML=deck.length?`<div class="mc face-down" onclick="drawCard(${G.players.indexOf(player)})">
+          <span class="mc-emoji">📚</span><span class="mc-name">${deck.length}</span></div>`:'<div style="font-size:9px;color:var(--text3);padding:4px;">Empty</div>';
+        if(countEl)countEl.textContent=deck.length;
+        break;
+      case 'discard':
+        const disc=z.player==='p2'?p2.graveyard:p1.graveyard;
+        if(disc.length){
+          const top=disc[disc.length-1];
+          el.innerHTML=renderMiniCard(top,-1,z.player,player,true);
+        }
+        if(countEl)countEl.textContent=(z.player==='p2'?p2:p1).graveyard.length;
+        break;
+      case 'graveyard':
+        const gr=z.player==='p2'?p2.graveyard:p1.graveyard;
+        if(gr.length){const t=gr[gr.length-1];el.innerHTML=renderMiniCard(t,-1,z.player,player,true);}
+        if(countEl)countEl.textContent=gr.length;
+        break;
+      case 'construct_stage':
+        el.innerHTML=G.constructStage.map((c,i)=>renderMiniCard(c,i,'construct',p1,false,true)).join('');
+        if(countEl)countEl.textContent=G.constructStage.length;
+        break;
+      case 'hp_tracker':
+        const hp_p=z.player==='p2'?p2:p1;
+        el.innerHTML=`<div style="text-align:center;padding:3px;">
+          <div style="font-family:Cinzel,serif;font-size:10px;color:var(--red2);">❤ ${hp_p.hp}/${hp_p.maxHp}</div>
+          <div class="hp-bar-wrap"><div class="hp-bar"><div class="hp-fill" style="width:${100*hp_p.hp/hp_p.maxHp}%;background:${hp_p.hp/hp_p.maxHp>.5?'var(--green)':hp_p.hp/hp_p.maxHp>.25?'var(--gold)':'var(--red)'}"></div></div></div>
+        </div>`;
+        break;
+      case 'resource':
+        const res_p=z.player==='p2'?p2:p1;
+        el.innerHTML=`<div style="text-align:center;padding:4px;"><div style="font-family:Cinzel,serif;font-size:11px;color:var(--blue2);">💎 ${res_p.res}/${res_p.maxRes}</div></div>`;
+        break;
+      case 'score':
+        el.innerHTML=`<div style="text-align:center;padding:4px;font-family:Cinzel,serif;font-size:10px;color:var(--gold2);">${G.players.map(p=>`${p.name}: ${p.score}`).join(' | ')}</div>`;
+        break;
+    }
+  });
+}
+function renderMiniCard(c,idx,who,owner,readOnly,isConstruct){
+  const isSel=G.selCard&&G.selCard._id===c._id;
+  const statusIcons=[];
+  if(c._frozen)statusIcons.push('<span class="si" style="background:rgba(80,160,220,.4)">❄</span>');
+  if(c._poisonCounters>0)statusIcons.push('<span class="si" style="background:rgba(100,180,80,.4)">☠</span>');
+  if(c._shield)statusIcons.push('<span class="si" style="background:rgba(136,153,187,.4)">🛡</span>');
+  if(c._silenced)statusIcons.push('<span class="si" style="background:rgba(120,120,120,.4)">🔇</span>');
+  const pIdx=G.players.findIndex(p=>p.id===owner?.id);
+  const onClickStr=isConstruct?`useConstructCard(${idx})`:`selectFieldCard(${pIdx},${idx})`;
+  return `<div class="mc${isSel?' selected':''}${c._tapped?' tapped':''}"
+    onclick="${onClickStr}"
+    style="border-color:${isSel?'var(--gold2)':typeColor(c.type)}">
+    <span class="mc-emoji">${c.emoji||'🃏'}</span>
+    <span class="mc-name">${esc((c.name||'').slice(0,8))}</span>
+    <div class="mc-stats">
+      <span style="color:var(--red2)">${c._hp}</span>
+      <span style="color:var(--gold)">${c._atk}</span>
+    </div>
+    <div class="status-icons">${statusIcons.join('')}</div>
+  </div>`;
+}
+function typeColor(t){const m={Creature:'#4488aa',Spell:'#9944cc',Construct:'#cc7733',Field:'#33aa55',Event:'#cc5533',Resource:'#aaaa33',Item:'#33aaaa',Trap:'#aa3355',Fusion:'#8833cc',Assistant:'#3355cc',Collector:'#55aa33'};return m[t]||'#556677';}
+
+// ─ GRID RENDER ─
+function renderGrid(){
+  if(!G.grid)return;
+  const size=G.grid.size;
+  const cellSize=72;
+  for(let r=0;r<size;r++){
+    for(let c=0;c<size;c++){
+      const cell=document.getElementById(`gcell_${r}_${c}`);
+      if(!cell)continue;
+      const card=G.grid.cells[r][c];
+      cell.innerHTML='';
+      if(card){
+        const isSel=G.selCard&&G.selCard._id===card._id;
+        const div=document.createElement('div');
+        div.className='mc'+(isSel?' selected':'')+(card._tapped?' tapped':'');
+        div.style.cssText=`border-color:${isSel?'var(--gold2)':card._owner===G.players[0].id?'var(--green)':'var(--red)'};`;
+        div.innerHTML=`<span class="mc-emoji">${card.emoji||'🃏'}</span>
+          <span class="mc-name">${esc((card.name||'').slice(0,6))}</span>
+          <div class="mc-stats"><span style="color:var(--red2)">${card._hp}</span><span style="color:var(--gold)">${card._atk}</span></div>`;
+        cell.appendChild(div);
+      }
+      // item tiles in traverse
+      if(G.game.mode==='traverse'&&G.items){
+        const item=G.items.find(it=>it.r===r&&it.c===c&&!it.collected);
+        if(item&&!card){
+          const iv=document.createElement('div');iv.style.cssText='font-size:18px;';iv.textContent=item.emoji||'💰';
+          cell.appendChild(iv);
+        }
+      }
+      // Crystal in traverse
+      if(G.game.mode==='traverse'&&G.crystals){
+        if(G.crystals.p1.r===r&&G.crystals.p1.c===c){
+          const cv=document.createElement('div');cv.style.cssText='font-size:10px;color:var(--blue2);text-align:center;';
+          cv.innerHTML=`🔮<br>${G.crystals.p1.hp}`;cell.appendChild(cv);
+        }
+        if(G.crystals.p2.r===r&&G.crystals.p2.c===c){
+          const cv=document.createElement('div');cv.style.cssText='font-size:10px;color:var(--red2);text-align:center;';
+          cv.innerHTML=`🔮<br>${G.crystals.p2.hp}`;cell.appendChild(cv);
+        }
+      }
+    }
+  }
+  // Render hand
+  const handEl=document.getElementById('pzCards_grid_hand');
+  if(handEl){
+    const p=G.players[0];
+    handEl.innerHTML=p.hand.map((c,i)=>`<div class="mc" onclick="selectGridHandCard(${i})" style="border-color:${G.selCard?.handIdx===i?'var(--gold2)':typeColor(c.type)}">
+      <span class="mc-emoji">${c.emoji||'🃏'}</span>
+      <span class="mc-name">${esc(c.name.slice(0,7))}</span>
+      <div class="mc-stats"><span style="color:var(--red2)">${c._hp}</span><span style="color:var(--gold)">${c.cost}</span></div>
+    </div>`).join('');
+  }
+  renderPlayerBars();
+}
+function selectGridHandCard(idx){
+  G.selCard={...G.players[0].hand[idx],handIdx:idx};
+  glog(`Selected ${G.players[0].hand[idx].name} — click a cell to place.`);
+  renderGrid(); renderInfoPanel();
+}
+function gridCellClick(r,c){
+  if(!G.grid)return;
+  const size=G.grid.size;
+  const existing=G.grid.cells[r][c];
+  const p=G.players[0];
+  const ai=G.players[1];
+  if(G.selCard&&G.selCard.handIdx!==undefined){
+    // Place card
+    if(existing)return glog('Cell occupied.','bad');
+    if(r<Math.floor(size/2))return glog('Cannot place in enemy territory.','bad');
+    const card=p.hand[G.selCard.handIdx];
+    if(!card)return;
+    if(G.game.rules?.resourceSystem&&card.cost>p.res)return glog('Not enough resources.','bad');
+    if(G.game.rules?.resourceSystem)p.res-=card.cost;
+    p.hand.splice(G.selCard.handIdx,1);
+    card._owner=p.id;card._x=c;card._y=r;card._tapped=!(hasKw(card,'Haste')||hasKw(card,'Charge'));
+    G.grid.cells[r][c]=card;
+    G.selCard=null;
+    glog(`${p.name} places ${card.name} at [${r},${c}].`,'good');
+    renderGrid(); renderPlayerBars(); renderInfoPanel();
+  } else if(existing&&existing._owner===p.id){
+    // Select this card
+    G.selCard={...existing,gridR:r,gridC:c};
+    glog(`${existing.name} selected. Click adjacent cell to move, or use abilities in the panel.`);
+    renderGrid(); renderInfoPanel();
+  } else if(G.selCard&&G.selCard.gridR!==undefined){
+    // Move or attack
+    const fr=G.selCard.gridR,fc=G.selCard.gridC;
+    const mover=G.grid.cells[fr][fc];
+    if(!mover)return;
+    if(existing&&existing._owner===ai.id){
+      // Attack
+      if(mover._tapped)return glog(`${mover.name} already acted.`,'bad');
+      resolveCombat(mover, existing, p, ai);
+      if(G.grid.cells[fr][fc])G.grid.cells[fr][fc]._tapped=true;
+    } else if(!existing){
+      // Move
+      const dist=Math.abs(r-fr)+Math.abs(c-fc);
+      if(dist>mover._movesLeft)return glog(`${mover.name} can only move ${mover._movesLeft} cells (Manhattan).`,'bad');
+      if(G.game.mode==='traverse'){
+        // Check items
+        const item=G.items?.find(it=>it.r===r&&it.c===c&&!it.collected);
+        if(item&&(hasKw(mover,'Collector')||mover.type==='Collector')){
+          item.collected=true;
+          applyEffects([{type:item.effect||'gain_res',value:item.value||2,target:'self'}],mover,p,null,p);
+          glog(`${mover.name} collects ${item.name}!`,'good');
+        }
+        // Check crystal attack range
+        [G.crystals.p1,G.crystals.p2].forEach((crys,ci)=>{
+          if(ci===0&&mover._owner===p.id)return;// don't attack own crystal
+          if(ci===1&&mover._owner===ai.id)return;
+          if(Math.abs(r-crys.r)<=1&&Math.abs(c-crys.c)<=1){
+            crys.hp-=mover._atk;
+            glog(`${mover.name} attacks ${ci===0?'P1':'P2'} Crystal for ${mover._atk}! (${crys.hp} HP left)`,'atk');
+            mover._tapped=true;
+            checkWin();
+          }
+        });
+      }
+      G.grid.cells[r][c]=mover;G.grid.cells[fr][fc]=null;
+      mover._x=c;mover._y=r;mover._movesLeft-=dist;
+    }
+    G.selCard=null;
+    renderGrid(); renderInfoPanel();
+  }
+}
+
+// ─ LANES RENDER ─
+function renderLanes(){
+  const board=document.getElementById('board');
+  if(!G.lanes)return;
+  const zones=lanesDefaultZones(820,580);
+  board.querySelectorAll('.pz-cards').forEach(el=>el.innerHTML='');
+  G.lanes.forEach((lane,i)=>{
+    const oppEl=document.getElementById(`pzCards_lane_opp_${i}`);
+    const plEl=document.getElementById(`pzCards_lane_pl_${i}`);
+    const midEl=document.getElementById(`pzCards_lane_mid_${i}`);
+    if(oppEl&&lane.opp)oppEl.innerHTML=renderMiniCard(lane.opp,-1,'p2',G.players[1],false);
+    if(plEl&&lane.player)plEl.innerHTML=renderMiniCard(lane.player,i,'p1',G.players[0],false);
+    if(midEl)midEl.innerHTML=`<div style="font-size:10px;font-family:Cinzel,serif;color:${lane.playerWon?'var(--green2)':lane.oppWon?'var(--red2)':'var(--text3)'};">${lane.playerWon?'YOU WIN':lane.oppWon?'OPP WINS':'—'}</div>`;
+    // click handlers
+    if(plEl&&!lane.player)plEl.onclick=()=>placeInLane(i);
+    if(oppEl&&lane.opp)oppEl.onclick=()=>attackLane(i);
+  });
+  // Hand
+  const handEl=document.getElementById(`pzCards_hand_pl`);
+  if(handEl){
+    handEl.innerHTML=G.players[0].hand.map((c,i)=>`<div class="mc" onclick="selectHandCard(0,${i})" style="border-color:${G.selCard?._id===c._id?'var(--gold2)':typeColor(c.type)}">
+      <span class="mc-emoji">${c.emoji||'🃏'}</span>
+      <span class="mc-name">${esc(c.name.slice(0,7))}</span>
+      <div class="mc-stats"><span style="color:var(--red2)">${c._hp}</span><span style="color:var(--gold)">${c.cost}</span></div>
+    </div>`).join('');
+  }
+  renderPlayerBars();
+}
+function placeInLane(i){
+  if(!G.selCard||G.selCard.source!=='hand')return glog('Select a card from hand first.','bad');
+  const lane=G.lanes[i];
+  if(lane.player)return glog('Lane already occupied.','bad');
+  const card=G.players[0].hand[G.selCard.handIdx];
+  if(!card)return;
+  if(G.game.rules?.resourceSystem&&card.cost>G.players[0].res)return glog('Not enough resources.','bad');
+  if(G.game.rules?.resourceSystem)G.players[0].res-=card.cost;
+  G.players[0].hand.splice(G.selCard.handIdx,1);
+  lane.player={...card,_who:'player',_tapped:!(hasKw(card,'Haste')||hasKw(card,'Charge'))};
+  G.selCard=null;
+  glog(`${card.name} placed in ${lane.name}.`,'good');
+  renderLanes(); renderPlayerBars(); renderInfoPanel();
+}
+function attackLane(i){
+  const lane=G.lanes[i];
+  if(!G.selCard?.lane&&G.selCard?.lane!==0)return glog('Select your lane card first.','bad');
+  const myCard=G.lanes[G.selCard.lane].player;
+  const oppCard=lane.opp;
+  if(!myCard||!oppCard)return;
+  if(myCard._tapped)return glog(`${myCard.name} already acted.`,'bad');
+  resolveCombat(myCard, oppCard, G.players[0], G.players[1]);
+  if(!lane.opp)checkLaneWin(i);
+  G.selCard=null;
+  renderLanes(); renderInfoPanel();
+}
+function checkLaneWin(i){
+  const lane=G.lanes[i];
+  if(!lane.opp&&lane.player&&!lane.playerWon){lane.playerWon=true;glog(`You win ${lane.name}!`,'good');}
+  if(!lane.player&&lane.opp&&!lane.oppWon){lane.oppWon=true;glog(`Opp wins ${lane.name}.`,'bad');}
+  checkWin();
+}
+
+// ─ CO-OP RENDER ─
+function renderCoop(){
+  const board=document.getElementById('board');
+  board.querySelectorAll('.pz-cards').forEach(el=>el.innerHTML='');
+  const stackEl=document.getElementById('pzCards_combo_stack');
+  const scoreEl=document.getElementById('pzCards_score_display');
+  if(stackEl)stackEl.innerHTML=G.comboStack.map((c,i)=>renderMiniCard(c,i,'shared',G.players[0],true)).join('');
+  if(scoreEl)scoreEl.innerHTML=`<div style="text-align:center;padding:6px;font-family:Cinzel,serif;font-size:14px;color:var(--gold2);">COMBO SCORE: ${G.comboScore}</div>`;
+  G.players.forEach((p,pi)=>{
+    const handEl=document.getElementById(`pzCards_p${pi+1}_hand`);
+    if(handEl)handEl.innerHTML=p.hand.map((c,i)=>`<div class="mc" onclick="playCoopCard(${pi},${i})" style="border-color:${typeColor(c.type)}">
+      <span class="mc-emoji">${c.emoji||'🃏'}</span>
+      <span class="mc-name">${esc(c.name.slice(0,7))}</span>
+      <div class="mc-stats"><span style="color:var(--gold)">${c.cost}</span></div>
+    </div>`).join('');
+    const deckEl=document.getElementById(`pzCards_p${pi+1}_deck`);
+    if(deckEl)deckEl.innerHTML=p.deck.length?`<div class="mc face-down" onclick="drawCard(${pi})"><span class="mc-emoji">📚</span><span class="mc-name">${p.deck.length}</span></div>`:'Empty';
+  });
+  renderPlayerBars();
+}
+function playCoopCard(pi, hi){
+  const p=G.players[pi];
+  const card=p.hand[hi];
+  if(!card)return;
+  p.hand.splice(hi,1);
+  // Combo: card stacks on top, accumulating stats
+  const prev=G.comboStack[G.comboStack.length-1];
+  const stackCard={...card};
+  if(prev){
+    stackCard._atk=(stackCard._atk||0)+(prev._atk||0);
+    stackCard._hp=(stackCard._hp||0)+(prev._hp||0);
+    glog(`${p.name} stacks ${card.name} — ATK now ${stackCard._atk}, HP ${stackCard._hp}!`,'good');
+  } else glog(`${p.name} starts combo with ${card.name}.`,'good');
+  G.comboStack.push(stackCard);
+  // Score contribution
+  G.comboScore+=(card.atk||0)+(card.hp||0)+(card.cost||0)*2;
+  // Apply effects
+  if(G.game.rules?.coopSimultaneous&&card.attacks?.length){
+    card.attacks.forEach(atk=>applyEffects(atk.effects||[],card,p,null,null));
+  }
+  if(G.comboScore>=100){glog(`COMBO THRESHOLD REACHED — Score: ${G.comboScore}!`,'phase');checkWin();}
+  renderCoop(); renderInfoPanel();
+}
+
+// ─ HAND / FIELD SELECTION ─
+function selectHandCard(pi,hi){
+  const p=G.players[pi];
+  const card=p.hand[hi];
+  if(!card)return;
+  if(pi===G.activePlayer&&!p.isAI){
+    G.selCard={...card,_playerIdx:pi,handIdx:hi,source:'hand'};
+    renderBoard(); renderInfoPanel();
+  }
+}
+function selectFieldCard(pi,fi){
+  const p=G.players[pi];
+  const card=p.field[fi];
+  if(!card)return;
+  if(G.selCard&&G.selCard.source==='hand'){
+    // play card from hand
+    playCardFromHand(G.selCard._playerIdx, G.selCard.handIdx);
+    return;
+  }
+  if(G.selCard&&G.selCard.source==='field'&&G.selCard._playerIdx!==pi){
+    // Attack this card
+    attackTarget(G.selCard._playerIdx, G.players[G.selCard._playerIdx].field[G.selCard.fieldIdx], pi, card);
+    G.selCard=null; renderBoard(); renderInfoPanel(); return;
+  }
+  if(pi===G.activePlayer&&!p.isAI){
+    G.selCard={...card,_playerIdx:pi,fieldIdx:fi,source:'field'};
+    renderBoard(); renderInfoPanel();
+  }
+}
+function drawCard(pi){
+  const p=G.players[pi];
+  if(!p.deck.length)return glog('No cards left to draw.','bad');
+  p.hand.push(p.deck.pop());
+  glog(`${p.name} draws a card.`);
+  renderBoard(); renderPlayerBars(); renderInfoPanel();
+}
+
+// ─ INFO PANEL ─
+function renderInfoPanel(){
+  const el=document.getElementById('infoPanel');
+  const c=G?.selCard;
+  if(!c){el.innerHTML='<div style="color:var(--text3);font-size:10px;padding:8px;font-style:italic;">Select a card to see details.</div>';return;}
+  const pi=c._playerIdx;
+  const p=pi!==undefined?G.players[pi]:G.players[0];
+  const oppP=G.players.find(x=>x.id!==p?.id);
+  let html=`<div class="info-card-preview">
+    <div style="font-size:24px;text-align:center;margin-bottom:4px;">${c.emoji||'🃏'}</div>
+    <div class="icp-name">${esc(c.name)}</div>
+    <div style="font-size:9px;color:${typeColor(c.type)};margin-bottom:6px;">${esc(c.type||'')}</div>
+    ${c._hp?`<div class="icp-stat"><span>HP</span><span style="color:var(--red2)">${c._hp}/${c.hp}</span></div>`:''}
+    ${c._atk?`<div class="icp-stat"><span>ATK</span><span>${c._atk}</span></div>`:''}
+    ${c._def?`<div class="icp-stat"><span>DEF</span><span>${c._def}</span></div>`:''}
+    ${c.cost?`<div class="icp-stat"><span>Cost</span><span style="color:var(--blue2)">${c.cost}</span></div>`:''}
+    ${c._move?`<div class="icp-stat"><span>Move</span><span>${c._movesLeft||c._move}/${c._move}</span></div>`:''}
+    ${c._poisonCounters?`<div class="icp-stat"><span>Poison</span><span style="color:var(--green2)">${c._poisonCounters}☠</span></div>`:''}
+    ${(c.keywords||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;">${c.keywords.slice(0,4).map(k=>`<span style="padding:1px 4px;border-radius:2px;font-size:7px;background:rgba(201,168,76,.1);border:1px solid var(--gold);color:var(--gold2);">${k}</span>`).join('')}</div>`:''}
+    ${c.rules?`<div class="icp-text">${esc(c.rules.slice(0,100))}</div>`:''}
+  </div>`;
+  // Action buttons
+  if(c.source==='hand'&&pi===G.activePlayer){
+    html+=`<button class="btn" style="width:100%;margin-bottom:4px;" onclick="playCardFromHand(${pi},${c.handIdx})">▶ PLAY TO FIELD</button>`;
+  }
+  if(c.source==='field'&&pi===G.activePlayer&&!c._tapped){
+    html+=`<button class="btn" style="width:100%;margin-bottom:4px;" onclick="attackDirectly(${pi},G.players[${pi}].field[${c.fieldIdx}])">⚔ ATTACK DIRECTLY</button>`;
+  }
+  // Attacks
+  if((c.attacks||[]).length){
+    html+=`<div style="font-family:Cinzel,serif;font-size:9px;color:var(--text3);letter-spacing:.06em;margin:8px 0 4px;">ATTACKS</div>`;
+    c.attacks.forEach((atk,ai)=>{
+      const fxDesc=(atk.effects||[]).map(ef=>`${ef.type} ${ef.value>0?'+':''}${ef.value} (${ef.target})`).join(', ');
+      html+=`<button class="atk-btn" onclick="useAttack(${JSON.stringify(c.fieldIdx)},${ai})">
+        <span class="ab-name">${esc(atk.name)}</span>
+        <span class="ab-cost">${atk.cost||0}💎</span>
+        <div class="ab-fx">${fxDesc||'No effects defined'}</div>
+      </button>`;
+    });
+  }
+  // Deselect
+  html+=`<button class="btn" style="width:100%;margin-top:6px;color:var(--text3);" onclick="G.selCard=null;renderBoard();renderInfoPanel();">DESELECT</button>`;
+  el.innerHTML=html;
+}
+function useAttack(fieldIdx,atkIdx){
+  if(fieldIdx===undefined||fieldIdx===null)return;
+  const pi=G.activePlayer;
+  const p=G.players[pi];
+  const card=p.field[fieldIdx];
+  if(!card)return;
+  const atk=card.attacks?.[atkIdx];
+  if(!atk)return;
+  if(card._tapped)return glog(`${card.name} has already acted.`,'bad');
+  if(G.game.rules?.resourceSystem&&atk.cost>p.res)return glog(`Not enough resources for ${atk.name}.`,'bad');
+  if(G.game.rules?.resourceSystem)p.res-=atk.cost||0;
+  const oppP=G.players.find(x=>x.id!==p.id);
+  (atk.effects||[]).forEach(ef=>{
+    let targetCard=null,targetOwner=null;
+    switch(ef.target){
+      case 'opp_card': targetCard=oppP?.field[0]||null; targetOwner=oppP; break;
+      case 'opp_all': oppP?.field.forEach(tc=>applyEffects([ef],card,p,tc,oppP)); return;
+      case 'opp_player': targetOwner=oppP; break;
+      case 'self_card': targetCard=card; targetOwner=p; break;
+      case 'ally_card': targetCard=p.field.find(c=>c._id!==card._id)||null; targetOwner=p; break;
+      case 'all_allies': p.field.filter(c=>c._id!==card._id).forEach(tc=>applyEffects([ef],card,p,tc,p)); return;
+      case 'all_field': [...(p.field||[]),...(oppP?.field||[])].forEach(tc=>applyEffects([ef],card,p,tc,null)); return;
+      case 'nearest_enemy': targetCard=oppP?.field[0]||null; targetOwner=oppP; break;
+    }
+    applyEffects([ef],card,p,targetCard,targetOwner);
+  });
+  glog(`${card.name} uses ${atk.name}.`,'atk');
+  card._tapped=true;
+  if(hasKw(card,'Vigilance'))card._tapped=false;
+  checkDead(); checkWin();
+  renderBoard(); renderPlayerBars(); renderInfoPanel();
+}
+
+// ═══════════════════════════════════════════════════
+//  PLAYER BARS
+// ═══════════════════════════════════════════════════
+function renderPlayerBars(){
+  const el=document.getElementById('playerBars');
+  el.innerHTML=G.players.map((p,i)=>`
+    <div class="pstat-bar${i===G.activePlayer?' active':''}">
+      <span class="psb-name">${esc(p.name)}</span>
+      <span class="psb-hp" style="color:${p.hp/p.maxHp>.5?'var(--green2)':p.hp/p.maxHp>.25?'var(--gold2)':'var(--red2)'}">❤${p.hp}</span>
+      ${G.game.mode==='traverse'?`<span style="font-size:10px;color:var(--blue2);">🔮${p.id==='p1'?G.crystals?.p1.hp:G.crystals?.p2.hp}</span>`:''}
+      <span class="psb-res">💎${p.res}/${p.maxRes}</span>
+      <span class="psb-hand">✋${p.hand.length} 📚${p.deck.length}</span>
+      ${p.field?.length?`<span style="font-size:10px;color:var(--text2);">⚔${p.field.length}</span>`:''}
+      ${i===G.activePlayer?`<span style="font-size:8px;color:var(--gold);margin-left:auto;">▶</span>`:''}
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  AI TURN
+// ═══════════════════════════════════════════════════
+function aiTurn(){
+  if(!G||G.over)return;
+  const ai=G.players[G.activePlayer];
+  if(!ai.isAI)return;
+  glog(`${ai.name} is thinking…`);
+  // Resource refresh
+  ai.res=Math.min(ai.maxRes,ai.res+(G.game.resPerTurn||3));
+  applyStartOfTurnEffects(ai);
+  const player=G.players.find(x=>!x.isAI);
+  const style=G.game.aiStyle||'aggressive';
+  const diff=G.game.aiDiff||'medium';
+  // Play cards
+  let played=0;
+  const maxPlay=diff==='hard'?5:diff==='medium'?3:2;
+  let sortedHand=[...ai.hand];
+  if(style==='aggressive')sortedHand.sort((a,b)=>(b.atk||0)-(a.atk||0));
+  else if(style==='control')sortedHand.sort((a,b)=>(b.hp||0)-(a.hp||0));
+  for(const card of sortedHand){
+    if(played>=maxPlay)break;
+    if(G.game.rules?.resourceSystem&&card.cost>ai.res)continue;
+    const mode=G.game.mode;
+    if(mode==='grid'||mode==='traverse'){
+      // Place in enemy territory rows
+      const size=G.grid.size;
+      let placed=false;
+      for(let r=0;r<Math.ceil(size/2)&&!placed;r++){
+        for(let c=0;c<size&&!placed;c++){
+          if(!G.grid.cells[r][c]){
+            if(G.game.rules?.resourceSystem)ai.res-=card.cost;
+            ai.hand.splice(ai.hand.indexOf(card),1);
+            card._owner=ai.id;card._tapped=!(hasKw(card,'Haste')||hasKw(card,'Charge'));
+            G.grid.cells[r][c]=card;
+            glog(`${ai.name} places ${card.name} at [${r},${c}].`);
+            placed=true;played++;
+          }
+        }
+      }
+    } else if(mode==='lanes'){
+      const emptyLane=G.lanes.findIndex(l=>!l.opp);
+      if(emptyLane>=0){
+        if(G.game.rules?.resourceSystem)ai.res-=card.cost;
+        ai.hand.splice(ai.hand.indexOf(card),1);
+        G.lanes[emptyLane].opp={...card,_who:'opp',_tapped:false};
+        glog(`${ai.name} plays ${card.name} in ${G.lanes[emptyLane].name}.`);
+        played++;
+      }
+    } else {
+      if(ai.field.length<(G.game.maxField||6)){
+        if(G.game.rules?.resourceSystem)ai.res-=card.cost;
+        ai.hand.splice(ai.hand.indexOf(card),1);
+        card._tapped=!(hasKw(card,'Haste')||hasKw(card,'Charge'));
+        ai.field.push(card);
+        glog(`${ai.name} plays ${card.name}.`);
+        played++;
+      }
+    }
+  }
+  // Attack
+  setTimeout(()=>{
+    const mode=G.game.mode;
+    if(mode==='grid'||mode==='traverse'){
+      aiGridAttack(ai, player);
+    } else if(mode==='lanes'){
+      aiLanesAttack(ai, player);
+    } else {
+      aiStandardAttack(ai, player);
+    }
+    setTimeout(()=>{
+      glog(`${ai.name} ends turn.`);
+      endTurn();
+    },400);
+  },400);
+}
+function aiStandardAttack(ai, player){
+  ai.field.forEach(c=>{
+    if(c._tapped||c._frozen)return;
+    if(hasKw(c,'Defender'))return;
+    if(player.field.length){
+      let target=player.field.find(t=>hasKw(t,'Taunt'))||player.field[0];
+      if(G.game.aiStyle==='aggressive')target=player.field.sort((a,b)=>a._hp-b._hp)[0];
+      resolveCombat(c,target,ai,player);
+    } else {
+      attackDirectly(G.players.indexOf(ai),c);
+    }
+  });
+}
+function aiGridAttack(ai, player){
+  const size=G.grid.size;
+  for(let r=0;r<size;r++){
+    for(let c=0;c<size;c++){
+      const card=G.grid.cells[r][c];
+      if(!card||card._owner!==ai.id||card._tapped||card._frozen)continue;
+      // Find adjacent player cards
+      const adj=[[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+      let attacked=false;
+      for(const [nr,nc] of adj){
+        if(nr>=0&&nc>=0&&nr<size&&nc<size){
+          const target=G.grid.cells[nr][nc];
+          if(target&&target._owner===player.id){
+            resolveCombat(card,target,ai,player);
+            attacked=true;break;
+          }
+          // Traverse: attack crystal
+          if(G.game.mode==='traverse'&&G.crystals&&G.crystals.p1.r===nr&&G.crystals.p1.c===nc){
+            G.crystals.p1.hp-=card._atk;
+            glog(`${card.name} attacks P1 Crystal for ${card._atk}!`,'atk');
+            card._tapped=true; attacked=true; checkWin(); break;
+          }
+        }
+      }
+      if(!attacked){
+        // Move toward player or crystal
+        let targetR=size-1,targetC=Math.floor(size/2);
+        if(G.game.mode==='traverse'&&G.crystals)targetR=G.crystals.p1.r,targetC=G.crystals.p1.c;
+        else if(player.field.length){const p=player.field[0];targetR=p._y||size-1;targetC=p._x||Math.floor(size/2);}
+        const dr=targetR>r?1:targetR<r?-1:0;
+        const dc=targetC>c?1:targetC<c?-1:0;
+        if(dr&&!G.grid.cells[r+dr]?.[c]){G.grid.cells[r+dr][c]=card;G.grid.cells[r][c]=null;card._y=r+dr;}
+        else if(dc&&!G.grid.cells[r]?.[c+dc]){G.grid.cells[r][c+dc]=card;G.grid.cells[r][c]=null;card._x=c+dc;}
+      }
+    }
+  }
+}
+function aiLanesAttack(ai, player){
+  G.lanes.forEach((lane,i)=>{
+    if(!lane.opp||lane.opp._tapped)return;
+    if(lane.player){
+      resolveCombat(lane.opp,lane.player,ai,player);
+      if(!lane.player){lane.oppWon=true;glog(`Opp wins ${lane.name}.`,'bad');}
+    } else {
+      player.hp-=lane.opp._atk;
+      glog(`${lane.opp.name} attacks you directly for ${lane.opp._atk}!`,'bad');
+      checkWin();
+    }
+    if(lane.opp)lane.opp._tapped=true;
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  FUSION / CONSTRUCT
+// ═══════════════════════════════════════════════════
+function useConstructCard(idx){
+  const card=G.constructStage[idx];
+  if(!card)return;
+  G.selCard={...card,source:'construct',constructIdx:idx};
+  renderInfoPanel();
+  glog(`${card.name} selected from construct stage.`);
+}
+
+// ═══════════════════════════════════════════════════
+//  RESIGN
+// ═══════════════════════════════════════════════════
+function resignGame(){
+  if(!confirm('Resign? Return to game select?'))return;
+  G=null;
+  document.getElementById('gameScreen').style.display='none';
+  const ss=document.getElementById('setupScreen');ss.style.display='flex';
+  loadData(); renderSetup();
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+loadData();
+renderSetup();
+</script>
+</body>
+</html>

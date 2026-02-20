@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layout Builder — Card Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f14;--bg2:#141720;--bg3:#1c2030;--bg4:#242840;
+  --border:#2a2f45;--border2:#3a4060;
+  --gold:#c9a84c;--gold2:#e8c96a;
+  --red:#cc4444;--red2:#ff6666;
+  --green:#44aa66;--green2:#66cc88;
+  --blue:#4488cc;--purple:#8855cc;--purple2:#aa77ee;
+  --text:#d4cfc0;--text2:#8a8878;--text3:#5a5848;
+  --canvas-w:800px;--canvas-h:580px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',serif;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+/* header */
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;gap:12px;height:48px;flex-shrink:0;}
+header h1{font-family:'Cinzel',serif;font-size:14px;color:var(--gold2);letter-spacing:.12em;}
+.btn{padding:5px 13px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.07em;transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--gold);color:var(--gold2);}
+.btn.primary{background:var(--gold);color:#1a1400;border-color:var(--gold);font-weight:700;}
+.btn.primary:hover{background:var(--gold2);}
+.btn.danger{border-color:var(--red);color:var(--red);}
+.btn.danger:hover{background:rgba(204,68,68,.12);}
+.btn.small{padding:3px 8px;font-size:9px;}
+/* main layout */
+#main{display:flex;flex:1;overflow:hidden;}
+/* sidebar */
+#sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+#sidebar h2{font-family:'Cinzel',serif;font-size:10px;color:var(--text3);letter-spacing:.12em;padding:10px 12px 6px;border-bottom:1px solid var(--border);}
+#zonePalette{flex:1;overflow-y:auto;padding:8px;}
+#zonePalette::-webkit-scrollbar{width:3px;}
+#zonePalette::-webkit-scrollbar-thumb{background:var(--border2);}
+.palette-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:5px;margin-bottom:5px;cursor:grab;background:var(--bg3);transition:all .15s;user-select:none;}
+.palette-item:hover{border-color:var(--gold);background:var(--bg4);}
+.palette-item:active{cursor:grabbing;}
+.palette-item .pi-icon{font-size:18px;width:24px;text-align:center;}
+.palette-item .pi-name{font-family:'Cinzel',serif;font-size:9px;color:var(--gold2);letter-spacing:.06em;}
+.palette-item .pi-desc{font-size:9px;color:var(--text3);margin-top:1px;}
+/* canvas area */
+#canvasWrap{flex:1;overflow:auto;background:repeating-conic-gradient(var(--bg) 0% 25%,var(--bg2) 0% 50%) 0 0/20px 20px;display:flex;align-items:flex-start;justify-content:flex-start;padding:20px;}
+#canvas{position:relative;width:var(--canvas-w);height:var(--canvas-h);background:rgba(20,23,32,.85);border:2px dashed var(--border2);border-radius:8px;flex-shrink:0;}
+#canvas.drag-over{border-color:var(--gold);background:rgba(201,168,76,.05);}
+/* zones */
+.zone{position:absolute;border:2px solid;border-radius:6px;cursor:move;user-select:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:box-shadow .15s;min-width:60px;min-height:40px;}
+.zone:hover{box-shadow:0 0 0 2px rgba(201,168,76,.4);}
+.zone.selected{box-shadow:0 0 0 3px var(--gold)!important;}
+.zone-icon{font-size:20px;}
+.zone-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.08em;text-align:center;padding:0 4px;}
+.zone-count{font-size:9px;opacity:.6;}
+/* resize handle */
+.resize-handle{position:absolute;bottom:2px;right:2px;width:12px;height:12px;cursor:se-resize;opacity:.5;}
+.resize-handle::after{content:'';display:block;width:8px;height:8px;border-right:2px solid var(--text2);border-bottom:2px solid var(--text2);position:absolute;right:2px;bottom:2px;}
+/* right panel */
+#rightPanel{width:220px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+#rightPanel h2{font-family:'Cinzel',serif;font-size:10px;color:var(--text3);letter-spacing:.12em;padding:10px 12px 6px;border-bottom:1px solid var(--border);}
+#propEditor{flex:1;overflow-y:auto;padding:10px;}
+#propEditor::-webkit-scrollbar{width:3px;}
+.prop-field{margin-bottom:8px;}
+.prop-field label{display:block;font-size:9px;color:var(--text2);font-family:'Cinzel',serif;letter-spacing:.06em;margin-bottom:3px;}
+.prop-field input,.prop-field select,.prop-field textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:5px 8px;border-radius:4px;font-family:'Crimson Pro',serif;font-size:12px;}
+.prop-field input:focus,.prop-field select:focus{outline:none;border-color:var(--gold);}
+/* layouts list */
+#layoutsList{padding:8px 10px;border-top:1px solid var(--border);max-height:180px;overflow-y:auto;}
+#layoutsList h3{font-family:'Cinzel',serif;font-size:9px;color:var(--text3);letter-spacing:.1em;margin-bottom:6px;}
+.layout-item{display:flex;align-items:center;gap:6px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;margin-bottom:4px;cursor:pointer;background:var(--bg3);transition:all .15s;}
+.layout-item:hover{border-color:var(--gold2);}
+.layout-item .li-name{font-family:'Cinzel',serif;font-size:9px;color:var(--gold2);flex:1;}
+.layout-item .li-count{font-size:9px;color:var(--text3);}
+/* toast */
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 16px;border-radius:16px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;}
+#toast.show{opacity:1;}
+/* modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;width:min(420px,94vw);padding:18px;max-height:90vh;overflow-y:auto;}
+.modal h2{font-family:'Cinzel',serif;font-size:14px;color:var(--gold2);margin-bottom:14px;}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:10px;border-top:1px solid var(--border);}
+/* canvas size controls */
+#canvasSizeBar{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);}
+#canvasSizeBar label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.06em;}
+#canvasSizeBar input{background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:3px 6px;border-radius:4px;font-size:11px;width:60px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>🗺 LAYOUT BUILDER</h1>
+  <div style="flex:1"></div>
+  <button class="btn" onclick="clearCanvas()">🗑 CLEAR</button>
+  <button class="btn" onclick="openSaveModal()">💾 SAVE LAYOUT</button>
+  <button class="btn primary" onclick="exportToPlaytest()">▶ SEND TO PLAYTEST</button>
+</header>
+<div id="canvasSizeBar">
+  <label>CANVAS W</label>
+  <input type="number" id="canvasW" value="800" min="400" max="1400" step="50" onchange="resizeCanvas()">
+  <label>H</label>
+  <input type="number" id="canvasH" value="580" min="300" max="1000" step="50" onchange="resizeCanvas()">
+  <label style="margin-left:12px;">PLAYERS</label>
+  <input type="number" id="layoutPlayers" value="2" min="1" max="4" style="width:45px;">
+  <span style="margin-left:auto;font-size:10px;color:var(--text3);">Drag zones from the left panel onto the canvas. Select a zone to edit its properties.</span>
+</div>
+<div id="main">
+  <!-- Zone Palette -->
+  <div id="sidebar">
+    <h2>ZONE TYPES</h2>
+    <div id="zonePalette"></div>
+  </div>
+
+  <!-- Canvas -->
+  <div id="canvasWrap">
+    <div id="canvas"
+      ondragover="canvasDragOver(event)"
+      ondragleave="canvasDragLeave(event)"
+      ondrop="canvasDrop(event)">
+    </div>
+  </div>
+
+  <!-- Properties -->
+  <div id="rightPanel">
+    <h2>PROPERTIES</h2>
+    <div id="propEditor"><div style="color:var(--text3);font-size:11px;padding:10px;font-style:italic;">Select a zone to edit its properties.</div></div>
+    <div id="layoutsList">
+      <h3>SAVED LAYOUTS</h3>
+      <div id="savedLayoutsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Save Modal -->
+<div class="modal-bg" id="saveModal">
+<div class="modal">
+  <h2>💾 SAVE LAYOUT</h2>
+  <div class="prop-field"><label>LAYOUT NAME</label><input type="text" id="saveLayoutName" placeholder="2-Player Duel…"></div>
+  <div class="prop-field"><label>DESCRIPTION</label><textarea id="saveLayoutDesc" rows="2" placeholder="Notes about this layout…" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:5px 8px;border-radius:4px;font-family:'Crimson Pro',serif;"></textarea></div>
+  <div class="prop-field"><label>GAME MODE TAG</label>
+    <select id="saveLayoutMode" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:5px 8px;border-radius:4px;">
+      <option value="standard">Standard</option>
+      <option value="grid">Grid Battle</option>
+      <option value="arena">Arena</option>
+      <option value="lanes">Lane Battle</option>
+      <option value="traverse">Traversible Field</option>
+      <option value="coop">Co-op Combo</option>
+      <option value="any">Any / Universal</option>
+    </select>
+  </div>
+  <div class="modal-foot">
+    <button class="btn" onclick="closeModal('saveModal')">CANCEL</button>
+    <button class="btn primary" onclick="saveLayout()">SAVE</button>
+  </div>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const STORE='cardforge_v3';
+const LB_STORE='cardforge_layouts_v2';
+
+// ── Zone type definitions ──
+const ZONE_TYPES=[
+  {type:'hand',icon:'✋',name:'Hand Zone',desc:'Player hand cards',color:'rgba(68,136,204,.15)',border:'#4488cc',w:200,h:80},
+  {type:'draw',icon:'📚',name:'Draw Pile',desc:'Deck / draw pile',color:'rgba(201,168,76,.12)',border:'#c9a84c',w:70,h:90},
+  {type:'discard',icon:'🗑',name:'Discard Pile',desc:'Discard / graveyard',color:'rgba(204,68,68,.12)',border:'#cc4444',w:70,h:90},
+  {type:'battlefield',icon:'⚔',name:'Battlefield',desc:'Main play area',color:'rgba(85,170,119,.1)',border:'#55aa77',w:340,h:120},
+  {type:'graveyard',icon:'💀',name:'Graveyard',desc:'Destroyed cards',color:'rgba(100,80,80,.2)',border:'#664444',w:70,h:90},
+  {type:'hp_tracker',icon:'❤',name:'HP Tracker',desc:'Player health',color:'rgba(204,68,68,.1)',border:'#cc4444',w:80,h:60},
+  {type:'resource',icon:'💎',name:'Resource Pool',desc:'Mana / energy pool',color:'rgba(88,160,88,.12)',border:'#58a058',w:80,h:60},
+  {type:'construct_stage',icon:'🔧',name:'Construct Stage',desc:'Fusion staging zone',color:'rgba(136,85,204,.15)',border:'#8855cc',w:120,h:80},
+  {type:'assistant',icon:'🤝',name:'Assistant Zone',desc:'Helper card slot (limited co-op)',color:'rgba(68,136,204,.12)',border:'#66aadd',w:80,h:100},
+  {type:'collector',icon:'🪤',name:'Collector Zone',desc:'Item collector on field',color:'rgba(200,160,50,.12)',border:'#c8a032',w:80,h:80},
+  {type:'field_card',icon:'🌍',name:'Field Card Zone',desc:'Global effect cards',color:'rgba(100,180,60,.12)',border:'#64b43c',w:120,h:70},
+  {type:'event_card',icon:'⚡',name:'Event Zone',desc:'Triggered events',color:'rgba(220,160,50,.12)',border:'#dcb032',w:120,h:70},
+  {type:'spell_slot',icon:'✨',name:'Spell Slot',desc:'Limited spell card slot',color:'rgba(150,80,200,.15)',border:'#9650c8',w:70,h:90},
+  {type:'exile',icon:'🚫',name:'Exile Zone',desc:'Removed from play',color:'rgba(100,100,100,.15)',border:'#666',w:70,h:90},
+  {type:'item_tile',icon:'💰',name:'Item Tile',desc:'Collectible item on field',color:'rgba(201,168,76,.18)',border:'#c9a84c',w:60,h:60},
+  {type:'crystal',icon:'🔮',name:'Crystal / Nexus',desc:'Base to defend (traverse)',color:'rgba(88,160,220,.15)',border:'#58a0dc',w:80,h:80},
+  {type:'lane',icon:'🛣',name:'Lane',desc:'A battle lane',color:'rgba(80,80,120,.15)',border:'#505078',w:100,h:200},
+  {type:'score',icon:'🏆',name:'Score Tracker',desc:'Points / objective count',color:'rgba(201,168,76,.1)',border:'#c9a84c',w:80,h:50},
+  {type:'combo_stack',icon:'🔗',name:'Combo Stack',desc:'Co-op combo play area',color:'rgba(200,100,200,.12)',border:'#c864c8',w:200,h:100},
+  {type:'custom',icon:'◻',name:'Custom Zone',desc:'Freely named zone',color:'rgba(80,80,100,.15)',border:'#505064',w:100,h:80},
+];
+
+let zones=[];
+let selectedZoneId=null;
+let dragPaletteType=null;
+let dragZoneId=null;
+let dragOffset={x:0,y:0};
+let resizingZoneId=null;
+let resizeStart={x:0,y:0,w:0,h:0};
+
+// ── Saved layouts ──
+let savedLayouts=[];
+function loadSaved(){try{savedLayouts=JSON.parse(localStorage.getItem(LB_STORE)||'[]');}catch(e){savedLayouts=[];}}
+function persistLayouts(){localStorage.setItem(LB_STORE,JSON.stringify(savedLayouts));}
+
+function uid(){return 'z_'+Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function toast(msg,cls=''){
+  const t=document.getElementById('toast');t.textContent=msg;t.className='show '+(cls||'');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.className='',2000);
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ── Build palette ──
+function buildPalette(){
+  const el=document.getElementById('zonePalette');
+  el.innerHTML=ZONE_TYPES.map(zt=>`
+    <div class="palette-item" draggable="true"
+      ondragstart="paletteDragStart(event,'${zt.type}')"
+      ondblclick="addZoneAtCenter('${zt.type}')">
+      <span class="pi-icon">${zt.icon}</span>
+      <div><div class="pi-name">${zt.name}</div><div class="pi-desc">${zt.desc}</div></div>
+    </div>
+  `).join('');
+}
+
+// ── Canvas drag ──
+function paletteDragStart(e,type){
+  dragPaletteType=type;
+  dragZoneId=null;
+  e.dataTransfer.effectAllowed='copy';
+}
+function canvasDragOver(e){e.preventDefault();document.getElementById('canvas').classList.add('drag-over');}
+function canvasDragLeave(){document.getElementById('canvas').classList.remove('drag-over');}
+function canvasDrop(e){
+  e.preventDefault();
+  document.getElementById('canvas').classList.remove('drag-over');
+  const canvas=document.getElementById('canvas');
+  const rect=canvas.getBoundingClientRect();
+  const x=e.clientX-rect.left-40;
+  const y=e.clientY-rect.top-25;
+  if(dragPaletteType)addZone(dragPaletteType,Math.max(0,x),Math.max(0,y));
+  dragPaletteType=null;
+}
+function addZoneAtCenter(type){
+  const canvas=document.getElementById('canvas');
+  const zt=ZONE_TYPES.find(z=>z.type===type);
+  addZone(type,(canvas.offsetWidth/2-(zt?.w||80)/2),(canvas.offsetHeight/2-(zt?.h||70)/2));
+}
+function addZone(type,x,y){
+  const zt=ZONE_TYPES.find(z=>z.type===type)||ZONE_TYPES[ZONE_TYPES.length-1];
+  const zone={
+    id:uid(), type, x:Math.round(x), y:Math.round(y),
+    w:zt.w, h:zt.h,
+    label:zt.name, icon:zt.icon,
+    color:zt.color, border:zt.border,
+    player:'any', // any, p1, p2, p3, p4, shared
+    maxCards:0, faceDown:false, notes:'',
+  };
+  zones.push(zone);
+  renderCanvas();
+  selectZone(zone.id);
+}
+function resizeCanvas(){
+  const w=+document.getElementById('canvasW').value||800;
+  const h=+document.getElementById('canvasH').value||580;
+  const c=document.getElementById('canvas');
+  c.style.width=w+'px'; c.style.height=h+'px';
+}
+
+// ── Render canvas ──
+function renderCanvas(){
+  const canvas=document.getElementById('canvas');
+  // keep non-zone content
+  canvas.querySelectorAll('.zone').forEach(el=>el.remove());
+  zones.forEach(z=>{
+    const el=document.createElement('div');
+    el.className='zone'+(z.id===selectedZoneId?' selected':'');
+    el.id='zone_'+z.id;
+    el.style.cssText=`left:${z.x}px;top:${z.y}px;width:${z.w}px;height:${z.h}px;background:${z.color};border-color:${z.border};color:${z.border};`;
+    el.innerHTML=`
+      <span class="zone-icon">${z.icon}</span>
+      <span class="zone-label">${z.label}</span>
+      ${z.player&&z.player!=='any'?`<span class="zone-count">${z.player}</span>`:''}
+      <div class="resize-handle" onmousedown="startResize(event,'${z.id}')"></div>
+    `;
+    // drag to move
+    el.addEventListener('mousedown',e=>{
+      if(e.target.classList.contains('resize-handle'))return;
+      e.preventDefault();
+      selectZone(z.id);
+      const canvas=document.getElementById('canvas');
+      const rect=canvas.getBoundingClientRect();
+      dragOffset={x:e.clientX-rect.left-z.x,y:e.clientY-rect.top-z.y};
+      dragZoneId=z.id;
+    });
+    el.addEventListener('click',e=>{e.stopPropagation();selectZone(z.id);});
+    canvas.appendChild(el);
+  });
+}
+
+// ── Mouse move/up for dragging ──
+document.addEventListener('mousemove',e=>{
+  if(dragZoneId){
+    const canvas=document.getElementById('canvas');
+    const rect=canvas.getBoundingClientRect();
+    const z=zones.find(x=>x.id===dragZoneId);
+    if(z){
+      z.x=Math.max(0,Math.min(canvas.offsetWidth-z.w,Math.round(e.clientX-rect.left-dragOffset.x)));
+      z.y=Math.max(0,Math.min(canvas.offsetHeight-z.h,Math.round(e.clientY-rect.top-dragOffset.y)));
+      const el=document.getElementById('zone_'+z.id);
+      if(el){el.style.left=z.x+'px';el.style.top=z.y+'px';}
+    }
+  }
+  if(resizingZoneId){
+    const z=zones.find(x=>x.id===resizingZoneId);
+    if(z){
+      z.w=Math.max(50,resizeStart.w+(e.clientX-resizeStart.x));
+      z.h=Math.max(30,resizeStart.h+(e.clientY-resizeStart.y));
+      const el=document.getElementById('zone_'+z.id);
+      if(el){el.style.width=z.w+'px';el.style.height=z.h+'px';}
+    }
+  }
+});
+document.addEventListener('mouseup',()=>{
+  if(dragZoneId){dragZoneId=null;}
+  if(resizingZoneId){resizingZoneId=null;renderCanvas();}
+});
+function startResize(e,id){
+  e.stopPropagation();e.preventDefault();
+  const z=zones.find(x=>x.id===id);if(!z)return;
+  resizingZoneId=id;
+  resizeStart={x:e.clientX,y:e.clientY,w:z.w,h:z.h};
+}
+
+// ── Select ──
+function selectZone(id){
+  selectedZoneId=id;
+  renderCanvas();
+  renderPropEditor();
+}
+document.getElementById('canvas').addEventListener('click',e=>{
+  if(e.target===document.getElementById('canvas')||e.target===document.getElementById('canvasWrap')){
+    selectedZoneId=null;renderCanvas();renderPropEditor();
+  }
+});
+
+// ── Prop editor ──
+function renderPropEditor(){
+  const el=document.getElementById('propEditor');
+  const z=zones.find(x=>x.id===selectedZoneId);
+  if(!z){el.innerHTML='<div style="color:var(--text3);font-size:11px;padding:10px;font-style:italic;">Select a zone to edit its properties.</div>';return;}
+  el.innerHTML=`
+    <div class="prop-field"><label>LABEL</label><input type="text" value="${esc(z.label)}" oninput="updateZoneProp('${z.id}','label',this.value)"></div>
+    <div class="prop-field"><label>ICON</label><input type="text" value="${esc(z.icon)}" maxlength="4" oninput="updateZoneProp('${z.id}','icon',this.value)"></div>
+    <div class="prop-field"><label>PLAYER OWNERSHIP</label>
+      <select onchange="updateZoneProp('${z.id}','player',this.value)">
+        ${['any','p1','p2','p3','p4','shared'].map(p=>`<option value="${p}"${z.player===p?' selected':''}>${p==='any'?'Any Player':p==='shared'?'Shared':p.toUpperCase()}</option>`).join('')}
+      </select></div>
+    <div class="prop-field"><label>MAX CARDS (0 = unlimited)</label><input type="number" value="${z.maxCards||0}" min="0" oninput="updateZoneProp('${z.id}','maxCards',+this.value)"></div>
+    <div class="prop-field"><label>FACE DOWN?</label>
+      <select onchange="updateZoneProp('${z.id}','faceDown',this.value==='true')">
+        <option value="false"${!z.faceDown?' selected':''}>Face Up</option>
+        <option value="true"${z.faceDown?' selected':''}>Face Down</option>
+      </select></div>
+    <div class="prop-field"><label>BORDER COLOR</label><input type="color" value="${rgbToHex(z.border)||'#4488cc'}" oninput="updateZoneProp('${z.id}','border',this.value)" style="height:28px;"></div>
+    <div class="prop-field"><label>NOTES</label><textarea rows="2" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:4px;border-radius:4px;font-size:11px;" oninput="updateZoneProp('${z.id}','notes',this.value)">${esc(z.notes||'')}</textarea></div>
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+      <button class="btn small" onclick="duplicateZone('${z.id}')">DUPLICATE</button>
+      <button class="btn small" onclick="bringToFront('${z.id}')">FRONT</button>
+      <button class="btn small danger" onclick="deleteZone('${z.id}')">DELETE</button>
+    </div>
+    <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px;">
+      <div style="font-size:9px;color:var(--text3);font-family:'Cinzel',serif;letter-spacing:.06em;margin-bottom:5px;">POSITION & SIZE</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+        <div class="prop-field"><label>X</label><input type="number" value="${z.x}" oninput="updateZoneProp('${z.id}','x',+this.value);renderCanvas();"></div>
+        <div class="prop-field"><label>Y</label><input type="number" value="${z.y}" oninput="updateZoneProp('${z.id}','y',+this.value);renderCanvas();"></div>
+        <div class="prop-field"><label>W</label><input type="number" value="${z.w}" min="50" oninput="updateZoneProp('${z.id}','w',+this.value);renderCanvas();"></div>
+        <div class="prop-field"><label>H</label><input type="number" value="${z.h}" min="30" oninput="updateZoneProp('${z.id}','h',+this.value);renderCanvas();"></div>
+      </div>
+    </div>
+  `;
+}
+function updateZoneProp(id,field,val){
+  const z=zones.find(x=>x.id===id);if(!z)return;
+  z[field]=val;
+  renderCanvas();
+}
+function duplicateZone(id){
+  const z=zones.find(x=>x.id===id);if(!z)return;
+  const nz={...z,id:uid(),x:z.x+20,y:z.y+20};
+  zones.push(nz);renderCanvas();selectZone(nz.id);
+}
+function bringToFront(id){
+  const idx=zones.findIndex(x=>x.id===id);if(idx<0)return;
+  zones.push(zones.splice(idx,1)[0]);renderCanvas();
+}
+function deleteZone(id){
+  zones=zones.filter(x=>x.id!==id);
+  selectedZoneId=null;renderCanvas();renderPropEditor();
+}
+function clearCanvas(){if(!confirm('Clear all zones?'))return;zones=[];selectedZoneId=null;renderCanvas();renderPropEditor();}
+
+// ── Save / Load ──
+function openSaveModal(){
+  document.getElementById('saveLayoutName').value='';
+  document.getElementById('saveLayoutDesc').value='';
+  document.getElementById('saveModal').classList.add('open');
+}
+function saveLayout(){
+  const name=document.getElementById('saveLayoutName').value.trim();
+  if(!name)return toast('Layout needs a name.','bad');
+  const layout={
+    id:'layout_'+Date.now(),
+    name, 
+    desc:document.getElementById('saveLayoutDesc').value,
+    mode:document.getElementById('saveLayoutMode').value,
+    players:+document.getElementById('layoutPlayers').value||2,
+    canvasW:+document.getElementById('canvasW').value||800,
+    canvasH:+document.getElementById('canvasH').value||580,
+    zones:JSON.parse(JSON.stringify(zones)),
+    created:Date.now(),
+  };
+  const existing=savedLayouts.findIndex(l=>l.name===name);
+  if(existing>=0){if(!confirm('Replace existing "'+name+'" layout?'))return;savedLayouts[existing]=layout;}
+  else savedLayouts.push(layout);
+  persistLayouts();
+  renderSavedLayouts();
+  closeModal('saveModal');
+  toast('Layout "'+name+'" saved!','good');
+}
+function loadLayout(id){
+  const layout=savedLayouts.find(l=>l.id===id);if(!layout)return;
+  if(zones.length&&!confirm('Load "'+layout.name+'"? This will replace current canvas.'))return;
+  zones=JSON.parse(JSON.stringify(layout.zones));
+  document.getElementById('canvasW').value=layout.canvasW||800;
+  document.getElementById('canvasH').value=layout.canvasH||580;
+  document.getElementById('layoutPlayers').value=layout.players||2;
+  resizeCanvas();
+  selectedZoneId=null;renderCanvas();renderPropEditor();
+  toast('Loaded "'+layout.name+'"');
+}
+function deleteLayout(id){
+  if(!confirm('Delete this layout?'))return;
+  savedLayouts=savedLayouts.filter(l=>l.id!==id);
+  persistLayouts();renderSavedLayouts();
+}
+function renderSavedLayouts(){
+  const el=document.getElementById('savedLayoutsList');
+  if(!savedLayouts.length){el.innerHTML='<div style="color:var(--text3);font-size:10px;font-style:italic;">No saved layouts yet.</div>';return;}
+  el.innerHTML=savedLayouts.map(l=>`
+    <div class="layout-item">
+      <span style="font-size:14px;">${modeIcon(l.mode)}</span>
+      <div style="flex:1;overflow:hidden;">
+        <div class="li-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(l.name)}</div>
+        <div class="li-count">${l.zones?.length||0} zones · ${esc(l.mode||'any')}</div>
+      </div>
+      <button class="btn small" onclick="loadLayout('${l.id}')">LOAD</button>
+      <button class="btn small danger" onclick="deleteLayout('${l.id}')">✕</button>
+    </div>
+  `).join('');
+}
+function modeIcon(m){const icons={standard:'⚔',grid:'♟',arena:'🏟',lanes:'🛣',traverse:'🗺',coop:'🤝',any:'🃏'};return icons[m]||'🃏';}
+
+function exportToPlaytest(){
+  if(!zones.length)return toast('Add some zones first.','bad');
+  const name=prompt('Layout name for playtest? (leave blank to use saved name)','');
+  const layout={
+    id:'active_'+Date.now(),
+    name:name||'Custom Layout',
+    mode:document.getElementById('saveLayoutMode')?.value||'standard',
+    players:+document.getElementById('layoutPlayers').value||2,
+    canvasW:+document.getElementById('canvasW').value||800,
+    canvasH:+document.getElementById('canvasH').value||580,
+    zones:JSON.parse(JSON.stringify(zones)),
+  };
+  localStorage.setItem('cardforge_active_layout',JSON.stringify(layout));
+  toast('Layout sent to playtest!','good');
+  setTimeout(()=>window.open('playtest.html','_blank'),300);
+}
+
+// ── Utils ──
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function rgbToHex(c){if(!c||c.startsWith('#'))return c;const m=c.match(/\d+/g);if(!m||m.length<3)return '#888';return '#'+m.slice(0,3).map(n=>parseInt(n).toString(16).padStart(2,'0')).join('');}
+
+// ── Init ──
+buildPalette();
+loadSaved();
+renderSavedLayouts();
+resizeCanvas();
+// Add a guide overlay text to empty canvas
+const canvas=document.getElementById('canvas');
+const guide=document.createElement('div');
+guide.id='canvasGuide';
+guide.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--text3);pointer-events:none;';
+guide.innerHTML='<div style="font-size:32px;margin-bottom:8px;">🗺</div><div style="font-family:Cinzel,serif;font-size:11px;letter-spacing:.1em;">DRAG ZONES FROM THE LEFT PANEL</div><div style="font-size:11px;margin-top:4px;">or double-click a zone type to add it</div>';
+canvas.appendChild(guide);
+function checkGuide(){
+  const g=document.getElementById('canvasGuide');
+  if(g)g.style.display=zones.length?'none':'block';
+}
+const origRender=renderCanvas;
+renderCanvas=function(){origRender();checkGuide();};
+checkGuide();
+</script>
+</body>
+</html>

@@ -1,6 +1,8 @@
-const CACHE = 'forge-v2';
+const CACHE = 'forge-v3';
 const ASSETS = [
   './forge.html',
+  './layout-builder.html',
+  './playtest.html',
   './forge_manifest.json',
   'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap'
 ];

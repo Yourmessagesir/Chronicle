@@ -44,7 +44,6 @@ header p{font-size:11px;color:var(--text2);letter-spacing:0.05em;margin-top:1px;
 
 /* SECTIONS */
 .section{display:none;padding:16px 14px 100px;}
-.forge-section{padding:0!important;overflow:hidden;}
 .section.active{display:block;}
 
 /* CARDS */
@@ -511,15 +510,24 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
 
 
 <!-- CARD GAME SECTION -->
-<section class="section forge-section" id="sec-cardgame">
-  <iframe id="forge-iframe" src="https://yourmessagesir.github.io/Chronicle/forge.html" style="position:fixed;top:0;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom,0px));width:100%;height:calc(100% - 60px - env(safe-area-inset-bottom,0px));border:none;z-index:50;display:none;" allow="fullscreen" loading="lazy"></iframe>
-  <div id="forge-placeholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px;text-align:center;">
-    <div style="font-size:48px;">⚔</div>
-    <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold);">Forge</div>
-    <div style="color:var(--text2);font-size:13px;max-width:260px;line-height:1.5;">Card Game Lab — tap below to open the full Forge app</div>
-    <button class="btn btn-gold" style="font-size:13px;padding:10px 24px;" onclick="launchForge()">▶ Open Forge</button>
-    <div style="color:var(--text2);font-size:11px;opacity:0.6;margin-top:4px;">forge.html must be in the same folder as chronicle</div>
+<section class="section" id="sec-cardgame" style="padding:0;">
+  <!-- Forge iframe — fills the section, shares localStorage automatically -->
+  <div style="display:flex;gap:6px;padding:8px 10px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center;">
+    <span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:.08em;">⚙ CARD FORGE</span>
+    <div style="flex:1"></div>
+    <button class="btn" style="font-size:9px;padding:3px 10px;" onclick="document.getElementById('forgeFrame').src='./forge.html'">↺ RELOAD</button>
+    <button class="btn" style="font-size:9px;padding:3px 10px;" onclick="window.open('./forge.html','_blank')">⬡ OPEN FULL</button>
+    <button class="btn" style="font-size:9px;padding:3px 10px;" onclick="window.open('./layout-builder.html','_blank')">🗺 LAYOUTS</button>
+    <button class="btn" style="font-size:9px;padding:3px 10px;" onclick="window.open('./playtest.html','_blank')">▶ PLAYTEST</button>
   </div>
+  <iframe id="forgeFrame" src="./forge.html"
+    style="width:100%;height:calc(100vh - 120px);border:none;background:var(--bg);"
+    allow="same-origin"></iframe>
+  <!-- Hidden legacy views kept so old JS functions don't throw errors -->
+  <div id="cg-view-builder" style="display:none"></div>
+  <div id="cg-view-games" style="display:none"></div>
+  <div id="cg-view-play" style="display:none"></div>
+
 </section>
 
 <!-- NAV -->
@@ -557,8 +565,8 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
     Vault
   </button>
   <button onclick="showSection('cardgame')" id="nav-cardgame">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 2.5c0 1.5-1.5 3-1.5 3H9c-.5 0-1-.2-1.4-.6L5 2.5"/><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 14h2M14 14h2M8 17h2M14 17h2"/></svg>
-    Forge
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 2v4M8 2v4M2 10h20"/><circle cx="8" cy="15" r="1.5" fill="currentColor"/><path d="M16 13h3M16 16.5h2"/></svg>
+    Cards
   </button>
 </nav>
 </div>
@@ -646,12 +654,20 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
       </div>
     </div>
     <div id="exportStrength" style="font-size:12px;height:16px;margin-top:-8px;margin-bottom:10px;padding-left:2px;"></div>
-    <button class="btn btn-gold" style="width:100%;" onclick="doExport()">↓ Download Backup</button>
-    <div class="divider">Import</div>
+    <button class="btn btn-gold" style="width:100%;" onclick="doExport()">↓ Download Chronicle Backup</button>
+    <div class="divider" style="margin-top:12px;">Card Forge Backup</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:8px;">Forge cards, decks, fusions, game configs and layouts — stored separately from Chronicle.</p>
+    <div style="display:flex;gap:8px;margin-bottom:4px;">
+      <button class="btn" style="flex:1;font-size:10px;" onclick="doForgeExport()">↓ Download Forge Backup</button>
+      <button class="btn" style="flex:1;font-size:10px;" onclick="document.getElementById('forgeImportFile').click()">↑ Restore Forge</button>
+      <input type="file" id="forgeImportFile" accept=".json" style="display:none" onchange="doForgeImport(event)">
+    </div>
+    <div id="forgeImportStatus" style="font-size:12px;min-height:16px;text-align:center;font-family:'Cinzel',serif;color:var(--text2);margin-bottom:4px;"></div>
+    <div class="divider">Import Chronicle</div>
     <p style="font-size:13px;color:var(--amber);margin-bottom:10px;">⚠ Merges with existing data. IDs deduplicated.</p>
     <div class="field"><label>Backup File</label><input type="file" id="importFile" accept=".json" style="padding:6px;color:var(--text);"></div>
     <div class="field"><label>Password (if encrypted)</label><input type="password" id="importPassword" placeholder="Leave blank if unencrypted"></div>
-    <button class="btn btn-gold" style="width:100%;" onclick="doImport()">↑ Import</button>
+    <button class="btn btn-gold" style="width:100%;" onclick="doImport()">↑ Import Chronicle</button>
     <div id="importStatus" style="margin-top:10px;font-size:13px;text-align:center;min-height:18px;font-family:'Cinzel',serif;"></div>
     <div class="divider">Security</div>
     <button class="btn" style="width:100%;margin-bottom:10px;" onclick="openPinSetup()">🔑 Change PIN</button>
@@ -1129,32 +1145,12 @@ function showSection(name){
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById('sec-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
-  const subs={calendar:'Weekly scroll of time',persona:'Who you are today',people:'Those who walk beside you',book:'Your written world',passwords:'The sealed vault',board:'Projects & tasks',comic:'Comics & story panels',rpg:'RPG world & playtest',cardgame:'Card Game Lab'};
+  const subs={calendar:'Weekly scroll of time',persona:'Who you are today',people:'Those who walk beside you',book:'Your written world',passwords:'The sealed vault',board:'Projects & tasks',comic:'Comics & story panels',rpg:'RPG world & playtest'};
   document.getElementById('headerSub').textContent=subs[name]||'';
   if(name==='board')renderBoard();
   if(name==='comic'){renderComicSelector();renderComicArcs();}
   if(name==='rpg')renderRpgMap();
-  // Forge: show iframe if already launched, else show placeholder
-  if(name==='cardgame'){
-    const ifr=document.getElementById('forge-iframe');
-    if(ifr&&ifr.dataset.launched==='1'){
-      ifr.style.display='block';
-      document.getElementById('forge-placeholder').style.display='none';
-    }
-  } else {
-    // Hide forge iframe when leaving the tab (so it doesn't float over other sections)
-    const ifr=document.getElementById('forge-iframe');
-    if(ifr)ifr.style.display='none';
-  }
-}
-
-function launchForge(){
-  const ifr=document.getElementById('forge-iframe');
-  const ph=document.getElementById('forge-placeholder');
-  if(!ifr)return;
-  ifr.dataset.launched='1';
-  ifr.style.display='block';
-  if(ph)ph.style.display='none';
+  if(name==='cardgame'){cgTab('builder');}
 }
 
 // ════════════════════════════════════
@@ -3102,17 +3098,65 @@ function cgPlayFieldSlotClick(){
   if(hi>=0)cgPlayCard(hi);
 }
 
-// ── init ──
+
+// ── FORGE BACKUP ──
+function doForgeExport(){
+  const FORGE_KEYS=['cardforge_v3','cardforge_layouts_v2','cardforge_active_layout'];
+  const backup={forge_backup:true,version:1,exported:new Date().toISOString(),stores:{}};
+  FORGE_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v)backup.stores[k]=v;});
+  if(!Object.keys(backup.stores).length){alert('No Forge data found to export.');return;}
+  const ts=new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  const fn=`forge_backup_${ts}.json`;
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'})),download:fn});
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+function doForgeImport(e){
+  const file=e.target.files[0];
+  const st=document.getElementById('forgeImportStatus');
+  if(!file){st.textContent='No file selected.';return;}
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const parsed=JSON.parse(ev.target.result);
+      if(!parsed.forge_backup||!parsed.stores){st.textContent='✕ Not a valid Forge backup.';st.style.color='var(--red)';return;}
+      let count=0;
+      Object.entries(parsed.stores).forEach(([k,v])=>{
+        // Merge card data rather than overwrite if key exists
+        if(k==='cardforge_v3'){
+          try{
+            const existing=JSON.parse(localStorage.getItem(k)||'{"cards":[],"decks":[],"fusions":[],"games":[],"nextId":1}');
+            const incoming=JSON.parse(v);
+            const mergeById=(arr1,arr2)=>{const ids=new Set(arr1.map(x=>x.id));arr2.forEach(x=>{if(!ids.has(x.id))arr1.push(x);});return arr1;};
+            existing.cards=mergeById(existing.cards||[],incoming.cards||[]);
+            existing.decks=mergeById(existing.decks||[],incoming.decks||[]);
+            existing.fusions=mergeById(existing.fusions||[],incoming.fusions||[]);
+            existing.games=mergeById(existing.games||[],incoming.games||[]);
+            existing.nextId=Math.max(existing.nextId||1,incoming.nextId||1)+1;
+            localStorage.setItem(k,JSON.stringify(existing));
+          }catch(err){localStorage.setItem(k,v);}
+        } else {
+          localStorage.setItem(k,v);
+        }
+        count++;
+      });
+      st.style.color='var(--green)';st.textContent=`✓ Forge restored (${count} data stores).`;
+      // Reload forge iframe if visible
+      const frame=document.getElementById('forgeFrame');
+      if(frame)frame.src=frame.src;
+    }catch(err){st.style.color='var(--red)';st.textContent='✕ Invalid file.';}
+  };
+  r.readAsText(file);
+  e.target.value='';
+}
+
+// ── init (legacy cardgame stubs — Forge iframe handles actual data) ──
 function initCardGame(){
   if(!data.cardgame)data.cardgame={cards:[],games:[]};
-  populateCgGameSelect();
-  populateCgFilters();
-  renderCardGrid();
 }
 
 </script>
 <script>
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(r=>{console.log('Chronicle SW:',r.scope);r.addEventListener('updatefound',()=>{const nw=r.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){console.log('Chronicle: update ready, applies on next open.');}});});}).catch(e=>console.warn('SW:',e));});}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(r=>{console.log('Chronicle SW:',r.scope);r.addEventListener('updatefound',()=>{const nw=r.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){if(confirm('Chronicle has been updated. Reload now?'))window.location.reload();}});});}).catch(e=>console.warn('SW:',e));});}
 </script>
 </body>
 </html>
