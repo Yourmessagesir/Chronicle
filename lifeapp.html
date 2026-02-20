@@ -3156,7 +3156,27 @@ function initCardGame(){
 
 </script>
 <script>
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(r=>{console.log('Chronicle SW:',r.scope);r.addEventListener('updatefound',()=>{const nw=r.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){if(confirm('Chronicle has been updated. Reload now?'))window.location.reload();}});});}).catch(e=>console.warn('SW:',e));});}
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').then(r=>{
+      console.log('Chronicle SW registered');
+      r.addEventListener('updatefound',()=>{
+        const nw=r.installing;
+        nw.addEventListener('statechange',()=>{
+          if(nw.state==='installed'&&navigator.serviceWorker.controller&&!sessionStorage.getItem('_swPrompted')){
+            sessionStorage.setItem('_swPrompted','1');
+            const banner=document.createElement('div');
+            banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#1c1a14;border-bottom:1px solid #c9a84c;padding:10px 16px;display:flex;align-items:center;gap:12px;font-family:Cinzel,serif;font-size:12px;color:#e8c96a;';
+            banner.innerHTML='<span style="flex:1">Chronicle updated — reload for latest version.</span>'
+              +'<button onclick="window.location.reload()" style="background:#c9a84c;color:#1a1400;border:none;padding:5px 14px;border-radius:4px;font-family:Cinzel,serif;font-size:11px;cursor:pointer;font-weight:700;">RELOAD</button>'
+              +'<button onclick="this.parentElement.remove()" style="background:none;border:none;color:#8a8878;font-size:16px;cursor:pointer;padding:0 4px;">&#x2715;</button>';
+            document.body.appendChild(banner);
+          }
+        });
+      });
+    }).catch(e=>console.warn('SW error:',e));
+  });
+}
 </script>
 </body>
 </html>
