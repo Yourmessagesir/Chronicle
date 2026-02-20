@@ -160,6 +160,16 @@ hr.dim{border:none;border-top:1px solid var(--border);margin:12px 0;}
 .guide-kw:last-child{border-bottom:none;}
 .guide-kw .gk-desc{font-size:12px;color:var(--text2);}
 /* responsive */
+/* ── RESOURCE PIPS ── */
+.res-pip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;font-size:11px;border:1.5px solid;cursor:pointer;transition:all .15s;font-family:"Crimson Pro",serif;user-select:none;}
+.res-pip:hover{filter:brightness(1.2);}
+.res-pip.selected{box-shadow:0 0 0 2px var(--gold);}
+.res-pip .pip-count{display:inline-flex;align-items:center;gap:3px;font-family:"Cinzel",serif;font-size:10px;}
+.res-pip .pip-count button{background:none;border:none;color:inherit;cursor:pointer;font-size:13px;padding:0 2px;line-height:1;opacity:.7;}
+.res-pip .pip-count button:hover{opacity:1;}
+.res-type-row{display:grid;grid-template-columns:2rem 1fr 1fr auto auto;gap:6px;align-items:center;padding:6px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;}
+.res-type-row input[type=text]{background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;width:100%;}
+.res-type-row input[type=color]{width:32px;height:28px;padding:2px;border:1px solid var(--border2);border-radius:4px;cursor:pointer;background:var(--bg2);}
 @media(max-width:500px){.form-grid{grid-template-columns:1fr;}.form-grid.cols3,.form-grid.cols4{grid-template-columns:1fr 1fr;}}
 </style>
 </head>
@@ -301,7 +311,7 @@ hr.dim{border:none;border-top:1px solid var(--border);margin:12px 0;}
     <div class="field"><label>MOVEMENT</label><input type="number" id="cMove" value="1" min="0"></div>
     <div class="field"><label>LEVEL</label><input type="number" id="cLevel" value="1" min="1"></div>
     <div class="field"><label>TRIBUTE REQ</label><input type="number" id="cTribute" value="0" min="0" title="Cards to sacrifice to play this"></div>
-    <div class="field"><label>RESOURCE TYPE</label><input type="text" id="cResType" placeholder="Mana / Energy…"></div>
+    <div class="field full"><label>RESOURCE COST TYPE</label><div id="cResTypePips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;"><span style="font-size:11px;color:var(--text3);font-style:italic;">Select a Game Config to load resource types.</span></div><input type="hidden" id="cResType"></div>
   </div>
   <div class="sec-label" style="margin-top:14px;">KEYWORDS</div>
   <div class="kw-grid" id="kwSelector"></div>
@@ -421,6 +431,9 @@ hr.dim{border:none;border-top:1px solid var(--border);margin:12px 0;}
       </select>
     </div>
   </div>
+  <div class="sec-label" style="margin-top:14px;">RESOURCE TYPES <span style="color:var(--text3);font-size:9px;letter-spacing:0;">(up to 5 — these appear as selectable pips on each card)</span></div>
+  <div id="gResTypeList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px;"></div>
+  <button class="btn small" id="gResTypeAddBtn" onclick="addResType()" style="margin-top:2px;">+ ADD RESOURCE TYPE</button>
   <div class="sec-label" style="margin-top:14px;">WIN CONDITIONS</div>
   <div class="rule-grid" id="winCondGrid"></div>
   <div class="sec-label" style="margin-top:14px;">RULE TOGGLES</div>
@@ -699,6 +712,7 @@ function renderCards(){
         ${c.move?`<div class="ct-stat"><span>MOV</span><span>${c.move}</span></div>`:''}
       </div>
       <div class="ct-kws">${(c.keywords||[]).slice(0,3).map(k=>`<span class="kw kw-${k}" style="font-size:7px;">${k}</span>`).join('')}</div>
+      ${c.resType&&c.resType!=='[]'?`<div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;margin-top:4px;">${renderResCost(c.resType,c.gameId)}</div>`:''}
       ${c.set?`<div style="font-size:8px;color:var(--text3);text-align:center;margin-top:4px;">${esc(c.set)}</div>`:''}
     </div>
   `).join('');
@@ -720,7 +734,8 @@ function openAddCard(){
   document.getElementById('editCardId').value='';
   document.getElementById('delCardBtn').style.display='none';
   // reset
-  ['cName','cEmoji','cCardId','cSet','cResType','cRules','cFlavor','cImage','cCustomType'].forEach(id=>document.getElementById(id).value='');
+  ['cName','cEmoji','cCardId','cSet','cRules','cFlavor','cImage','cCustomType'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cResType').value='';
   document.getElementById('cType').value='Creature';
   document.getElementById('cRarity').value='Common';
   document.getElementById('cHp').value=10;document.getElementById('cAtk').value=3;
@@ -731,6 +746,10 @@ function openAddCard(){
   buildKwSelector('kwSelector',[]);
   setAtkList('atkList',[]);
   refreshSelects();
+  // Wire game select to update pips when changed
+  const cgSel=document.getElementById('cGameId');
+  cgSel.onchange=()=>buildResTypePips('cResTypePips',cgSel.value,[]);
+  buildResTypePips('cResTypePips','',[]); // empty until game chosen
   openModal('cardModal');
 }
 function openEditCard(id){
@@ -751,6 +770,7 @@ function openEditCard(id){
   document.getElementById('cMove').value=c.move||1;
   document.getElementById('cLevel').value=c.level||1;
   document.getElementById('cTribute').value=c.tribute||0;
+  // Resource type pips
   document.getElementById('cResType').value=c.resType||'';
   document.getElementById('cRules').value=c.rules||'';
   document.getElementById('cFlavor').value=c.flavor||'';
@@ -759,7 +779,12 @@ function openEditCard(id){
   buildKwSelector('kwSelector',c.keywords||[]);
   setAtkList('atkList',c.attacks||[]);
   refreshSelects();
-  setTimeout(()=>{if(c.gameId)document.getElementById('cGameId').value=c.gameId;},50);
+  setTimeout(()=>{
+    if(c.gameId)document.getElementById('cGameId').value=c.gameId;
+    buildResTypePips('cResTypePips',c.gameId||'',JSON.parse(c.resType||'[]'));
+    const cgSel=document.getElementById('cGameId');
+    cgSel.onchange=()=>buildResTypePips('cResTypePips',cgSel.value,JSON.parse(document.getElementById('cResType').value||'[]'));
+  },50);
   openModal('cardModal');
 }
 function saveCard(){
@@ -1012,6 +1037,137 @@ function delFusion(){
 }
 
 // ═══════════════════════════════════════════════════════
+//  RESOURCE TYPES (defined per game config)
+// ═══════════════════════════════════════════════════════
+const DEFAULT_RES_COLORS=['#4488cc','#cc4444','#44aa66','#cc8844','#9944cc'];
+const DEFAULT_RES_EMOJIS=['💧','🔥','🌿','⚡','💀'];
+
+function buildResTypeEditor(resTypes){
+  const el=document.getElementById('gResTypeList');
+  if(!el)return;
+  const types=resTypes&&resTypes.length?resTypes:[];
+  el.innerHTML=types.map((rt,i)=>`
+    <div class="res-type-row" id="rtRow_${i}">
+      <input type="color" value="${rt.color||DEFAULT_RES_COLORS[i%5]}" oninput="updateResTypeRow(${i},'color',this.value)" title="Colour">
+      <input type="text" value="${esc(rt.emoji||DEFAULT_RES_EMOJIS[i%5])}" oninput="updateResTypeRow(${i},'emoji',this.value)" placeholder="Symbol/emoji" maxlength="4" style="width:60px;text-align:center;">
+      <input type="text" value="${esc(rt.name||'')}" oninput="updateResTypeRow(${i},'name',this.value)" placeholder="Resource name (e.g. Fire, Mana…)">
+      <div style="font-size:11px;padding:3px 6px;border-radius:12px;border:1.5px solid ${rt.color||DEFAULT_RES_COLORS[i%5]};color:${rt.color||DEFAULT_RES_COLORS[i%5]};background:${rt.color||DEFAULT_RES_COLORS[i%5]}22;white-space:nowrap;" id="rtPreview_${i}">${esc(rt.emoji||DEFAULT_RES_EMOJIS[i%5])} ${esc(rt.name||'?')}</div>
+      <button class="btn small danger" onclick="removeResType(${i})">✕</button>
+    </div>
+  `).join('');
+  el.dataset.types=JSON.stringify(types);
+  const addBtn=document.getElementById('gResTypeAddBtn');
+  if(addBtn)addBtn.style.display=types.length>=5?'none':'inline-flex';
+}
+function updateResTypeRow(i,field,val){
+  const el=document.getElementById('gResTypeList');
+  const types=JSON.parse(el.dataset.types||'[]');
+  if(types[i])types[i][field]=val;
+  el.dataset.types=JSON.stringify(types);
+  // Live update preview
+  const rt=types[i];
+  const prev=document.getElementById('rtPreview_'+i);
+  if(prev){prev.textContent=(rt.emoji||'?')+' '+(rt.name||'?');prev.style.borderColor=rt.color||'#888';prev.style.color=rt.color||'#888';prev.style.background=(rt.color||'#888')+'22';}
+}
+function addResType(){
+  const el=document.getElementById('gResTypeList');
+  const types=JSON.parse(el.dataset.types||'[]');
+  if(types.length>=5)return;
+  const i=types.length;
+  types.push({name:'',emoji:DEFAULT_RES_EMOJIS[i%5],color:DEFAULT_RES_COLORS[i%5]});
+  buildResTypeEditor(types);
+}
+function removeResType(i){
+  const el=document.getElementById('gResTypeList');
+  const types=JSON.parse(el.dataset.types||'[]');
+  types.splice(i,1);
+  buildResTypeEditor(types);
+}
+function getResTypes(){
+  const el=document.getElementById('gResTypeList');
+  if(!el)return[];
+  return (JSON.parse(el.dataset.types||'[]')).filter(rt=>rt.name&&rt.name.trim());
+}
+
+// ── Card editor: pip selector (shows resource types from chosen game) ──
+function buildResTypePips(containerId,gameId,selected){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  // selected is an array like [{typeIdx:0,count:2},{typeIdx:2,count:1}]
+  const game=D.games.find(g=>g.id===gameId);
+  const resTypes=game?.resTypes||[];
+  if(!resTypes.length){
+    el.innerHTML='<span style="font-size:11px;color:var(--text3);font-style:italic;">'+(gameId?'No resource types defined for this game — add them in Game Config.':'Select a Game Config above to load resource types.')+'</span>';
+    document.getElementById('cResType').value=JSON.stringify([]);
+    return;
+  }
+  const sel=selected&&selected.length?selected:[];
+  el.innerHTML=resTypes.map((rt,i)=>{
+    const entry=sel.find(s=>s.typeIdx===i)||{typeIdx:i,count:0};
+    const active=entry.count>0;
+    return `<div class="res-pip${active?' selected':''}" style="border-color:${rt.color};color:${rt.color};background:${rt.color}${active?'22':'11'};" data-typeidx="${i}">
+      <span>${rt.emoji||'?'}</span>
+      <span style="font-size:11px;">${esc(rt.name)}</span>
+      <span class="pip-count">
+        <button onclick="adjustResPip(${i},-1,'${containerId}')" title="Remove">−</button>
+        <span id="pipCount_${i}">${entry.count||0}</span>
+        <button onclick="adjustResPip(${i},1,'${containerId}')" title="Add">+</button>
+      </span>
+    </div>`;
+  }).join('');
+  saveResTypePips(containerId);
+}
+function adjustResPip(typeIdx,delta,containerId){
+  const el=document.getElementById(containerId);
+  const countEl=document.getElementById('pipCount_'+typeIdx);
+  if(!countEl)return;
+  const cur=parseInt(countEl.textContent)||0;
+  const newVal=Math.max(0,cur+delta);
+  countEl.textContent=newVal;
+  // Update pip style
+  const pip=el.querySelector(`[data-typeidx="${typeIdx}"]`);
+  if(pip){
+    const game=D.games.find(g=>g.id===document.getElementById('cGameId').value);
+    const rt=game?.resTypes?.[typeIdx];
+    if(rt){
+      pip.classList.toggle('selected',newVal>0);
+      pip.style.background=rt.color+(newVal>0?'22':'11');
+    }
+  }
+  saveResTypePips(containerId);
+}
+function saveResTypePips(containerId){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  const pips=[...el.querySelectorAll('[data-typeidx]')];
+  const result=[];
+  pips.forEach(pip=>{
+    const idx=parseInt(pip.dataset.typeidx);
+    const countEl=document.getElementById('pipCount_'+idx);
+    const count=countEl?parseInt(countEl.textContent)||0:0;
+    if(count>0)result.push({typeIdx:idx,count});
+  });
+  document.getElementById('cResType').value=JSON.stringify(result);
+}
+
+// ── Card tile: render resource pips on card tile ──
+function renderResCost(resTypeJson,gameId){
+  if(!resTypeJson)return'';
+  try{
+    const sel=JSON.parse(resTypeJson);
+    if(!sel||!sel.length)return'';
+    const game=D.games.find(g=>g.id===gameId);
+    const resTypes=game?.resTypes||[];
+    if(!resTypes.length)return`<span style="font-size:9px;color:var(--text3);">${resTypeJson}</span>`;
+    return sel.map(s=>{
+      const rt=resTypes[s.typeIdx];
+      if(!rt)return'';
+      return Array(s.count).fill(`<span style="display:inline-block;padding:1px 4px;border-radius:8px;font-size:8px;border:1px solid ${rt.color};color:${rt.color};background:${rt.color}22;margin:1px;">${rt.emoji||'?'}</span>`).join('');
+    }).join('');
+  }catch(e){return'';}
+}
+
+// ═══════════════════════════════════════════════════════
 //  GAMES
 // ═══════════════════════════════════════════════════════
 function renderGames(){
@@ -1081,6 +1237,7 @@ function openAddGame(){
   document.getElementById('gAiDiff').value='medium';
   document.getElementById('gNotes').value='';
   buildWinCondUI(null); buildRuleUI(null); buildPhaseUI(null);
+  buildResTypeEditor([]);
   openModal('gameModal');
 }
 function openEditGame(id){
@@ -1104,6 +1261,7 @@ function openEditGame(id){
   buildWinCondUI(g.winConds||null);
   buildRuleUI(g.rules||null);
   buildPhaseUI(g.phases||null);
+  buildResTypeEditor(g.resTypes||[]);
   openModal('gameModal');
 }
 function saveGame(){
@@ -1127,6 +1285,7 @@ function saveGame(){
     winConds:getWinConds(),
     rules:getRuleToggles(),
     phases:getPhases(),
+    resTypes:getResTypes(),
   };
   const idx=D.games.findIndex(x=>x.id===g.id);
   if(idx>=0)D.games[idx]=g; else D.games.push(g);
