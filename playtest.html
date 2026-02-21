@@ -104,6 +104,60 @@ header h1{font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);letter-sp
 /* toast */
 .play-token{transition:opacity .18s;}
 .play-token:active{transform:scale(.92);}
+
+/* ── DICE ── */
+#dicePanel{position:fixed;bottom:20px;right:210px;z-index:500;display:none;
+  background:var(--bg2);border:1px solid var(--border2);border-radius:10px;
+  padding:12px;box-shadow:0 4px 24px rgba(0,0,0,.6);min-width:200px;}
+#dicePanel.open{display:block;}
+.dice-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.die-btn{width:38px;height:38px;border:1px solid var(--border2);background:var(--bg3);
+  color:var(--gold2);border-radius:6px;cursor:pointer;font-family:'Cinzel',serif;
+  font-size:10px;letter-spacing:.04em;display:flex;align-items:center;justify-content:center;
+  transition:all .12s;touch-action:manipulation;}
+.die-btn:hover,.die-btn:active{border-color:var(--gold);background:var(--bg4);}
+.die-btn.rolling{animation:dieSpin .4s ease;}
+@keyframes dieSpin{0%{transform:rotate(0) scale(1)}40%{transform:rotate(180deg) scale(1.3)}100%{transform:rotate(360deg) scale(1)}}
+#diceResult{font-family:'Cinzel',serif;font-size:28px;color:var(--gold2);text-align:center;
+  min-height:44px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);border-radius:6px;background:var(--bg3);margin-bottom:8px;}
+#diceFormula{font-size:10px;color:var(--text3);text-align:center;margin-bottom:6px;}
+.dice-custom-row{display:flex;gap:6px;align-items:center;}
+.dice-custom-row input{background:var(--bg3);border:1px solid var(--border2);color:var(--text);
+  padding:4px 8px;border-radius:4px;font-size:12px;width:56px;}
+/* ── PIECE TOKENS (draggable on board) ── */
+.piece-token{position:absolute;width:36px;height:36px;border-radius:50%;
+  border:3px solid;display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:grab;user-select:none;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.5);
+  touch-action:none;transition:box-shadow .1s;}
+.piece-token:active{cursor:grabbing;box-shadow:0 6px 20px rgba(0,0,0,.7);}
+.piece-token.selected-piece{box-shadow:0 0 0 3px var(--gold),0 4px 16px rgba(0,0,0,.6)!important;}
+/* ── COUNTERS SIDEBAR ── */
+#counterPanel{padding:8px;flex:1;overflow-y:auto;}
+.ctr-block{background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  padding:8px;margin-bottom:8px;}
+.ctr-name{font-family:'Cinzel',serif;font-size:9px;color:var(--text3);letter-spacing:.07em;margin-bottom:6px;}
+.ctr-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.ctr-label{font-size:11px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ctr-val{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);min-width:30px;text-align:center;}
+.ctr-btn{width:24px;height:24px;border:1px solid var(--border2);background:var(--bg2);
+  color:var(--text);border-radius:4px;cursor:pointer;font-size:14px;display:flex;
+  align-items:center;justify-content:center;touch-action:manipulation;flex-shrink:0;}
+.ctr-btn:active{border-color:var(--gold);color:var(--gold);}
+.sidebar-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+.stab{flex:1;padding:6px 4px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:.06em;
+  color:var(--text3);border:none;background:none;cursor:pointer;
+  border-bottom:2px solid transparent;touch-action:manipulation;}
+.stab.active{color:var(--gold);border-bottom-color:var(--gold);}
+/* ── PIECE SPAWN PANEL ── */
+#piecePanel{padding:8px;}
+.piece-spawn{display:flex;align-items:center;gap:8px;padding:7px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  margin-bottom:5px;cursor:pointer;touch-action:manipulation;}
+.piece-spawn:active{border-color:var(--gold);background:var(--bg4);}
+.ps-dot{width:28px;height:28px;border-radius:50%;border:3px solid;
+  display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.ps-label{font-family:'Cinzel',serif;font-size:9px;color:var(--text2);}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border2);padding:7px 16px;border-radius:16px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;}
 #toast.show{opacity:1;}
 #toast.win{border-color:var(--gold);color:var(--gold2);}
@@ -129,7 +183,7 @@ header h1{font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);letter-sp
   <p>Select a game config to start playtesting. Layouts are loaded from the Layout Builder.</p>
   <div class="setup-section">GAME CONFIGS</div>
   <div class="setup-grid" id="gameConfigList"></div>
-  <div class="setup-section">SAVED LAYOUTS</div>
+  <div class="setup-section">SAVED LAYOUTS <span style="font-size:9px;color:var(--text3);font-family:'Crimson Pro',serif;letter-spacing:0;">— layouts with 🎲 mode launch as board games with dice, pieces & counters</span></div>
   <div class="setup-grid" id="layoutConfigList"></div>
 </div>
 
@@ -142,17 +196,50 @@ header h1{font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);letter-sp
     <div style="flex:1"></div>
     <button class="btn sm" id="phaseBtn" onclick="advancePhase()">NEXT PHASE ▶</button>
     <button class="btn sm" onclick="endTurn()">END TURN ⏭</button>
+    <button class="btn sm" onclick="toggleDicePanel()">🎲 DICE</button>
     <button class="btn sm danger" onclick="resignGame()">✕ RESIGN</button>
   </header>
   <div id="playerBars"></div>
   <div id="playArea">
     <div id="boardWrap"><div id="board"></div></div>
     <div id="rightSidebar">
-      <div style="padding:6px 8px;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:9px;color:var(--text3);letter-spacing:.08em;">SELECTED CARD</div>
-      <div id="infoPanel"><div style="color:var(--text3);font-size:10px;padding:8px;font-style:italic;">Select a card to see details and actions.</div></div>
+      <div class="sidebar-tabs">
+        <button class="stab active" id="stab-info" onclick="switchSideTab('info',this)">CARD</button>
+        <button class="stab" id="stab-counters" onclick="switchSideTab('counters',this)">COUNTERS</button>
+        <button class="stab" id="stab-pieces" onclick="switchSideTab('pieces',this)">PIECES</button>
+      </div>
+      <div id="infoPanel" style="flex:1;overflow-y:auto;padding:8px;"><div style="color:var(--text3);font-size:10px;padding:8px;font-style:italic;">Select a card to see details and actions.</div></div>
+      <div id="counterPanel" style="display:none;"></div>
+      <div id="piecePanel" style="display:none;overflow-y:auto;flex:1;"></div>
     </div>
   </div>
   <div id="logPanel"></div>
+</div>
+
+<!-- ── DICE PANEL ── -->
+<div id="dicePanel">
+  <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--text3);letter-spacing:.08em;margin-bottom:8px;">🎲 DICE ROLLER</div>
+  <div id="diceResult">—</div>
+  <div id="diceFormula">tap a die to roll</div>
+  <div class="dice-row">
+    <button class="die-btn" onclick="rollDie(4)">d4</button>
+    <button class="die-btn" onclick="rollDie(6)">d6</button>
+    <button class="die-btn" onclick="rollDie(8)">d8</button>
+    <button class="die-btn" onclick="rollDie(10)">d10</button>
+    <button class="die-btn" onclick="rollDie(12)">d12</button>
+    <button class="die-btn" onclick="rollDie(20)">d20</button>
+  </div>
+  <div class="dice-custom-row">
+    <span style="font-size:10px;color:var(--text3);">Qty:</span>
+    <input type="number" id="diceQty" value="1" min="1" max="10" style="width:46px;">
+    <span style="font-size:10px;color:var(--text3);">d</span>
+    <input type="number" id="diceSides" value="6" min="2" max="100" style="width:52px;">
+    <button class="die-btn" style="width:auto;padding:0 10px;" onclick="rollCustom()">ROLL</button>
+  </div>
+  <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:6px;">
+    <div style="font-family:'Cinzel',serif;font-size:8px;color:var(--text3);margin-bottom:4px;">LAST ROLLS</div>
+    <div id="diceHistory" style="font-size:10px;color:var(--text2);max-height:60px;overflow-y:auto;"></div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -206,16 +293,22 @@ function renderSetup(){
   if(!allLayouts.length){
     lcEl.innerHTML='<div style="color:var(--text3);font-size:12px;grid-column:1/-1;font-style:italic;padding:10px;">No layouts found. Use the Layout Builder to create one.</div>';
   } else {
-    lcEl.innerHTML=allLayouts.map(l=>`
-      <div class="setup-card" onclick="startGameWithLayout(null,'${l.id}')">
-        <h3>${l.id===activeLayout?.id?'📍 ':''} ${esc(l.name)}</h3>
+    const modeIcon2={standard:'⚔',grid:'♟',arena:'🏟',lanes:'🛣',traverse:'🗺',coop:'🤝',draft:'📋',boardgame:'🎲',freeplay:'🎲',any:'🃏'};
+    lcEl.innerHTML=allLayouts.map(l=>{
+      const isBG=l.mode==='boardgame'||l.mode==='freeplay';
+      const hasTokens=(l.zones||[]).filter(z=>z.isToken).length;
+      return `<div class="setup-card" onclick="startGameWithLayout(null,'${l.id}')">
+        <h3>${l.id===activeLayout?.id?'📍 ':''}${modeIcon2[l.mode||'any']||'🃏'} ${esc(l.name)}</h3>
         <div class="sc-meta">
-          <span class="sc-mode">${esc(l.mode||'any')}</span>
-          <span>${l.zones?.length||0} zones</span>
+          <span class="sc-mode" style="${isBG?'border-color:var(--gold);color:var(--gold2);':''}">${esc(l.mode||'any')}</span>
+          <span>${(l.zones||[]).filter(z=>!z.isToken).length} zones</span>
+          ${hasTokens?`<span>🎲 ${hasTokens} tokens</span>`:''}
           <span>${l.players||2}P</span>
+          ${l.bgImage?'<span>🖼 bg</span>':''}
+          ${isBG?'<span style="color:var(--gold2);">🎲 Dice + Pieces</span>':''}
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
 }
 
@@ -266,6 +359,10 @@ function startGameWithLayout(gameId, layoutId){
   const activeLayout=JSON.parse(localStorage.getItem(ACTIVE_LAYOUT_STORE)||'null');
   if(activeLayout)allLayouts.unshift(activeLayout);
   const layout=allLayouts.find(l=>l.id===layoutId)||null;
+  // Board game / freeplay mode: no game config needed
+  if(!gameId&&layout&&(layout.mode==='boardgame'||layout.mode==='freeplay'||!D.games.length)){
+    startBoardGame(layout);return;
+  }
   if(gameId){
     startGame(gameId, layout);
   } else {
@@ -312,9 +409,12 @@ function _initGame(game, layout){
   };
   if(game.mode==='grid'||game.mode==='traverse')initGrid(game);
   if(game.mode==='lanes')initLanes(game);
+  pieces=[];
   showGameScreen(game, layout);
+  initCounters();
   glog(`⚔ ${game.name} — ${game.mode} mode started!`,'phase');
   glog(`Turn 1: ${G.players[0].name}`,'phase');
+  if(game.mode==='boardgame'||game.mode==='freeplay'){glog('Board game mode — use dice, pieces, and counters. No decks.','phase');return;}
   doDrawPhase();
 }
 
@@ -444,6 +544,7 @@ function endTurn(){
   G.phase=0;
   glog(`── Turn ${G.turn+1}: ${G.players[G.activePlayer].name} ──`,'phase');
   renderPhaseBar();
+  if(isBoardGameMode()){renderBoard();renderPlayerBars();renderInfoPanel();return;}
   doDrawPhase();
   renderBoard(); renderPlayerBars(); renderInfoPanel();
   // AI takes turn if active player is AI
@@ -1358,15 +1459,16 @@ function useAttack(fieldIdx,atkIdx){
 // ═══════════════════════════════════════════════════
 function renderPlayerBars(){
   const el=document.getElementById('playerBars');
+  const bgMode=isBoardGameMode();
   el.innerHTML=G.players.map((p,i)=>`
     <div class="pstat-bar${i===G.activePlayer?' active':''}">
       <span class="psb-name">${esc(p.name)}</span>
-      <span class="psb-hp" style="color:${p.hp/p.maxHp>.5?'var(--green2)':p.hp/p.maxHp>.25?'var(--gold2)':'var(--red2)'}">❤${p.hp}</span>
-      ${G.game.mode==='traverse'?`<span style="font-size:10px;color:var(--blue2);">🔮${p.id==='p1'?G.crystals?.p1.hp:G.crystals?.p2.hp}</span>`:''}
-      <span class="psb-res">💎${p.res}/${p.maxRes}</span>
-      <span class="psb-hand">✋${p.hand.length} 📚${p.deck.length}</span>
-      ${p.field?.length?`<span style="font-size:10px;color:var(--text2);">⚔${p.field.length}</span>`:''}
-      ${i===G.activePlayer?`<span style="font-size:8px;color:var(--gold);margin-left:auto;">▶</span>`:''}
+      ${bgMode?'':`<span class="psb-hp" style="color:${(p.maxHp>0)?(p.hp/p.maxHp>.5?'var(--green2)':p.hp/p.maxHp>.25?'var(--gold2)':'var(--red2)'):'var(--text2)'}">❤${p.hp}</span>`}
+      ${!bgMode&&G.game.mode==='traverse'?`<span style="font-size:10px;color:var(--blue2);">🔮${p.id==='p1'?G.crystals?.p1.hp:G.crystals?.p2.hp}</span>`:''}
+      ${bgMode?'':`<span class="psb-res">💎${p.res}/${p.maxRes}</span>`}
+      ${bgMode?'':`<span class="psb-hand">✋${p.hand.length} 📚${p.deck.length}</span>`}
+      ${bgMode?`<span style="font-size:10px;color:var(--text2);">Pieces: ${pieces.filter(pc=>pc.label?.includes(p.name)||false).length||'—'}</span>`:''}
+      ${i===G.activePlayer?`<span style="font-size:8px;color:var(--gold);margin-left:auto;">▶ ACTIVE</span>`:''}
     </div>
   `).join('');
 }
@@ -1534,9 +1636,321 @@ function resignGame(){
   loadData(); renderSetup();
 }
 
+
+// ═══════════════════════════════════════════════════
+//  DICE ROLLER
+// ═══════════════════════════════════════════════════
+let diceHistory=[];
+function toggleDicePanel(){
+  const p=document.getElementById('dicePanel');
+  p.classList.toggle('open');
+}
+function rollDie(sides){rollCustomDice(1,sides);}
+function rollCustom(){
+  const qty=Math.max(1,Math.min(10,+document.getElementById('diceQty').value||1));
+  const sides=Math.max(2,Math.min(100,+document.getElementById('diceSides').value||6));
+  rollCustomDice(qty,sides);
+}
+function rollCustomDice(qty,sides){
+  const results=[];
+  for(let i=0;i<qty;i++) results.push(1+Math.floor(Math.random()*sides));
+  const total=results.reduce((a,b)=>a+b,0);
+  const formula=`${qty}d${sides}`;
+  const detail=qty>1?` (${results.join('+')})`:'';
+  // Animate
+  const resEl=document.getElementById('diceResult');
+  const fmEl=document.getElementById('diceFormula');
+  resEl.textContent='…';
+  fmEl.textContent=formula+detail;
+  // Animate the clicked button
+  document.querySelectorAll('.die-btn').forEach(b=>{if(b.textContent==='d'+sides||b.textContent==='ROLL'){b.classList.add('rolling');setTimeout(()=>b.classList.remove('rolling'),450);}});
+  setTimeout(()=>{
+    resEl.textContent=total;
+    fmEl.textContent=formula+detail+(qty>1?` = ${total}`:'');
+    // Log
+    const entry=`${formula}: ${total}${detail}`;
+    diceHistory.unshift(entry);
+    if(diceHistory.length>20)diceHistory.pop();
+    document.getElementById('diceHistory').innerHTML=diceHistory.slice(0,8).map(e=>`<div style="border-bottom:1px solid rgba(255,255,255,.04);padding:1px 0;">${e}</div>`).join('');
+    if(G)glog(`🎲 Rolled ${entry}`,'');
+  },280);
+}
+
+// ═══════════════════════════════════════════════════
+//  SIDEBAR TABS
+// ═══════════════════════════════════════════════════
+function switchSideTab(name,btn){
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('infoPanel').style.display=name==='info'?'block':'none';
+  document.getElementById('counterPanel').style.display=name==='counters'?'block':'none';
+  document.getElementById('piecePanel').style.display=name==='pieces'?'block':'none';
+  if(name==='counters')renderCounterPanel();
+  if(name==='pieces')renderPiecePanel();
+}
+
+// ═══════════════════════════════════════════════════
+//  COUNTERS
+// ═══════════════════════════════════════════════════
+// counters: [{id, label, values:{p1:0, p2:0, shared:0}}]
+let gameCounters=[];
+function initCounters(){
+  gameCounters=[];
+  // Default counters for every game
+  const defaults=[
+    {id:'score',label:'Score',perPlayer:true},
+    {id:'round',label:'Round',perPlayer:false},
+    {id:'custom1',label:'Counter 1',perPlayer:true},
+    {id:'custom2',label:'Counter 2',perPlayer:true},
+  ];
+  const players=G?.players||[];
+  defaults.forEach(d=>{
+    const vals={shared:0};
+    players.forEach(p=>vals[p.id]=0);
+    gameCounters.push({...d,vals});
+  });
+}
+function renderCounterPanel(){
+  const el=document.getElementById('counterPanel');
+  if(!el)return;
+  const players=G?.players||[];
+  let html='<div style="padding:8px;">';
+  // Custom counter add
+  html+=`<button onclick="addCustomCounter()" style="width:100%;margin-bottom:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:6px;border-radius:5px;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;">+ ADD COUNTER</button>`;
+  gameCounters.forEach((ctr,ci)=>{
+    html+=`<div class="ctr-block">`;
+    html+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">`;
+    html+=`<input value="${esc(ctr.label)}" oninput="gameCounters[${ci}].label=this.value;renderCounterPanel()" style="flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--gold2);padding:3px 6px;border-radius:4px;font-family:'Cinzel',serif;font-size:9px;">`;
+    html+=`<button onclick="removeCounter(${ci})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;">✕</button>`;
+    html+='</div>';
+    if(ctr.perPlayer){
+      players.forEach(p=>{
+        const v=ctr.vals[p.id]||0;
+        html+=`<div class="ctr-row">
+          <span class="ctr-label">${esc(p.name)}</span>
+          <button class="ctr-btn" onclick="adjCtr(${ci},'${p.id}',-1)">−</button>
+          <span class="ctr-val" id="cv_${ci}_${p.id}">${v}</span>
+          <button class="ctr-btn" onclick="adjCtr(${ci},'${p.id}',1)">+</button>
+        </div>`;
+      });
+    } else {
+      const v=ctr.vals.shared||0;
+      html+=`<div class="ctr-row">
+        <span class="ctr-label" style="color:var(--text);">Shared</span>
+        <button class="ctr-btn" onclick="adjCtr(${ci},'shared',-1)">−</button>
+        <span class="ctr-val" id="cv_${ci}_shared">${v}</span>
+        <button class="ctr-btn" onclick="adjCtr(${ci},'shared',1)">+</button>
+      </div>`;
+    }
+    html+='</div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+function adjCtr(ci,key,delta){
+  if(!gameCounters[ci])return;
+  gameCounters[ci].vals[key]=(gameCounters[ci].vals[key]||0)+delta;
+  // Fast update without full re-render
+  const el=document.getElementById(`cv_${ci}_${key}`);
+  if(el)el.textContent=gameCounters[ci].vals[key];
+}
+function addCustomCounter(){
+  const players=G?.players||[];
+  const vals={shared:0};
+  players.forEach(p=>vals[p.id]=0);
+  gameCounters.push({id:'c'+Date.now(),label:'Counter '+(gameCounters.length+1),perPlayer:true,vals});
+  renderCounterPanel();
+}
+function removeCounter(ci){gameCounters.splice(ci,1);renderCounterPanel();}
+
+// ═══════════════════════════════════════════════════
+//  PIECE TOKENS (draggable playing pieces on board)
+// ═══════════════════════════════════════════════════
+let pieces=[]; // {id,emoji,color,border,x,y,label}
+let selPiece=null;
+let pieceDrag=null;
+
+const PIECE_PRESETS=[
+  {emoji:'⚪',color:'rgba(220,220,220,.2)',border:'#ccc',label:'White'},
+  {emoji:'⚫',color:'rgba(40,40,40,.4)',border:'#666',label:'Black'},
+  {emoji:'🔴',color:'rgba(204,68,68,.25)',border:'#cc4444',label:'Red'},
+  {emoji:'🔵',color:'rgba(68,136,204,.25)',border:'#4488cc',label:'Blue'},
+  {emoji:'🟢',color:'rgba(68,204,68,.25)',border:'#44cc44',label:'Green'},
+  {emoji:'🟡',color:'rgba(201,168,76,.25)',border:'#c9a84c',label:'Yellow'},
+  {emoji:'🟣',color:'rgba(136,68,204,.25)',border:'#8844cc',label:'Purple'},
+  {emoji:'🟠',color:'rgba(204,120,40,.25)',border:'#cc7828',label:'Orange'},
+  {emoji:'💀',color:'rgba(80,60,60,.3)',border:'#664444',label:'Skull'},
+  {emoji:'⭐',color:'rgba(201,168,76,.3)',border:'#e8c96a',label:'Star'},
+  {emoji:'🏠',color:'rgba(100,160,80,.25)',border:'#64a050',label:'Base'},
+  {emoji:'🚩',color:'rgba(200,60,60,.25)',border:'#c83c3c',label:'Flag'},
+  {emoji:'🎯',color:'rgba(200,140,40,.25)',border:'#c88c28',label:'Target'},
+  {emoji:'👑',color:'rgba(201,168,76,.35)',border:'#e8c96a',label:'Crown'},
+  {emoji:'🔮',color:'rgba(100,60,180,.3)',border:'#6440b4',label:'Crystal'},
+  {emoji:'🗝',color:'rgba(160,140,60,.3)',border:'#a08c3c',label:'Key'},
+];
+
+function renderPiecePanel(){
+  const el=document.getElementById('piecePanel');
+  if(!el)return;
+  const board=document.getElementById('boardWrap');
+  let html=`<div style="font-family:'Cinzel',serif;font-size:9px;color:var(--text3);letter-spacing:.07em;padding:8px 8px 4px;">TAP TO SPAWN ON BOARD</div>`;
+  html+=PIECE_PRESETS.map(p=>`
+    <div class="piece-spawn" onclick="spawnPiece('${p.emoji}','${p.color}','${p.border}','${p.label}')">
+      <div class="ps-dot" style="background:${p.color};border-color:${p.border};">${p.emoji}</div>
+      <span class="ps-label">${p.label}</span>
+    </div>`).join('');
+  // Custom piece
+  html+=`<div style="padding:8px;border-top:1px solid var(--border);margin-top:4px;">
+    <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--text3);margin-bottom:6px;">CUSTOM PIECE</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <input id="customPieceEmoji" value="♟" maxlength="4" style="width:46px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:5px;border-radius:4px;font-size:16px;text-align:center;">
+      <input type="color" id="customPieceColor" value="#4488cc" style="width:36px;height:34px;padding:2px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;cursor:pointer;">
+      <button onclick="spawnCustomPiece()" style="flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:5px;border-radius:4px;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;">SPAWN</button>
+    </div>
+  </div>
+  <div style="padding:8px;border-top:1px solid var(--border);">
+    <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--text3);margin-bottom:4px;">ON BOARD (${pieces.length})</div>
+    ${pieces.map((p,i)=>`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:14px;">${p.emoji}</span>
+      <span style="font-size:10px;color:var(--text2);flex:1;">${esc(p.label)}</span>
+      <button onclick="removePiece('${p.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;">✕</button>
+    </div>`).join('')}
+  </div>`;
+  el.innerHTML=html;
+}
+function spawnPiece(emoji,color,border,label){
+  const board=document.getElementById('board');
+  const wrap=document.getElementById('boardWrap');
+  const bw=board.offsetWidth||400, bh=board.offsetHeight||300;
+  const id='piece_'+Date.now();
+  const piece={id,emoji,color,border,label,
+    x:Math.random()*(bw-50)+10, y:Math.random()*(bh-50)+10};
+  pieces.push(piece);
+  createPieceEl(piece);
+  glog&&glog(`🎲 ${label} piece spawned on board.`);
+}
+function spawnCustomPiece(){
+  const emoji=document.getElementById('customPieceEmoji').value||'♟';
+  const hex=document.getElementById('customPieceColor').value||'#4488cc';
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  spawnPiece(emoji,`rgba(${r},${g},${b},.25)`,hex,'Custom');
+}
+function createPieceEl(piece){
+  const board=document.getElementById('board');
+  const el=document.createElement('div');
+  el.className='piece-token';
+  el.id=piece.id;
+  el.style.cssText=`left:${piece.x}px;top:${piece.y}px;background:${piece.color};border-color:${piece.border};`;
+  el.textContent=piece.emoji;
+  el.title=piece.label+' — drag to move, double-tap to remove';
+  // Touch drag
+  el.addEventListener('touchstart',e=>{
+    e.stopPropagation();e.preventDefault();
+    const t=e.touches[0];
+    pieceDrag={id:piece.id,sx:t.clientX,sy:t.clientY,ox:piece.x,oy:piece.y};
+    el.classList.add('selected-piece');
+  },{passive:false});
+  // Mouse drag
+  el.addEventListener('mousedown',e=>{
+    e.stopPropagation();e.preventDefault();
+    pieceDrag={id:piece.id,sx:e.clientX,sy:e.clientY,ox:piece.x,oy:piece.y};
+    el.classList.add('selected-piece');
+  });
+  // Double tap/click to remove
+  let lastTap=0;
+  el.addEventListener('click',e=>{
+    const now=Date.now();
+    if(now-lastTap<350){removePiece(piece.id);}
+    lastTap=now;
+  });
+  board.appendChild(el);
+}
+function removePiece(id){
+  pieces=pieces.filter(p=>p.id!==id);
+  const el=document.getElementById(id);
+  if(el)el.remove();
+  renderPiecePanel();
+}
+// Global pointer/touch move for piece drag
+document.addEventListener('touchmove',e=>{
+  if(!pieceDrag)return;
+  const t=e.touches[0];
+  movePiece(t.clientX,t.clientY);
+},{passive:true});
+document.addEventListener('mousemove',e=>{
+  if(!pieceDrag)return;
+  movePiece(e.clientX,e.clientY);
+});
+function movePiece(cx,cy){
+  const piece=pieces.find(p=>p.id===pieceDrag.id);if(!piece)return;
+  const board=document.getElementById('board');
+  const rect=board.getBoundingClientRect();
+  // Account for any scroll in boardWrap
+  const wrap=document.getElementById('boardWrap');
+  const dx=cx-pieceDrag.sx, dy=cy-pieceDrag.sy;
+  const bw=board.offsetWidth,bh=board.offsetHeight;
+  piece.x=Math.max(0,Math.min(bw-36,pieceDrag.ox+dx));
+  piece.y=Math.max(0,Math.min(bh-36,pieceDrag.oy+dy));
+  const el=document.getElementById(piece.id);
+  if(el){el.style.left=piece.x+'px';el.style.top=piece.y+'px';}
+}
+document.addEventListener('touchend',()=>{
+  if(pieceDrag){
+    const el=document.getElementById(pieceDrag.id);
+    if(el)el.classList.remove('selected-piece');
+    pieceDrag=null;
+  }
+});
+document.addEventListener('mouseup',()=>{
+  if(pieceDrag){
+    const el=document.getElementById(pieceDrag.id);
+    if(el)el.classList.remove('selected-piece');
+    pieceDrag=null;
+  }
+});
+
+// ═══════════════════════════════════════════════════
+//  BOARDGAME MODE (freeplay — no decks, just board + dice + pieces + counters)
+// ═══════════════════════════════════════════════════
+function isBoardGameMode(){return G&&(G.game.mode==='boardgame'||G.game.mode==='freeplay');}
+function startBoardGame(layout){
+  // Create a minimal game state for boardgame mode
+  const game={
+    id:'bg_'+Date.now(), name:layout?.name||'Board Game',
+    mode:'boardgame',
+    startHp:0,maxHand:0,maxField:0,resPerTurn:0,maxRes:0,
+    players:layout?.players||2,
+    phases:['Turn 1','Turn 2','Turn 3','Turn 4'].slice(0,layout?.players||2),
+    winConds:[],rules:{},aiStyle:'none',aiDiff:'none',
+  };
+  const numPlayers=game.players;
+  const players=[];
+  for(let i=0;i<numPlayers;i++){
+    players.push({id:'p'+(i+1),name:'Player '+(i+1),isAI:false,
+      hp:0,maxHp:0,res:0,maxRes:0,hand:[],deck:[],graveyard:[],exile:[],
+      field:[],score:0,poisonCounters:0,crystalHp:0});
+  }
+  G={game,layout,players,turn:0,activePlayer:0,phase:0,
+    phases:game.phases,log:[],over:false,winner:null,
+    selCard:null,selOwner:null,selLocation:null,
+    grid:null,lanes:null,comboStack:[],comboScore:0,fusions:[],constructStage:[]};
+  pieces=[];
+  showGameScreen(game,layout);
+  initCounters();
+  // Hide card-focused UI elements for pure board game
+  document.getElementById('phaseBtn').style.display='none';
+  glog('Board game started. Use dice, pieces, and counters as needed.','phase');
+}
 // ═══════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════
+// Close dice panel on outside click
+document.addEventListener('click',e=>{
+  const dp=document.getElementById('dicePanel');
+  if(dp&&dp.classList.contains('open')&&!dp.contains(e.target)&&!e.target.textContent?.includes('DICE')){
+    dp.classList.remove('open');
+  }
+});
 loadData();
 renderSetup();
 </script>

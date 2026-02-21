@@ -229,6 +229,7 @@ hr.dim{border:none;border-top:1px solid var(--border);margin:12px 0;}
   <div class="pane" id="pane-games">
     <div class="toolbar">
       <button class="btn primary" onclick="openAddGame()">+ NEW GAME CONFIG</button>
+      <button class="btn" onclick="quickAddBoardGame()" title="Add a ready-to-use board game configuration">🎲 QUICK BOARD GAME</button>
     </div>
     <div class="pane-scroll" id="gamesPane"></div>
   </div>
@@ -397,7 +398,7 @@ hr.dim{border:none;border-top:1px solid var(--border);margin:12px 0;}
     <div class="field"><label>CONFIG NAME</label><input type="text" id="gName" placeholder="My Game Mode"></div>
     <div class="field">
       <label>PLAY MODE</label>
-      <select id="gMode">
+      <select id="gMode" onchange="updateGameModeHints()">
         <option value="standard">Standard (table layout)</option>
         <option value="grid">Grid Battle (chess-style movement)</option>
         <option value="arena">Arena (positional free play)</option>
@@ -405,6 +406,7 @@ hr.dim{border:none;border-top:1px solid var(--border);margin:12px 0;}
         <option value="traverse">Traversible Field (crystal hunt)</option>
         <option value="coop">Co-op Combo</option>
         <option value="draft">Draft / Deck-builder</option>
+        <option value="boardgame">Board Game / Freeplay (dice + pieces, no decks)</option>
       </select>
     </div>
     <div class="field"><label>STARTING HP</label><input type="number" id="gHp" value="30" min="1"></div>
@@ -1173,19 +1175,18 @@ function renderResCost(resTypeJson,gameId){
 function renderGames(){
   const el=document.getElementById('gamesPane');
   if(!D.games.length){el.innerHTML='<div class="empty">No game configs — create one to set up play rules.</div>';return;}
-  el.innerHTML=D.games.map(g=>`
-    <div class="game-card" onclick="openEditGame('${g.id}')">
-      <h3>⚙ ${esc(g.name)}</h3>
+  const modeIcon={standard:'⚔',grid:'♟',arena:'🏟',lanes:'🛣',traverse:'🗺',coop:'🤝',draft:'📋',boardgame:'🎲',freeplay:'🎲'};
+  el.innerHTML=D.games.map(g=>{
+    const isBG=g.mode==='boardgame'||g.mode==='freeplay';
+    return `<div class="game-card" onclick="openEditGame('${g.id}')">
+      <h3>${modeIcon[g.mode||'standard']||'⚙'} ${esc(g.name)}</h3>
       <div class="gc-meta">
-        <span class="badge">${esc(g.mode||'standard')}</span>
-        <span>HP: ${g.startHp}</span>
-        <span>Hand: ${g.maxHand}</span>
-        <span>Field: ${g.maxField}</span>
-        <span>Players: ${g.players||2}</span>
+        <span class="badge" style="${isBG?'border-color:var(--gold);color:var(--gold2);':''}">${esc(g.mode||'standard')}</span>
+        ${isBG?`<span style="color:var(--text2);">🎲 Dice + Pieces + Counters</span><span>${g.players||2} players</span>`:`<span>HP: ${g.startHp}</span><span>Hand: ${g.maxHand}</span><span>Field: ${g.maxField}</span><span>Players: ${g.players||2}</span>`}
         ${g.notes?`<span style="color:var(--text3)">${esc(g.notes.slice(0,50))}</span>`:''}
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 const DEFAULT_WIN=[{id:'hp0',on:true},{id:'crystal',on:false},{id:'deckout',on:false},{id:'objective',on:false},{id:'lanes2',on:false},{id:'combo',on:false}];
 const DEFAULT_RULES={tributeEnabled:true,fusionEnabled:true,resourceSystem:true,assistantZone:false,
@@ -1219,12 +1220,63 @@ function getRuleToggles(){
   return r;
 }
 function getPhases(){return [...document.getElementById('phaseEditor').querySelectorAll('.kw-toggle.on')].map(e=>e.dataset.phase);}
+function quickAddBoardGame(){
+  const name=prompt('Board game name:','My Board Game');
+  if(!name)return;
+  const players=+prompt('Number of players? (2-6):','2')||2;
+  const g={
+    id:uid(), name,
+    mode:'boardgame',
+    startHp:0, maxHand:0, maxField:0, resPerTurn:0, maxRes:0,
+    players:Math.max(1,Math.min(6,players)),
+    crystalHp:0, gridSize:6,
+    aiStyle:'none', aiDiff:'none',
+    notes:'Board game created with Quick Setup. Build your board in Layout Builder, then Playtest to play with dice, pieces, and counters.',
+    winConds:[], rules:{},
+    phases:Array.from({length:Math.max(1,Math.min(6,players))},(_,i)=>'Player '+(i+1)+' Turn'),
+    resTypes:[],
+  };
+  D.games.push(g);
+  persist(); renderGames();
+  toast('🎲 "'+name+'" added! Go to Layout Builder to design your board, then Playtest to play.','good');
+}
+function updateGameModeHints(){
+  const mode=document.getElementById('gMode').value;
+  const isBG=mode==='boardgame';
+  // Show/hide stat fields that don't apply to boardgame
+  const cardFields=['gHp','gHand','gField','gRes','gMaxRes'];
+  cardFields.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.closest('.field').style.opacity=isBG?'0.35':'1';el.closest('.field').title=isBG?'Not used in Board Game mode':'';}
+  });
+  // Show a hint
+  let hint=document.getElementById('gameModeHint');
+  if(!hint){
+    hint=document.createElement('div');
+    hint.id='gameModeHint';
+    hint.style.cssText='font-size:11px;color:var(--text2);padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;margin-top:6px;line-height:1.5;grid-column:1/-1;';
+    document.getElementById('gMode').closest('.form-grid').appendChild(hint);
+  }
+  const hints={
+    standard:'Standard card game — players draw, play, and attack with cards.',
+    grid:'Chess-style grid movement — cards move around a NxN board.',
+    arena:'Free positional play — cards can move to any zone.',
+    lanes:'3-lane battle — each player fights across Left, Center, and Right lanes.',
+    traverse:'Crystal hunt \u2014 protect your crystal while destroying the enemy\'s.',
+    coop:'Co-op combo — both players work together to build combos and reach the score threshold.',
+    draft:'Draft / Deck-builder — players draft cards from a shared pool.',
+    boardgame:'🎲 Board Game / Freeplay — no decks or cards. Use the Layout Builder to design your board, then use dice, draggable pieces, and counters in Playtest. Great for Monopoly-style, Betrayal-style, Clue-style games and any other physical board game you want to simulate.',
+  };
+  hint.textContent=hints[mode]||'';
+}
+
 function openAddGame(){
   document.getElementById('gameModalTitle').textContent='NEW GAME CONFIG';
   document.getElementById('editGameId').value='';
   document.getElementById('delGameBtn').style.display='none';
   document.getElementById('gName').value='';
   document.getElementById('gMode').value='standard';
+  setTimeout(updateGameModeHints,50);
   document.getElementById('gHp').value=30;
   document.getElementById('gHand').value=5;
   document.getElementById('gField').value=5;
@@ -1247,6 +1299,7 @@ function openEditGame(id){
   document.getElementById('delGameBtn').style.display='';
   document.getElementById('gName').value=g.name||'';
   document.getElementById('gMode').value=g.mode||'standard';
+  setTimeout(updateGameModeHints,50);
   document.getElementById('gHp').value=g.startHp||30;
   document.getElementById('gHand').value=g.maxHand||5;
   document.getElementById('gField').value=g.maxField||5;
