@@ -367,7 +367,7 @@ const TOKEN_TYPES=[
   {type:'custom_token',icon:'◉',name:'Custom Token',desc:'Freely named token',color:'rgba(100,100,120,.2)',border:'#646478',w:48,h:48},
 ];
 let zones=[],selectedId=null,savedLayouts=[],currentMode="move",zoomLevel=1,lastDeleted=null;
-let drag=null,resize=null,shDrag=null;
+let drag=null,resize=null,shDrag=null,dragMoved=false;
 let bgImage=null,bgOpacity=0.35,snapGrid=false,snapSize=20,showZoneLabels=true;
 function uid(){return"z_"+Date.now().toString(36)+Math.random().toString(36).slice(2);}
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
@@ -502,7 +502,11 @@ function onTS(e,action,id){
   if(action!=="resize"&&currentMode==="delete"){e.preventDefault();deleteZone(id);return;}
   e.preventDefault();
   const t=e.touches[0],z=zones.find(x=>x.id===id);if(!z)return;
-  if(action!=="resize")selectZone(id);
+  if(action!=="resize"){
+    selectedId=id;
+    renderCanvas();
+    dragMoved=false;
+  }
   const st={id,sx:t.clientX,sy:t.clientY,ox:z.x,oy:z.y,ow:z.w,oh:z.h};
   if(action==="resize")resize=st;else drag=st;
 }
@@ -511,7 +515,12 @@ function onMD(e,action,id){
   if(action!=="resize"&&currentMode==="delete"){deleteZone(id);return;}
   e.preventDefault();
   const z=zones.find(x=>x.id===id);if(!z)return;
-  if(action!=="resize")selectZone(id);
+  if(action!=="resize"){
+    // Visually select without opening the sheet yet — wait to see if user drags
+    selectedId=id;
+    renderCanvas();
+    dragMoved=false;
+  }
   const st={id,sx:e.clientX,sy:e.clientY,ox:z.x,oy:z.y,ow:z.w,oh:z.h};
   if(action==="resize")resize=st;else drag=st;
 }
@@ -520,6 +529,7 @@ function snap(v){return snapGrid?Math.round(v/snapSize)*snapSize:Math.round(v);}
 function applyDrag(e){
   if(!drag)return;
   const{x,y}=gxy(e),dx=(x-drag.sx)/zoomLevel,dy=(y-drag.sy)/zoomLevel;
+  if(Math.abs(dx)>4||Math.abs(dy)>4)dragMoved=true;
   const z=zones.find(x=>x.id===drag.id);if(!z)return;
   const cw=+document.getElementById("canvasW").value,ch=+document.getElementById("canvasH").value;
   z.x=Math.max(0,Math.min(cw-z.w,snap(drag.ox+dx)));
@@ -536,9 +546,28 @@ function applyResize(e){
   if(el){el.style.width=z.w+"px";el.style.height=z.h+"px";}
 }
 document.addEventListener("touchmove",e=>{if(drag||resize)e.preventDefault();applyDrag(e);applyResize(e);},{passive:false});
-document.addEventListener("touchend",()=>{if(drag){drag=null;renderCanvas();}if(resize){resize=null;renderCanvas();}});
+document.addEventListener("touchend",()=>{
+  if(drag){
+    const wasClick=!dragMoved;
+    const dragId=drag.id;
+    drag=null;
+    renderCanvas();
+    if(wasClick)openPropsSheet(dragId);
+  }
+  if(resize){resize=null;renderCanvas();}
+});
 document.addEventListener("mousemove",e=>{applyDrag(e);applyResize(e);});
-document.addEventListener("mouseup",()=>{if(drag){drag=null;renderCanvas();}if(resize){resize=null;renderCanvas();}});
+document.addEventListener("mouseup",()=>{
+  if(drag){
+    const wasClick=!dragMoved;
+    const dragId=drag.id;
+    drag=null;
+    renderCanvas();
+    // Only open the props sheet if the user clicked (didn't drag)
+    if(wasClick)openPropsSheet(dragId);
+  }
+  if(resize){resize=null;renderCanvas();}
+});
 document.getElementById("canvas").addEventListener("click",e=>{if(e.target.id==="canvas"||e.target.closest("#canvasGuide")){selectedId=null;renderCanvas();closeSheet();}});
 function selectZone(id){selectedId=id;renderCanvas();if(id)openPropsSheet(id);}
 function openPropsSheet(id){
