@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Card Forge — Complete Manual</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c10;
+  --bg2: #111520;
+  --bg3: #181c28;
+  --bg4: #202438;
+  --border: #252a3a;
+  --border2: #323850;
+  --gold: #c9a84c;
+  --gold2: #e8c96a;
+  --gold3: #f5e0a0;
+  --red: #cc4444;
+  --green: #44aa66;
+  --blue: #4488cc;
+  --purple: #8855cc;
+  --text: #d4cfc0;
+  --text2: #8a8878;
+  --text3: #5a5848;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Crimson Pro', serif;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+/* ── LAYOUT ── */
+#shell { display: flex; min-height: 100vh; }
+#sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 20px 0;
+}
+#sidebar::-webkit-scrollbar { width: 3px; }
+#sidebar::-webkit-scrollbar-thumb { background: var(--border2); }
+#main { flex: 1; max-width: 860px; padding: 48px 52px 80px; }
+
+/* ── SIDEBAR NAV ── */
+.nav-logo {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--gold2);
+  letter-spacing: .14em;
+  padding: 0 20px 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.nav-section {
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  color: var(--text3);
+  letter-spacing: .14em;
+  padding: 14px 20px 4px;
+  text-transform: uppercase;
+}
+.nav-link {
+  display: block;
+  padding: 6px 20px 6px 24px;
+  font-size: 13px;
+  color: var(--text2);
+  text-decoration: none;
+  transition: color .12s, background .12s;
+  border-left: 2px solid transparent;
+}
+.nav-link:hover { color: var(--gold2); background: rgba(201,168,76,.06); }
+.nav-link.sub { padding-left: 36px; font-size: 12px; color: var(--text3); }
+.nav-link.sub:hover { color: var(--text2); }
+
+/* ── TYPOGRAPHY ── */
+h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 32px;
+  color: var(--gold2);
+  letter-spacing: .1em;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  color: var(--gold2);
+  letter-spacing: .09em;
+  margin: 52px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  color: var(--gold);
+  letter-spacing: .08em;
+  margin: 28px 0 10px;
+}
+h4 {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: var(--text2);
+  letter-spacing: .1em;
+  margin: 20px 0 8px;
+  text-transform: uppercase;
+}
+p { margin-bottom: 14px; }
+p:last-child { margin-bottom: 0; }
+a { color: var(--gold); text-decoration: none; }
+a:hover { color: var(--gold2); text-decoration: underline; }
+strong { color: var(--gold3); font-weight: 600; }
+em { font-style: italic; color: var(--text2); }
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 36px 40px;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: "⚙";
+  position: absolute;
+  right: 30px;
+  top: 20px;
+  font-size: 80px;
+  opacity: .04;
+  font-family: 'Cinzel', serif;
+}
+.hero h1 { font-size: 28px; margin-bottom: 6px; }
+.hero .tagline { color: var(--text2); font-size: 15px; margin-bottom: 20px; }
+.hero .file-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.file-pill {
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  color: var(--text2);
+  letter-spacing: .06em;
+}
+.file-pill.gold { border-color: var(--gold); color: var(--gold); }
+
+/* ── CALLOUT BOXES ── */
+.callout {
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 20px 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.callout.tip { background: rgba(68,136,204,.1); border-left: 3px solid var(--blue); }
+.callout.warn { background: rgba(204,170,68,.08); border-left: 3px solid var(--gold); }
+.callout.note { background: rgba(80,80,100,.2); border-left: 3px solid var(--text3); }
+.callout.future { background: rgba(136,85,204,.1); border-left: 3px solid var(--purple); }
+.callout strong { display: block; margin-bottom: 4px; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: .08em; }
+
+/* ── TABLES ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 14px;
+}
+th {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: .08em;
+  color: var(--text3);
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border2);
+  background: var(--bg2);
+}
+td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:hover td { background: rgba(255,255,255,.02); }
+td:first-child { font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold); white-space: nowrap; }
+
+/* ── KEYWORD BADGES ── */
+.kw {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  border: 1px solid;
+  letter-spacing: .04em;
+  font-family: 'Cinzel', serif;
+  margin: 2px 2px;
+}
+.kw-blue  { background:rgba(68,136,204,.2);border-color:#4488cc;color:#88bbee; }
+.kw-red   { background:rgba(204,68,68,.2);border-color:#cc4444;color:#ee9999; }
+.kw-green { background:rgba(68,170,102,.2);border-color:#44aa66;color:#88ccaa; }
+.kw-gold  { background:rgba(201,168,76,.2);border-color:#c9a84c;color:#e8c96a; }
+.kw-purple{ background:rgba(136,85,204,.2);border-color:#8855cc;color:#bb88ff; }
+.kw-gray  { background:rgba(100,100,100,.2);border-color:#666;color:#aaa; }
+
+/* ── STEP BOXES ── */
+.steps { counter-reset: steps; }
+.step {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 24px;
+  align-items: flex-start;
+}
+.step-num {
+  counter-increment: steps;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 2px solid var(--gold);
+  color: var(--gold2);
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.step-body { flex: 1; }
+.step-body h4 { margin-top: 0; color: var(--text); }
+
+/* ── ZONE GRID ── */
+.zone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+.zone-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.zone-card .zi { font-size: 22px; margin-bottom: 4px; display: block; }
+.zone-card .zn { font-family: 'Cinzel', serif; font-size: 10px; color: var(--gold2); letter-spacing: .06em; }
+.zone-card .zd { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+/* ── MODE CARDS ── */
+.mode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.mode-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.mode-card .mi { font-size: 28px; margin-bottom: 8px; display: block; }
+.mode-card .mn { font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold2); letter-spacing: .07em; margin-bottom: 6px; }
+.mode-card .md { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+/* ── ROADMAP ITEMS ── */
+.roadmap { list-style: none; margin: 16px 0; }
+.roadmap li {
+  display: flex;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  align-items: flex-start;
+}
+.roadmap .status { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+.roadmap .rl { flex: 1; }
+.roadmap .rt { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text); margin-bottom: 3px; }
+.roadmap .rd { font-size: 13px; color: var(--text3); line-height: 1.5; }
+.roadmap li.done { opacity: .5; }
+.roadmap li.done .rt { color: var(--green); }
+.roadmap li.next { border-color: var(--gold); }
+.roadmap li.next .rt { color: var(--gold2); }
+
+/* ── DIVIDER ── */
+hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+
+/* ── INLINE CODE ── */
+code {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: var(--gold3);
+}
+
+/* ── PRINT / MOBILE ── */
+@media print {
+  #sidebar { display: none; }
+  #main { max-width: 100%; padding: 20px; }
+  body { background: #fff; color: #000; }
+}
+@media (max-width: 768px) {
+  #sidebar { display: none; }
+  #main { padding: 24px 20px 60px; }
+  h1 { font-size: 24px; }
+  h2 { font-size: 17px; }
+}
+</style>
+</head>
+<body>
+<div id="shell">
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav id="sidebar">
+  <div class="nav-logo">⚙ CARD FORGE</div>
+
+  <div class="nav-section">Overview</div>
+  <a href="#intro" class="nav-link">What Is This?</a>
+  <a href="#files" class="nav-link">The Three Files</a>
+  <a href="#pwa" class="nav-link">Installing as an App</a>
+
+  <div class="nav-section">Card Forge</div>
+  <a href="#forge-cards" class="nav-link">Cards Tab</a>
+  <a href="#forge-card-fields" class="nav-link sub">Card Fields</a>
+  <a href="#forge-attacks" class="nav-link sub">Attacks & Effects</a>
+  <a href="#forge-decks" class="nav-link">Decks Tab</a>
+  <a href="#forge-fusion" class="nav-link">Fusion Tab</a>
+  <a href="#forge-games" class="nav-link">Game Config Tab</a>
+  <a href="#forge-modes" class="nav-link sub">Game Modes</a>
+  <a href="#forge-rules" class="nav-link sub">Rule Toggles</a>
+  <a href="#forge-export" class="nav-link">Export / Import</a>
+
+  <div class="nav-section">Keywords</div>
+  <a href="#keywords" class="nav-link">All 23 Keywords</a>
+
+  <div class="nav-section">Layout Builder</div>
+  <a href="#lb-overview" class="nav-link">Overview</a>
+  <a href="#lb-zones" class="nav-link">Zone Types</a>
+  <a href="#lb-tokens" class="nav-link">Token Types</a>
+  <a href="#lb-canvas" class="nav-link">Canvas Tools</a>
+  <a href="#lb-tutorial" class="nav-link">Tutorial</a>
+
+  <div class="nav-section">Playtest</div>
+  <a href="#pt-overview" class="nav-link">Overview</a>
+  <a href="#pt-card-game" class="nav-link">Playing a Card Game</a>
+  <a href="#pt-board-game" class="nav-link">Board Game Mode</a>
+  <a href="#pt-dice" class="nav-link">Dice Roller</a>
+  <a href="#pt-pieces" class="nav-link">Playing Pieces</a>
+  <a href="#pt-counters" class="nav-link">Counters Panel</a>
+  <a href="#pt-ai" class="nav-link">AI Opponent</a>
+
+  <div class="nav-section">Tutorials</div>
+  <a href="#tut-ccg" class="nav-link">Build a Card Game</a>
+  <a href="#tut-board" class="nav-link">Simulate a Board Game</a>
+
+  <div class="nav-section">Roadmap</div>
+  <a href="#roadmap" class="nav-link">What's Coming</a>
+</nav>
+
+<!-- ═══ MAIN CONTENT ═══ -->
+<main id="main">
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Card Forge</h1>
+  <p class="tagline">A complete tabletop game design studio — card games, board games, and everything in between. Runs entirely in your browser, works offline, installable on any device.</p>
+  <div class="file-pills">
+    <span class="file-pill gold">forge.html</span>
+    <span class="file-pill gold">layout-builder.html</span>
+    <span class="file-pill gold">playtest.html</span>
+    <span class="file-pill">forge_manifest.json</span>
+    <span class="file-pill">forge_sw.js</span>
+    <span class="file-pill">manifest.json</span>
+    <span class="file-pill">sw.js</span>
+    <span class="file-pill">icon-192.png</span>
+    <span class="file-pill">icon-512.png</span>
+  </div>
+</div>
+
+<!-- ═══ INTRO ═══ -->
+<h2 id="intro">What Is Card Forge?</h2>
+<p>Card Forge is a self-contained tabletop game lab that lives in three HTML files. You design cards, set rules, draw board layouts, and then immediately play your game — all without any server, account, or internet connection after the first load.</p>
+<p>Everything you create is saved to your browser's local storage and stays on your device. You can back it up, share it, and restore it at any time using the Export/Import tools.</p>
+<p>The system was built to handle two distinct use cases:</p>
+<p><strong>Custom card games</strong> — build your own cards with stats, keywords, and multi-effect attacks. Define the rules, win conditions, resource system, and phase structure. Design a board layout, then play against an AI or pass the device between players.</p>
+<p><strong>Board game simulation</strong> — use the layout builder to draw a board, place interactive zones and markers, then use the playtest mode's dice roller, draggable pieces, and counters to run any physical board game digitally. Think Monopoly, Betrayal at House on the Hill, Clue, Ticket to Ride.</p>
+
+<hr>
+
+<!-- ═══ FILES ═══ -->
+<h2 id="files">The Three Files</h2>
+<p>Each file handles one part of the workflow. They share data through <code>localStorage</code> so changes in one are instantly visible in another.</p>
+
+<table>
+  <thead><tr><th>File</th><th>Purpose</th><th>Opens In</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>forge.html</td>
+      <td>The main design studio — create cards, decks, fusions, and game configs</td>
+      <td>Browser tab, or installed as PWA</td>
+    </tr>
+    <tr>
+      <td>layout-builder.html</td>
+      <td>Visual board designer — drag and place zones, upload a playmat background</td>
+      <td>Opens from the Layouts button in Forge</td>
+    </tr>
+    <tr>
+      <td>playtest.html</td>
+      <td>The game table — play your card game against AI, or use board game tools</td>
+      <td>Opens from the Playtest button in Forge or Layout Builder</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout tip">
+  <strong>TIP — HOW TO HOST LOCALLY</strong>
+  All three files need to be in the same folder. Open <code>forge.html</code> in any modern browser. The Layout Builder and Playtest open as new tabs automatically. No server required — works directly from your file system or any static host (GitHub Pages, Netlify, etc.).
+</div>
+
+<hr>
+
+<!-- ═══ PWA ═══ -->
+<h2 id="pwa">Installing as an App (PWA)</h2>
+<p>Both Card Forge and the companion app Chronicle can be installed as Progressive Web Apps — they appear on your home screen and work fully offline.</p>
+<p><strong>On iOS (Safari):</strong> Open the file, tap the Share icon, then "Add to Home Screen." You get two separate apps: Card Forge (forge.html) and Chronicle (lifeapp.html).</p>
+<p><strong>On Android (Chrome):</strong> Open the file, tap the three-dot menu, then "Add to Home Screen" or "Install App."</p>
+<p><strong>On Desktop (Chrome/Edge):</strong> Look for the install icon in the address bar (a computer with a down arrow). Click it to install.</p>
+<p>Once installed, the app caches itself and runs completely offline. When you update the HTML files and reload, a banner appears offering to reload to the latest version.</p>
+
+<hr>
+
+<!-- ═══════════════════════════════ -->
+<!-- CARD FORGE                      -->
+<!-- ═══════════════════════════════ -->
+<h2 id="forge-cards">Card Forge — Cards Tab</h2>
+<p>The Cards tab is the main card designer. Every card you create is stored globally and can be assigned to a specific game config, or left unassigned to be shared across all games.</p>
+
+<h3 id="forge-card-fields">Card Fields</h3>
+<table>
+  <thead><tr><th>Field</th><th>What It Does</th></tr></thead>
+  <tbody>
+    <tr><td>Name</td><td>The card's display name</td></tr>
+    <tr><td>Emoji / Icon</td><td>A single emoji or symbol shown large on the card tile and in playtest</td></tr>
+    <tr><td>Card ID</td><td>Optional unique identifier — auto-generated if left blank</td></tr>
+    <tr><td>Set Name</td><td>Label for grouping cards into sets or expansions</td></tr>
+    <tr><td>Type</td><td>Creature, Spell, Construct, Field, Event, Resource, Item, Trap, Fusion, Assistant, Collector, or Custom. Controls how the card behaves in play.</td></tr>
+    <tr><td>Rarity</td><td>Common / Uncommon / Rare / Epic / Legendary — cosmetic only</td></tr>
+    <tr><td>Game Config</td><td>Binds the card to a specific game. Unbound cards appear in all games.</td></tr>
+    <tr><td>HP</td><td>Hit points. How much damage the card can take before being destroyed.</td></tr>
+    <tr><td>ATK</td><td>Attack power used in combat and direct attacks.</td></tr>
+    <tr><td>DEF</td><td>Defence value subtracted from incoming damage (unless attacker has Piercing).</td></tr>
+    <tr><td>Cost</td><td>Resource cost to play this card from hand.</td></tr>
+    <tr><td>Movement</td><td>How many cells this card can move per turn (grid/traverse modes).</td></tr>
+    <tr><td>Level</td><td>Card level — used with Tribute to require sacrifices.</td></tr>
+    <tr><td>Tribute Req</td><td>Number of field cards to sacrifice before this card can be played.</td></tr>
+    <tr><td>Resource Cost Type</td><td>If the Game Config defines resource types (e.g. Fire, Mana), you can assign specific costs here as coloured pip icons.</td></tr>
+    <tr><td>Keywords</td><td>Toggle any of the 23 built-in keywords. See the Keywords section.</td></tr>
+    <tr><td>Attacks / Abilities</td><td>Multi-effect actions the card can use during play. See below.</td></tr>
+    <tr><td>Rules Text</td><td>Free-form ability description shown during play.</td></tr>
+    <tr><td>Flavor Text</td><td>Italic lore text — cosmetic only.</td></tr>
+    <tr><td>Image URL</td><td>Optional card art URL.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="forge-card-types">Card Types Explained</h3>
+<table>
+  <thead><tr><th>Type</th><th>Behaviour in Play</th></tr></thead>
+  <tbody>
+    <tr><td>Creature</td><td>Stays on the field, attacks and blocks. The most common type.</td></tr>
+    <tr><td>Spell</td><td>Fires effects immediately when played, then goes to the graveyard.</td></tr>
+    <tr><td>Construct</td><td>Like a Creature but goes to the Construct Stage — must be built using materials.</td></tr>
+    <tr><td>Field</td><td>A persistent global effect card. Stays active and affects all cards.</td></tr>
+    <tr><td>Event</td><td>Fires once globally when played, then discarded.</td></tr>
+    <tr><td>Resource</td><td>Played to gain resources equal to its HP value — goes to graveyard.</td></tr>
+    <tr><td>Item</td><td>One-use item that fires its attacks when played, then discards.</td></tr>
+    <tr><td>Trap</td><td>Played defensively — can be triggered in response to opponent actions (manual for now).</td></tr>
+    <tr><td>Fusion</td><td>Result of a Fusion recipe — cannot be played normally, only via Fusion crafting.</td></tr>
+    <tr><td>Assistant</td><td>Limited co-op helper — sits in the Assistant zone and provides a support ability.</td></tr>
+    <tr><td>Collector</td><td>Can move onto item tiles and collect resources from the traversible field.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="forge-attacks">Attacks & Abilities</h3>
+<p>Each card can have multiple attacks. Each attack has a name, a resource cost, and up to four effects that fire simultaneously when the attack is used.</p>
+
+<h4>Effect Types</h4>
+<table>
+  <thead><tr><th>Effect</th><th>What It Does</th></tr></thead>
+  <tbody>
+    <tr><td>Damage HP</td><td>Deals direct HP damage to a target card or player</td></tr>
+    <tr><td>Reduce ATK / DEF</td><td>Permanently lowers target's stats for the rest of the game</td></tr>
+    <tr><td>Heal Self HP</td><td>Restores HP to the player who used the attack</td></tr>
+    <tr><td>Heal Ally HP</td><td>Restores HP to a target friendly card</td></tr>
+    <tr><td>Boost ATK / DEF / HP</td><td>Permanently raises target stats</td></tr>
+    <tr><td>Draw Cards</td><td>Draws a number of cards from your deck</td></tr>
+    <tr><td>Opponent Discards</td><td>Forces the opponent to discard a card from hand</td></tr>
+    <tr><td>Gain Resources</td><td>Adds to your current resource pool</td></tr>
+    <tr><td>Drain Opponent Resources</td><td>Removes from opponent's resource pool</td></tr>
+    <tr><td>Apply Poison / Freeze / Burn / Silence</td><td>Applies a status effect to the target card</td></tr>
+    <tr><td>Destroy Target</td><td>Sends a card directly to the graveyard (bypasses damage)</td></tr>
+    <tr><td>Exile Target</td><td>Removes a card from play permanently (bypasses Reborn)</td></tr>
+    <tr><td>Collect Item</td><td>Picks up an item tile on the traversible field</td></tr>
+    <tr><td>Copy Target ATK</td><td>Sets this card's ATK equal to target's current ATK</td></tr>
+  </tbody>
+</table>
+
+<h4>Targets</h4>
+<p>Every effect needs a target: <strong>Target Opp Card</strong>, <strong>All Opp Cards</strong>, <strong>Opp Player</strong>, <strong>This Card</strong>, <strong>Target Ally</strong>, <strong>All Allies</strong>, <strong>All Cards on Field</strong>, <strong>Nearest Enemy</strong> (traverse mode), or <strong>Item on Field</strong> (traverse mode).</p>
+
+<hr>
+
+<!-- ═══ DECKS ═══ -->
+<h2 id="forge-decks">Decks Tab</h2>
+<p>Build named decks by selecting any combination of your cards. Decks can be linked to a specific game config. During playtest, the system draws from all cards matching the game config — custom deck support for specific deck selection during play is on the roadmap.</p>
+
+<hr>
+
+<!-- ═══ FUSION ═══ -->
+<h2 id="forge-fusion">Fusion Tab</h2>
+<p>Fusion recipes let you combine 2–4 "ingredient" cards into a more powerful result card during gameplay. This requires the <strong>Fusion / crafting enabled</strong> rule toggle to be on in the Game Config.</p>
+<p>To create a recipe, select the ingredient cards, then define the result card's full stats — name, emoji, type, HP, ATK, DEF, move, keywords, attacks, and rules text.</p>
+<p>In playtest, when all ingredient cards are on your field simultaneously, the Construct Stage shows the fusion option and lets you combine them in one tap.</p>
+
+<hr>
+
+<!-- ═══ GAME CONFIG ═══ -->
+<h2 id="forge-games">Game Config Tab</h2>
+<p>A Game Config defines all the rules for a single game session. You can have as many configs as you like — one per game idea, one per expansion, etc.</p>
+
+<table>
+  <thead><tr><th>Setting</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>Config Name</td><td>Name shown in playtest when choosing a game to start</td></tr>
+    <tr><td>Play Mode</td><td>Defines the board layout and gameplay loop (see modes below)</td></tr>
+    <tr><td>Starting HP</td><td>Each player starts with this HP</td></tr>
+    <tr><td>Hand Size</td><td>Maximum cards in hand at end of turn</td></tr>
+    <tr><td>Field Size</td><td>Maximum simultaneous cards on your battlefield</td></tr>
+    <tr><td>Resource/Turn</td><td>Resources gained at the start of each turn</td></tr>
+    <tr><td>Max Resource</td><td>Hard cap on resources held at once</td></tr>
+    <tr><td>Players</td><td>1–4 players</td></tr>
+    <tr><td>Crystal HP</td><td>Traverse mode only — HP of the objective crystal</td></tr>
+    <tr><td>Grid Size</td><td>Grid and Traverse modes — the board is N×N cells</td></tr>
+    <tr><td>AI Style</td><td>Aggressive (targets weak), Control (plays high HP), Combo, or Random</td></tr>
+    <tr><td>AI Difficulty</td><td>Easy / Medium / Hard — affects how many cards AI plays per turn</td></tr>
+    <tr><td>Resource Types</td><td>Up to 5 named resource types (e.g. Fire, Water, Mana) shown as pip icons on cards</td></tr>
+    <tr><td>Win Conditions</td><td>One or more end conditions — see below</td></tr>
+    <tr><td>Rule Toggles</td><td>Individual rule switches — see below</td></tr>
+    <tr><td>Turn Phases</td><td>Toggle which phases exist in each turn (Draw, Main, Combat, End, Craft, Move, Collect, Combo)</td></tr>
+  </tbody>
+</table>
+
+<h3 id="forge-modes">Game Modes</h3>
+<div class="mode-grid">
+  <div class="mode-card">
+    <span class="mi">⚔</span>
+    <div class="mn">Standard</div>
+    <div class="md">Classic table layout. Players have a hand, field, deck, discard. Cards attack cards or the player directly.</div>
+  </div>
+  <div class="mode-card">
+    <span class="mi">♟</span>
+    <div class="mn">Grid Battle</div>
+    <div class="md">Chess-style movement on an N×N grid. Cards have movement points and attack adjacent enemies.</div>
+  </div>
+  <div class="mode-card">
+    <span class="mi">🏟</span>
+    <div class="mn">Arena</div>
+    <div class="md">Free positional play — cards occupy zones on a custom layout. Uses the same attack logic as Standard.</div>
+  </div>
+  <div class="mode-card">
+    <span class="mi">🛣</span>
+    <div class="mn">Lane Battle</div>
+    <div class="md">Three lanes (Left, Center, Right). Win two lanes to win the game. Each lane has one card slot per player.</div>
+  </div>
+  <div class="mode-card">
+    <span class="mi">🗺</span>
+    <div class="mn">Traversible Field</div>
+    <div class="md">Move cards across a grid toward the enemy Crystal. Destroy the crystal to win. Item tiles scattered across the field give bonuses when collected by Collector cards.</div>
+  </div>
+  <div class="mode-card">
+    <span class="mi">🤝</span>
+    <div class="mn">Co-op Combo</div>
+    <div class="md">Two players work together stacking cards onto a Combo Stack. Each card adds stats to the stack and score. Reach the threshold score to win.</div>
+  </div>
+  <div class="mode-card">
+    <span class="mi">📋</span>
+    <div class="mn">Draft / Deck-builder</div>
+    <div class="md">Players draft from a shared card pool. Standard play after draft.</div>
+  </div>
+  <div class="mode-card">
+    <span class="mi">🎲</span>
+    <div class="mn">Board Game / Freeplay</div>
+    <div class="md">No cards, decks, or HP. Launches playtest with only a board, dice, draggable pieces, and counters. Ideal for Monopoly/Betrayal/Clue-style games. Use the Quick Board Game button to set one up instantly.</div>
+  </div>
+</div>
+
+<h3>Win Conditions</h3>
+<p>Multiple win conditions can be active at once — the first one triggered ends the game.</p>
+<table>
+  <thead><tr><th>Condition</th><th>How It Triggers</th></tr></thead>
+  <tbody>
+    <tr><td>Reduce opponent HP to 0</td><td>Any player's HP reaches zero</td></tr>
+    <tr><td>Opponent decks out</td><td>A player tries to draw with an empty deck</td></tr>
+    <tr><td>Control objective zones</td><td>Manual — use Score Tracker zones and counters</td></tr>
+    <tr><td>Destroy opponent crystal</td><td>Crystal HP reaches zero in Traverse mode</td></tr>
+    <tr><td>Win 2 of 3 lanes</td><td>A player wins the majority of lanes in Lane Battle mode</td></tr>
+    <tr><td>Reach combo threshold score</td><td>Co-op combo score hits 100 in Co-op mode</td></tr>
+  </tbody>
+</table>
+
+<h3 id="forge-rules">Rule Toggles</h3>
+<table>
+  <thead><tr><th>Toggle</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>Tribute summon</td><td>Cards with a Tribute Req > 0 require you to sacrifice that many field cards to play them</td></tr>
+    <tr><td>Fusion / crafting</td><td>Enables the Construct Stage and Fusion mechanic during play</td></tr>
+    <tr><td>Resource / cost system</td><td>Cards have costs; players spend resources to play them. Without this, all cards are free.</td></tr>
+    <tr><td>Assistant zone</td><td>A special zone where one Assistant-type card provides a persistent support effect</td></tr>
+    <tr><td>Collector zone</td><td>A special zone where a Collector-type card harvests items</td></tr>
+    <tr><td>Field cards active</td><td>Field cards placed in the Field Zone affect all cards on the board</td></tr>
+    <tr><td>Event cards trigger globally</td><td>Played Event cards fire effects that impact all players, not just the caster</td></tr>
+    <tr><td>Spell slots</td><td>Limits how many Spell cards can be played per turn</td></tr>
+    <tr><td>First strike</td><td>Cards with the First Strike keyword deal damage before normal combat resolves</td></tr>
+    <tr><td>Stack resources</td><td>Unspent resources carry over between turns instead of resetting</td></tr>
+    <tr><td>Co-op simultaneous play</td><td>In Co-op mode, both players can play cards on any turn</td></tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <strong>QUICK BOARD GAME BUTTON</strong>
+  In the Games tab, the <strong>🎲 Quick Board Game</strong> button asks for a name and player count, then instantly creates a Board Game config with per-player turn phases already set up. No form to fill out.
+</div>
+
+<hr>
+
+<!-- ═══ EXPORT ═══ -->
+<h2 id="forge-export">Export / Import Tab</h2>
+<p>Use this tab to back up and restore your entire collection.</p>
+<p><strong>Export CSV</strong> — exports your cards as a comma-separated file. Filter by game or card type first. Useful for importing into spreadsheets or card printing software.</p>
+<p><strong>Export JSON (Backup)</strong> — saves everything: cards, decks, fusions, and game configs as a single JSON file. Keep this as your backup.</p>
+<p><strong>Import JSON</strong> — restores from a JSON backup. This replaces your current data, so export first if needed.</p>
+
+<hr>
+
+<!-- ═══════════════════ -->
+<!-- KEYWORDS            -->
+<!-- ═══════════════════ -->
+<h2 id="keywords">All 23 Keywords</h2>
+<p>Keywords are special rules that modify how a card behaves in combat. Toggle them on or off on any card in the card editor.</p>
+
+<table>
+  <thead><tr><th>Keyword</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td><span class="kw kw-blue">Flying</span></td><td>Can only be blocked or targeted in combat by other Flying cards. Non-Flying attackers cannot target it.</td></tr>
+    <tr><td><span class="kw kw-red">Taunt</span></td><td>Opponents must attack this card before they can attack anything else on your field.</td></tr>
+    <tr><td><span class="kw kw-green">Lifesteal</span></td><td>Any damage this card deals heals your player HP by the same amount.</td></tr>
+    <tr><td><span class="kw kw-green">Poison</span></td><td>Hitting a target adds a Poison counter. Each counter deals 1 damage to the target at the start of its owner's turn.</td></tr>
+    <tr><td><span class="kw kw-green">Regen</span></td><td>Restores 1 HP to this card at the start of each of your turns, up to its base maximum.</td></tr>
+    <tr><td><span class="kw kw-gold">Haste</span></td><td>Can attack the same turn it is played — doesn't enter play tapped.</td></tr>
+    <tr><td><span class="kw kw-gold">Charge</span></td><td>Identical to Haste — can act immediately when played.</td></tr>
+    <tr><td><span class="kw kw-blue">Shield</span></td><td>Absorbs the first instance of damage completely. The shield is removed after triggering once.</td></tr>
+    <tr><td><span class="kw kw-red">Trample</span></td><td>Excess damage beyond a blocker's HP carries through to the defending player.</td></tr>
+    <tr><td><span class="kw kw-gold">Piercing</span></td><td>This card's damage completely ignores the target's DEF value.</td></tr>
+    <tr><td><span class="kw kw-red">Burn</span></td><td>At the start of the opponent's turn, deals 1 damage back to any card that attacked this card.</td></tr>
+    <tr><td><span class="kw kw-blue">Freeze</span></td><td>When this card deals damage, the target is frozen for one full turn — it cannot attack or use abilities.</td></tr>
+    <tr><td><span class="kw kw-gray">Silence</span></td><td>A silenced card has all its keywords and attack abilities disabled until end of turn.</td></tr>
+    <tr><td><span class="kw kw-gray">Stealth</span></td><td>Cannot be targeted by opponent abilities until it has attacked at least once.</td></tr>
+    <tr><td><span class="kw kw-red">Deathtouch</span></td><td>Any damage dealt by this card is lethal — destroys the target regardless of its remaining HP.</td></tr>
+    <tr><td><span class="kw kw-blue">Defender</span></td><td>This card cannot attack. Its DEF is doubled when blocking incoming attacks.</td></tr>
+    <tr><td><span class="kw kw-gold">Indestructible</span></td><td>Cannot be destroyed by combat damage. Can still be removed by Exile effects.</td></tr>
+    <tr><td><span class="kw kw-green">Vigilance</span></td><td>Does not tap (exhaust) when it attacks — can still block the same turn it attacked.</td></tr>
+    <tr><td><span class="kw kw-purple">Prowess</span></td><td>Gains +1 ATK each time you play a non-creature card while this is on the field.</td></tr>
+    <tr><td><span class="kw kw-purple">Cascade</span></td><td>When played, immediately draw and play the top card of your deck for free.</td></tr>
+    <tr><td><span class="kw kw-blue">Reborn</span></td><td>When this card is destroyed, it returns to your field one time with exactly 1 HP.</td></tr>
+    <tr><td><span class="kw kw-gold">Collector</span></td><td>In Traverse mode, this card can move onto Item tiles and collect their effects.</td></tr>
+    <tr><td><span class="kw kw-green">Mobile</span></td><td>Gains additional movement points on the traversible field.</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- ═══════════════════════════ -->
+<!-- LAYOUT BUILDER              -->
+<!-- ═══════════════════════════ -->
+<h2 id="lb-overview">Layout Builder — Overview</h2>
+<p>The Layout Builder is a visual board designer. You tap zone types from a palette and they appear on a canvas. You then drag them into position, resize them with a corner handle, and set their properties. When you're happy with the board, save it and send it to Playtest.</p>
+
+<p>The Layout Builder has three tabs at the bottom:</p>
+<p><strong>Zones</strong> — the palette of zone types to add to your board.</p>
+<p><strong>Canvas</strong> — the actual drawing surface where you arrange zones.</p>
+<p><strong>Layouts</strong> — saved layouts you can reload or delete.</p>
+
+<h3 id="lb-zones">Zone Types</h3>
+<div class="zone-grid">
+  <div class="zone-card"><span class="zi">✋</span><div class="zn">Hand Zone</div><div class="zd">Player's hand of cards</div></div>
+  <div class="zone-card"><span class="zi">📚</span><div class="zn">Draw Pile</div><div class="zd">Deck to draw from</div></div>
+  <div class="zone-card"><span class="zi">🗑</span><div class="zn">Discard Pile</div><div class="zd">Discarded cards</div></div>
+  <div class="zone-card"><span class="zi">⚔</span><div class="zn">Battlefield</div><div class="zd">Main play area for creatures</div></div>
+  <div class="zone-card"><span class="zi">💀</span><div class="zn">Graveyard</div><div class="zd">Destroyed cards go here</div></div>
+  <div class="zone-card"><span class="zi">❤</span><div class="zn">HP Tracker</div><div class="zd">Shows player health bar</div></div>
+  <div class="zone-card"><span class="zi">💎</span><div class="zn">Resource Pool</div><div class="zd">Mana / energy display</div></div>
+  <div class="zone-card"><span class="zi">🔧</span><div class="zn">Construct Stage</div><div class="zd">Fusion staging area</div></div>
+  <div class="zone-card"><span class="zi">🤝</span><div class="zn">Assistant Zone</div><div class="zd">Co-op helper slot</div></div>
+  <div class="zone-card"><span class="zi">🪤</span><div class="zn">Collector Zone</div><div class="zd">Item collector slot</div></div>
+  <div class="zone-card"><span class="zi">🌍</span><div class="zn">Field Card Zone</div><div class="zd">Global effect cards</div></div>
+  <div class="zone-card"><span class="zi">⚡</span><div class="zn">Event Zone</div><div class="zd">Triggered events</div></div>
+  <div class="zone-card"><span class="zi">✨</span><div class="zn">Spell Slot</div><div class="zd">Spell card placeholder</div></div>
+  <div class="zone-card"><span class="zi">🚫</span><div class="zn">Exile Zone</div><div class="zd">Removed from play</div></div>
+  <div class="zone-card"><span class="zi">💰</span><div class="zn">Item Tile</div><div class="zd">Collectible on the field</div></div>
+  <div class="zone-card"><span class="zi">🔮</span><div class="zn">Crystal / Nexus</div><div class="zd">Objective base to defend</div></div>
+  <div class="zone-card"><span class="zi">🛣</span><div class="zn">Lane</div><div class="zd">A single battle lane</div></div>
+  <div class="zone-card"><span class="zi">🏆</span><div class="zn">Score Tracker</div><div class="zd">Points or objectives</div></div>
+  <div class="zone-card"><span class="zi">🔗</span><div class="zn">Combo Stack</div><div class="zd">Co-op combo area</div></div>
+  <div class="zone-card"><span class="zi">◻</span><div class="zn">Custom Zone</div><div class="zd">Freely named zone for anything</div></div>
+</div>
+
+<h3 id="lb-tokens">Token Types (Tokens Tab)</h3>
+<p>Tokens are circular markers placed on the canvas. They show a count badge and are interactive during playtest — tap to increment, right-click or long-press to decrement. They are distinct from zone-type cards.</p>
+<table>
+  <thead><tr><th>Token</th><th>Default Use</th></tr></thead>
+  <tbody>
+    <tr><td>💢 Damage</td><td>Track damage on a specific card or character</td></tr>
+    <tr><td>⬆ Buff</td><td>+1/+1 stat boost counter</td></tr>
+    <tr><td>⬇ Debuff</td><td>−1/−1 stat reduction counter</td></tr>
+    <tr><td>🛡 Shield</td><td>Block or protection marker</td></tr>
+    <tr><td>☠ Poison</td><td>Poison / damage-over-time counter</td></tr>
+    <tr><td>❄ Freeze</td><td>Frozen / stasis marker</td></tr>
+    <tr><td>⚡ Charge</td><td>Energy or charge counter</td></tr>
+    <tr><td>🎯 Objective</td><td>Quest or objective marker</td></tr>
+    <tr><td>🔮 Relic</td><td>Relic or artifact token</td></tr>
+    <tr><td>🚩 Flag</td><td>Territory control marker</td></tr>
+    <tr><td>🪙 Coin</td><td>Currency or trade token</td></tr>
+    <tr><td>◉ Custom</td><td>Any freely named counter</td></tr>
+  </tbody>
+</table>
+
+<h3 id="lb-canvas">Canvas Tools</h3>
+<p>The toolbar across the top of the Canvas view has the following tools:</p>
+<table>
+  <thead><tr><th>Button</th><th>Function</th></tr></thead>
+  <tbody>
+    <tr><td>⚙ (Settings)</td><td>Opens canvas settings — set width, height, player count, and game mode</td></tr>
+    <tr><td>✛ MOVE</td><td>Move mode (default) — drag zones to reposition them</td></tr>
+    <tr><td>🗑 DEL</td><td>Delete mode — tap any zone to instantly remove it</td></tr>
+    <tr><td>⊞ SNAP</td><td>Toggle grid snapping at 20px increments for precise alignment</td></tr>
+    <tr><td>🔍 LBL</td><td>Toggle zone labels on/off for a clean preview</td></tr>
+    <tr><td>🌅 BG</td><td>Upload a playmat background image (PNG/JPG) or enter a URL. Set opacity.</td></tr>
+    <tr><td>＋ / ─</td><td>Zoom in or out</td></tr>
+    <tr><td>FIT</td><td>Zoom to fit the whole canvas in view</td></tr>
+    <tr><td>↩ (Undo)</td><td>Appears after a delete — tap to restore the last deleted zone</td></tr>
+  </tbody>
+</table>
+
+<h3>Zone Properties Sheet</h3>
+<p>Tap any zone to open its properties in a sheet that slides up from the bottom. Drag the sheet down or tap ✕ to close it without selecting a different zone.</p>
+<p>Every zone has: <strong>Label</strong>, <strong>Icon</strong>, <strong>Player Ownership</strong> (Any, P1–P4, Shared), <strong>Max Cards</strong>, <strong>Face Down</strong> (cards in this zone are hidden), <strong>Border Colour</strong>, <strong>Opacity</strong> (10–100%), and <strong>Notes</strong>.</p>
+<p>Non-token zones also have <strong>Position &amp; Size</strong> fields (X, Y, W, H) for exact pixel placement, and <strong>Align on Canvas</strong> buttons: Left, Center H, Right, Top, Middle V, Bottom.</p>
+<p>Token zones additionally show a <strong>Token Count</strong> control with + / − buttons.</p>
+
+<h3 id="lb-tutorial">Layout Builder Tutorial</h3>
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Open the Layout Builder</h4>
+      <p>In Card Forge, tap the <strong>🗺 Layouts</strong> button in the top right. The Layout Builder opens in a new tab. Switch to the Canvas tab at the bottom.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Set canvas size</h4>
+      <p>Tap ⚙ in the canvas toolbar. Set Width and Height (default 800×580 works well for a standard 2-player layout). Set the player count and game mode here too.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Add zones from the palette</h4>
+      <p>Switch to the Zones tab. Tap any zone type — it appears on the canvas. Tap a few: a Battlefield for each player, Hand zones, Draw and Discard piles. Each tap adds one at a staggered position so they don't overlap.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Arrange and resize</h4>
+      <p>Switch back to the Canvas tab. Drag zones by touching their centre and moving. To resize, grab the small triangle handle in the bottom-right corner of each zone. <em>The key: drag the centre to move, drag the corner to resize — don't confuse them or you'll get unexpected results.</em></p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h4>Set zone ownership</h4>
+      <p>Tap a zone to open its properties. Set Player Ownership to P1 or P2 so the playtest engine knows which zone belongs to which player. Shared zones display information for all players.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <h4>Add a background (optional)</h4>
+      <p>Tap 🌅 BG in the toolbar. Upload a PNG/JPG playmat image or paste a URL. Adjust opacity — around 30–40% looks good under zone overlays.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">7</div>
+    <div class="step-body">
+      <h4>Save and send to Playtest</h4>
+      <p>Tap <strong>💾 Save</strong> in the header to save the layout with a name and game mode. Then tap <strong>▶ Playtest</strong> to send it directly to the playtest engine and start playing immediately.</p>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════ -->
+<!-- PLAYTEST                    -->
+<!-- ═══════════════════════════ -->
+<h2 id="pt-overview">Playtest — Overview</h2>
+<p>Playtest is the game table. It loads your Game Config (card game rules) and/or Layout (board), shuffles decks, and lets you play. It can also run as a pure board game with no cards at all.</p>
+
+<p>The setup screen shows two sections: <strong>Game Configs</strong> (your card game rule sets) and <strong>Saved Layouts</strong> (your board designs). You can start from either.</p>
+<p>Layouts with the 🎲 Board Game mode bypass the card system entirely and launch with dice, pieces, and counters active.</p>
+
+<h3 id="pt-card-game">Playing a Card Game</h3>
+<p>Select a Game Config from the setup screen. Decks are automatically built from all cards linked to that config (or all cards if none are linked), shuffled, and dealt. You are Player 1; the AI plays as Player 2.</p>
+
+<h4>The Game Screen</h4>
+<p>The header shows the current phase indicators and whose turn it is. The <strong>NEXT PHASE ▶</strong> button advances through your turn's phases. <strong>END TURN ⏭</strong> skips to the end and passes to the opponent. <strong>🎲 DICE</strong> opens the dice roller.</p>
+<p>The board shows all zones from your layout (or a default layout if you didn't use the builder). Cards in zones are shown as mini-cards with emoji, name, HP, and ATK.</p>
+<p>The right sidebar has three tabs:</p>
+<p><strong>CARD tab</strong> — shows detailed info for the selected card and action buttons (Play to Field, Attack Directly, and all defined attacks).</p>
+<p><strong>COUNTERS tab</strong> — per-player counters for Score, Round, and custom values. See Counters Panel below.</p>
+<p><strong>PIECES tab</strong> — spawn draggable playing pieces onto the board. See Playing Pieces below.</p>
+<p>The log at the bottom shows every game event in reverse order.</p>
+
+<h4>Basic Turn Flow</h4>
+<p><strong>Draw Phase:</strong> A card is drawn automatically. Resources refresh.</p>
+<p><strong>Main Phase:</strong> Tap a card in your hand to select it, then tap an empty battlefield slot to play it. Or tap it in the Card tab and hit Play to Field.</p>
+<p><strong>Combat Phase:</strong> Tap a card on your field to select it (it highlights in gold). Then tap an enemy card to attack it, or use Attack Directly from the Card tab to hit the player.</p>
+<p><strong>End Phase:</strong> Hit End Turn. The AI takes its turn, then your Draw Phase begins again.</p>
+
+<h4>Grid / Traverse Mode</h4>
+<p>In grid modes, select a card from your hand, then tap a grid cell in your half of the board to place it. Select a placed card and tap an adjacent cell to move, or an adjacent enemy card to attack.</p>
+<p>In Traverse mode, item tiles scattered across the map give bonuses when a Collector card lands on them. Attack the enemy Crystal (shown as 🔮) when you're adjacent to it.</p>
+
+<h4>Lane Battle Mode</h4>
+<p>Select a card from hand, then tap one of the three lane zones (Left, Center, Right) to place it. Tap an occupied enemy lane to attack. Win two lanes to win the game.</p>
+
+<h4>Co-op Combo Mode</h4>
+<p>Both players tap cards from their hands onto the shared Combo Stack. Each card's stats add to the stack. Build up the score to hit the threshold and win.</p>
+
+<hr>
+
+<h2 id="pt-board-game">Board Game Mode</h2>
+<p>When you start from a layout saved in Board Game / Freeplay mode, or when no Game Configs exist, the playtest launches without any card game mechanics. You get:</p>
+<p>A clean board with your layout zones visible. No decks, hand, or HP bars. The phase indicator shows Player 1 Turn, Player 2 Turn, etc. Hit <strong>END TURN ⏭</strong> to pass to the next player. Use dice, pieces, and counters for all game tracking.</p>
+
+<hr>
+
+<h2 id="pt-dice">Dice Roller</h2>
+<p>Tap <strong>🎲 DICE</strong> in the header. A panel appears above the log with quick-roll buttons and a custom roller.</p>
+<p><strong>Quick dice:</strong> d4, d6, d8, d10, d12, d20 — tap once to roll. The result animates and appears large in the panel.</p>
+<p><strong>Custom roll:</strong> Set Qty (1–10) and the number of sides, then tap ROLL. Multi-dice rolls show each individual result and the total (e.g. <em>3d6: 4+2+5 = 11</em>).</p>
+<p>Every roll is logged in the game log and in a short history list inside the dice panel. Tap anywhere outside the panel to close it.</p>
+
+<hr>
+
+<h2 id="pt-pieces">Playing Pieces</h2>
+<p>Open the <strong>PIECES</strong> tab in the right sidebar. Tap any piece to spawn it on the board — it appears at a random position on the canvas.</p>
+<p>16 preset pieces are available: ⚪ White, ⚫ Black, 🔴 Red, 🔵 Blue, 🟢 Green, 🟡 Yellow, 🟣 Purple, 🟠 Orange, 💀 Skull, ⭐ Star, 🏠 Base, 🚩 Flag, 🎯 Target, 👑 Crown, 🔮 Crystal, 🗝 Key.</p>
+<p>You can also spawn a custom piece using any emoji and a colour picker.</p>
+<p><strong>Moving pieces:</strong> Touch and drag any piece to move it anywhere on the board. The piece follows your finger precisely.</p>
+<p><strong>Removing pieces:</strong> Double-tap any piece to remove it, or use the ✕ button next to it in the Pieces tab list.</p>
+<p>Pieces are free-floating — they sit on top of zones but are independent of them. They are not saved between sessions (they represent live game state, not board layout).</p>
+
+<hr>
+
+<h2 id="pt-counters">Counters Panel</h2>
+<p>Open the <strong>COUNTERS</strong> tab in the right sidebar. Default counters include Score (per player), Round (shared), and two Custom counters (per player).</p>
+<p>Each counter shows the value for each player (or a single shared value) with + and − buttons. Tap the label text to rename any counter inline.</p>
+<p>Tap <strong>+ ADD COUNTER</strong> to create a new counter. Tap ✕ to remove one. Use counters for anything: money, victory points, resources, health, ammunition, turns remaining — whatever your game tracks.</p>
+
+<hr>
+
+<h2 id="pt-ai">AI Opponent</h2>
+<p>The AI automatically takes its turn after you end yours. It plays cards from its hand based on the AI Style set in the Game Config:</p>
+<p><strong>Aggressive</strong> — sorts hand by ATK, plays highest-attack cards first, targets the weakest enemy cards in combat.</p>
+<p><strong>Control</strong> — sorts hand by HP, plays tankiest cards first.</p>
+<p><strong>Combo</strong> — tries to maximize field presence.</p>
+<p><strong>Random</strong> — plays cards in random order.</p>
+<p>Difficulty affects how many cards the AI plays per turn: Easy (max 2), Medium (max 3), Hard (max 5). The AI also applies all keyword rules correctly — it respects Taunt, Flying, Defender, Frozen cards, etc.</p>
+
+<hr>
+
+<!-- ═══════════════════ -->
+<!-- TUTORIALS          -->
+<!-- ═══════════════════ -->
+<h2 id="tut-ccg">Tutorial — Build a Card Game from Scratch</h2>
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Create a Game Config</h4>
+      <p>Open Card Forge → Game Config tab → <strong>+ NEW GAME CONFIG</strong>. Name it, pick Standard mode. Set HP to 30, hand size 5, field size 5, 3 resources/turn. Turn on the Resource/cost system and Fusion/crafting rules. Hit Save Config.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Create some cards</h4>
+      <p>Go to the Cards tab → <strong>+ NEW CARD</strong>. Make at least 8–10 cards. Give them variety: some cheap low-ATK creatures (Cost 1–2), some expensive heavy hitters (Cost 4–5), a few Spells with damage effects. Link each card to your game config. Try adding keywords like Haste or Taunt to a couple.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Design a board layout (optional)</h4>
+      <p>Click <strong>🗺 Layouts</strong>. In the Layout Builder, add: two Battlefields (one for P1, one for P2), two Hand zones, two Draw Piles, two Discard Piles, and a Field Card zone in the middle. Arrange them top-to-bottom (P2 side at top, P1 side at bottom). Save with your game's name and the Standard mode.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Playtest</h4>
+      <p>Hit <strong>▶ Playtest</strong> from either the Forge header or the Layout Builder. Select your Game Config from the setup screen (or your Layout). The game starts. Draw a card, play a creature, advance to Combat, attack the AI's field card, end your turn. Watch the AI respond.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h4>Iterate</h4>
+      <p>After a few turns, resign and go back to the card editor. Adjust costs and stats, add a Fusion recipe, try adding a Resource card type. Every change is live instantly — reopen Playtest and the updated cards are there.</p>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<h2 id="tut-board">Tutorial — Simulate a Board Game (e.g. Monopoly-style)</h2>
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Create a Board Game config</h4>
+      <p>In Card Forge → Game Config → <strong>🎲 Quick Board Game</strong>. Enter a name (e.g. "My Monopoly") and player count (e.g. 4). Done — a config with four per-player turn phases is created instantly.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Design the board</h4>
+      <p>Open the Layout Builder. Use Custom Zone tiles to represent the board spaces — arrange them in a loop or grid. Use the BG button to upload a hand-drawn or printed board image as the background at ~35% opacity, then place transparent Custom Zones on top of each space as interactive overlays.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Add token markers</h4>
+      <p>Switch to the Tokens palette tab. Add Coin tokens for money piles, Flag tokens for owned properties, Objective tokens for special spaces. Tap each one to set the label (e.g. "Go", "Jail", "Free Parking").</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Save with Board Game mode</h4>
+      <p>Tap 💾 Save. Set Game Mode to <em>Board Game / Freeplay</em>. Save with a name. Hit ▶ Playtest.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h4>Play</h4>
+      <p>In Playtest, the board appears with no HP or hand. Open the PIECES tab and spawn one coloured piece per player (e.g. 🔴 Red for P1, 🔵 Blue for P2). Open the COUNTERS tab, rename Counter 1 to "Money" for each player. Tap 🎲 DICE and roll 2d6 for movement. Drag pieces to the new space. Use +/− on the Money counter for transactions. Hit END TURN to pass to the next player.</p>
+    </div>
+  </div>
+</div>
+
+<div class="callout tip">
+  <strong>SAME WORKFLOW FOR BETRAYAL / CLUE / TICKET TO RIDE</strong>
+  Betrayal at House on the Hill: Use a grid of Custom Zones as rooms, spawn character pieces, roll dice to move, use Counters for Omen count and character stats. Clue: Use a room layout, spawn suspect pieces, use Counters to track accusations. Ticket to Ride: Use a route map as background, use Coin tokens as train pieces, use Counters for remaining trains and score.
+</div>
+
+<hr>
+
+<!-- ═══════════════════ -->
+<!-- ROADMAP             -->
+<!-- ═══════════════════ -->
+<h2 id="roadmap">Roadmap — What's Coming</h2>
+<p>Everything below has been discussed and scoped. Items marked 🔜 are the next priorities.</p>
+
+<ul class="roadmap">
+  <li class="done">
+    <span class="status">✅</span>
+    <div class="rl"><div class="rt">Card Builder with 23 Keywords</div><div class="rd">Full card creation with stats, types, rarity, multi-effect attacks, and keyword toggles.</div></div>
+  </li>
+  <li class="done">
+    <span class="status">✅</span>
+    <div class="rl"><div class="rt">Six Game Modes</div><div class="rd">Standard, Grid Battle, Arena, Lane Battle, Traversible Field, and Co-op Combo all fully playable.</div></div>
+  </li>
+  <li class="done">
+    <span class="status">✅</span>
+    <div class="rl"><div class="rt">Fusion / Crafting</div><div class="rd">Combine 2–4 cards on the field into a defined Fusion result card.</div></div>
+  </li>
+  <li class="done">
+    <span class="status">✅</span>
+    <div class="rl"><div class="rt">Layout Builder</div><div class="rd">Visual board designer with 20 zone types, drag-to-move, resize handles, grid snap, alignment tools, and opacity control.</div></div>
+  </li>
+  <li class="done">
+    <span class="status">✅</span>
+    <div class="rl"><div class="rt">Playmat Background Images</div><div class="rd">Upload a PNG/JPG or paste a URL to use as a board background with adjustable opacity.</div></div>
+  </li>
+  <li class="done">
+    <span class="status">✅</span>
+    <div class="rl"><div class="rt">12 Token Types</div><div class="rd">Circular counter markers on the canvas with count badges, interactive in playtest.</div></div>
+  </li>
+  <li class="done">
+    <span class="status">✅</span>
+    <div class="rl"><div class="rt">Dice Roller</div><div class="rd">d4–d20 quick roll plus custom quantity/sides. Results logged and animated.</div></div>
+  </li>
+  <li class="done">
+    <span class="status">✅</span>
+    <div class="rl"><div class="rt">Draggable Playing Pieces</div><div class="rd">16 preset pieces plus custom emoji/colour. Spawn on board and drag freely during play.</div></div>
+  </li>
+  <li class="done">
+    <span class="status">✅</span>
+    <div class="rl"><div class="rt">Counters Panel</div><div class="rd">Per-player and shared counters with +/− buttons and inline renaming. Unlimited custom counters.</div></div>
+  </li>
+  <li class="done">
+    <span class="status">✅</span>
+    <div class="rl"><div class="rt">Board Game / Freeplay Mode</div><div class="rd">Launch playtest without any card mechanics. Quick Board Game button in Forge for instant setup.</div></div>
+  </li>
+  <li class="done">
+    <span class="status">✅</span>
+    <div class="rl"><div class="rt">PWA / Offline Install</div><div class="rd">Both Card Forge and Chronicle installable as offline-capable apps on iOS, Android, and desktop.</div></div>
+  </li>
+  <li class="done">
+    <span class="status">✅</span>
+    <div class="rl"><div class="rt">Layout Builder Touch Fixes</div><div class="rd">Fixed tap-to-open firing immediately on touchstart. Fixed resize dimension jumps caused by drag and resize activating simultaneously. Proper 8px drag threshold.</div></div>
+  </li>
+
+  <li class="next">
+    <span class="status">🔜</span>
+    <div class="rl"><div class="rt">Path / Numbered Space Board</div><div class="rd">A board type with numbered spaces and defined connections — supports Monopoly-style loops, Betrayal-style adjacency graphs, and linear tracks. Pieces snap to spaces and the system can track which space each piece occupies.</div></div>
+  </li>
+  <li class="next">
+    <span class="status">🔜</span>
+    <div class="rl"><div class="rt">Property / Zone Ownership</div><div class="rd">Zones can be "claimed" by a player, changing colour to show ownership. The counters system tracks rent/income from owned zones. Foundation for Monopoly, territory control, and area-majority games.</div></div>
+  </li>
+  <li>
+    <span class="status">⬜</span>
+    <div class="rl"><div class="rt">Zone Adjacency / Room Graph</div><div class="rd">Define which zones connect to which in the Layout Builder. Pieces can only move to connected zones. Enables proper room-by-room movement for Betrayal at House on the Hill, dungeon crawlers, etc.</div></div>
+  </li>
+  <li>
+    <span class="status">⬜</span>
+    <div class="rl"><div class="rt">Random Event / Card Text Reveal</div><div class="rd">A deck of custom event cards (text only, no stats) that can be drawn during play and shown on screen. For Chance cards, Community Chest, Betrayal Omen cards, etc.</div></div>
+  </li>
+  <li>
+    <span class="status">⬜</span>
+    <div class="rl"><div class="rt">Pieces Snap to Zones</div><div class="rd">Optional mode where dragged pieces snap to the nearest zone centre when released — makes tracking position on structured boards much cleaner.</div></div>
+  </li>
+  <li>
+    <span class="status">⬜</span>
+    <div class="rl"><div class="rt">Deck Selection in Playtest</div><div class="rd">Choose a specific saved deck at game start instead of auto-building from all cards. Enables constructed deck formats.</div></div>
+  </li>
+  <li>
+    <span class="status">⬜</span>
+    <div class="rl"><div class="rt">Multi-Player / Shared Board View</div><div class="rd">A way for multiple devices to see the same board state. Could work via a simple URL-based sync using a free backend (e.g. a shared JSON endpoint), or a QR code "spectator" link for the second player.</div></div>
+  </li>
+  <li>
+    <span class="status">⬜</span>
+    <div class="rl"><div class="rt">Draft Mode (Full Implementation)</div><div class="rd">A proper drafting interface — cards are dealt face-up, players pick one and pass, building their deck before the game starts.</div></div>
+  </li>
+  <li>
+    <span class="status">⬜</span>
+    <div class="rl"><div class="rt">Card Image Generation</div><div class="rd">Generate card art from the card's name, type, and flavor text using the Claude API, placing it directly onto the card tile.</div></div>
+  </li>
+  <li>
+    <span class="status">⬜</span>
+    <div class="rl"><div class="rt">Print-to-PDF / Card Sheet Export</div><div class="rd">Render all cards in a game config as a printable sheet — standard card sizes, with artwork, stats, and rules text formatted for cutting.</div></div>
+  </li>
+</ul>
+
+<div class="callout future">
+  <strong>LONGER-TERM IDEAS</strong>
+  Chronicle integration: link life events or journal entries to card/game sessions. Replay log: record a full game and play it back. Tournament bracket: run elimination brackets between multiple Game Configs. Sound effects: optional card-play and combat audio via the Web Audio API.
+</div>
+
+<hr>
+
+<p style="text-align:center;color:var(--text3);font-size:12px;font-family:'Cinzel',serif;letter-spacing:.1em;padding-top:20px;">CARD FORGE MANUAL · BUILT WITH CLAUDE</p>
+
+</main>
+</div>
+</body>
+</html>
