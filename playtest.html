@@ -102,6 +102,8 @@ header h1{font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);letter-sp
 .hp-bar{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;}
 .hp-fill{height:100%;border-radius:3px;transition:width .3s;}
 /* toast */
+.play-token{transition:opacity .18s;}
+.play-token:active{transform:scale(.92);}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border2);padding:7px 16px;border-radius:16px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;}
 #toast.show{opacity:1;}
 #toast.win{border-color:var(--gold);color:var(--gold2);}
@@ -738,15 +740,48 @@ function buildBoard(layout, game){
   if(layout&&layout.zones&&layout.zones.length){
     board.style.width=layout.canvasW+'px';
     board.style.height=layout.canvasH+'px';
+    // Playmat background
+    if(layout.bgImage){
+      const bg=document.createElement('div');
+      bg.style.cssText=`position:absolute;inset:0;border-radius:6px;pointer-events:none;z-index:0;background:url(${layout.bgImage}) center/cover no-repeat;opacity:${layout.bgOpacity!=null?layout.bgOpacity:0.35};`;
+      board.appendChild(bg);
+    }
     // Build from layout zones
     layout.zones.forEach(z=>{
+      if(z.isToken){
+        // Token zone: interactive counter displayed on board
+        const tk=document.createElement('div');
+        tk.className='play-token';
+        tk.id='ptk_'+z.id;
+        tk.style.cssText=`position:absolute;left:${z.x}px;top:${z.y}px;width:${z.w}px;height:${z.h}px;border:2px solid ${z.border};background:${z.color};border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;opacity:${z.opacity!=null?z.opacity:1};z-index:10;`;
+        tk.dataset.count=z.tokenCount||1;
+        tk.innerHTML=`<span style="font-size:20px;pointer-events:none;">${z.icon}</span><span class="ptk-count" style="font-family:'Cinzel',serif;font-size:11px;color:${z.border};font-weight:700;pointer-events:none;">${z.tokenCount||1}</span>`;
+        // Tap to cycle count
+        tk.addEventListener('click',()=>{
+          let n=+tk.dataset.count+1;
+          if(n>20)n=0;
+          tk.dataset.count=n;
+          tk.querySelector('.ptk-count').textContent=n;
+          // show 0 as "gone" visual
+          tk.style.opacity=n===0?'0.25':(z.opacity!=null?z.opacity:1);
+        });
+        tk.addEventListener('contextmenu',e=>{
+          e.preventDefault();
+          let n=Math.max(0,+tk.dataset.count-1);
+          tk.dataset.count=n;
+          tk.querySelector('.ptk-count').textContent=n;
+          tk.style.opacity=n===0?'0.25':(z.opacity!=null?z.opacity:1);
+        });
+        board.appendChild(tk);
+        return;
+      }
       const el=document.createElement('div');
       el.className='play-zone';
       el.id='pz_'+z.type+'_'+(z.player||'any')+'_'+z.id;
       el.dataset.zoneId=z.id;
       el.dataset.zoneType=z.type;
       el.dataset.zonePlayer=z.player||'any';
-      el.style.cssText=`left:${z.x}px;top:${z.y}px;width:${z.w}px;height:${z.h}px;border-color:${z.border};background:${z.color};`;
+      el.style.cssText=`left:${z.x}px;top:${z.y}px;width:${z.w}px;height:${z.h}px;border-color:${z.border};background:${z.color};opacity:${z.opacity!=null?z.opacity:1};`;
       el.innerHTML=`<div class="pz-header"><span class="pz-icon">${z.icon}</span><span class="pz-label">${esc(z.label)}</span><span class="pz-count" id="pzc_${z.id}"></span></div>
       <div class="pz-cards" id="pzCards_${z.id}"></div>`;
       board.appendChild(el);
