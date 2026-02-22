@@ -1,0 +1,389 @@
+================================================================================
+FORGE ROOM — 3D INTERACTIVE RPG WORKSPACE
+Project Tracking Document — v3
+================================================================================
+Last Updated: 2026-02-23
+Status: PHASE 3 IN PROGRESS (Phases 1 & 2 complete)
+
+--------------------------------------------------------------------------------
+OVERVIEW
+--------------------------------------------------------------------------------
+A 3D first-person RPG-style room built with Three.js that serves as an
+alternative interface to the existing Card Forge + Chronicle app suite.
+Both interfaces (flat app + 3D room) share the same localStorage data so
+changes in one are immediately visible in the other.
+
+Install both as PWAs on your phone. Use whichever interface you prefer.
+No backend. No server. Fully offline after first load.
+
+Primary device: Android phone with GameSir G8+ controller + S Pen (stylus)
+Files hosted on GitHub Pages, installed via lifeapp.html link.
+All files must be in the same repo folder for same-origin iframe support.
+
+--------------------------------------------------------------------------------
+FILES IN THE PROJECT
+--------------------------------------------------------------------------------
+Existing files (read-only reference):
+  forge.html              — Card Forge: card/deck/game builder
+  layout-builder.html     — Visual board designer
+  playtest.html           — Game table / playtest mode
+  lifeapp.html            — Chronicle: characters, world, books, notes
+  card-forge-manual.html  — Manual / documentation
+
+New files built:
+  forge-room.html         — The 3D room (single file, updated each phase)
+  FORGE_ROOM_PROJECT.txt  — This tracking file (increment version on each edit)
+
+Planned (Phase 5):
+  forge-room-manifest.json — PWA manifest
+  forge-room-sw.js         — Service worker for offline support
+
+--------------------------------------------------------------------------------
+LOCALSTORAGE KEYS
+--------------------------------------------------------------------------------
+Used by existing apps:
+  cardforge_v3              — Cards, decks, fusions, game configs (forge.html)
+  cardforge_layouts_v2      — Saved board layouts (layout-builder.html)
+  cardforge_active_layout   — Currently active layout (playtest.html)
+  chronicle_*               — Chronicle app data (lifeapp.html)
+
+Added by forge-room.html:
+  forge_room_whiteboard_east  — East wall canvas (base64 JPEG ~50-150KB)
+  forge_room_whiteboard_west  — West wall canvas (base64 JPEG ~50-150KB)
+  forge_room_settings         — Room settings JSON
+  forge_room_camera_pos       — Last camera position (planned Phase 5)
+  forge_room_sticky_notes     — Sticky notes on walls (planned Phase 5)
+
+--------------------------------------------------------------------------------
+THE ROOM — LAYOUT
+--------------------------------------------------------------------------------
+Aesthetic: BRIGHT ART GALLERY — white plaster walls, warm cream tile floor,
+light oak trim, gallery track lighting overhead. Cards and whiteboard drawings
+read clearly against the bright background.
+
+Colors:
+  Walls:   #f5f2ec plaster white with subtle panel seams
+  Floor:   #e8e0d0 cream polished tile, 32px grid with grout lines
+  Ceiling: #faf8f4 off-white
+  Trim:    Warm oak #b87840
+  HUD:     Dark gold on cream (#7a5010 text, rgba(255,252,240) backgrounds)
+  Fog:     #f0ede6, range 14-30 units
+
+Lighting (gallery style — no flicker):
+  AmbientLight: 0xfff8f0 at 1.2 intensity
+  7x PointLight: 0xfff5e8 at 0.9, range 12 — track lighting positions on ceiling
+  1x DirectionalLight: wall-wash on north (card gallery) wall
+  1x PointLight: 0xfff8ee over playtest table
+  No torches. No flicker animation.
+
+  NORTH WALL   — Card Gallery
+                 Cards rendered as framed art with gold borders.
+                 Type-coloured glow per card.
+                 5 cards per page, PREV/NEXT pagination.
+                 Tap card → full detail modal.
+                 Demo cards shown if no Forge data exists.
+
+  SOUTH WALL   — Chronicle Panels (Phase 3)
+                 Full iframe embeds of lifeapp.html sections.
+                 4 panels: Characters, World, Books, Notes.
+                 Tap → fullscreen modal with live iframe.
+
+  EAST WALL    — Whiteboard #1
+                 Full S Pen / touch drawing. Persists to localStorage.
+                 Visible as texture on wall from across room.
+
+  WEST WALL    — Whiteboard #2
+                 Same as East. For game notes / reference.
+
+  CENTER       — Playtest Table
+                 Green felt, wooden legs, gold trim.
+                 Tap → modal to launch playtest.html.
+
+  CEILING      — Off-white with ceiling fixture meshes at track light positions.
+  FLOOR        — Cream tile, navigable.
+  PILLARS      — Light oak along both side walls every 4 units.
+  BEAMS        — Light oak across ceiling every 4 units.
+  LABELS       — Dark gold banners above each wall/feature.
+  PARTICLES    — 120 subtle warm dust motes (opacity 0.18).
+
+--------------------------------------------------------------------------------
+NAVIGATION — ALL INPUT METHODS
+--------------------------------------------------------------------------------
+GAMEPAD (GameSir G8+ — Gamepad API, Xbox layout):
+  Left stick        — Move (forward/back/strafe)
+  Right stick       — Look (pan camera) — UP = look up (correct)
+  A (btn 0)         — Interact / select
+  B (btn 1)         — Back / close modal or whiteboard
+  X (btn 2)         — Jump to card gallery (north wall)
+  Y (btn 3)         — Toggle draw mode / close whiteboard
+  LT (btn 6/axis)   — Sprint (2.5x speed)
+  Start (btn 9)     — Open settings
+  D-pad Up (12)     — Gallery prev page
+  D-pad Down (13)   — Gallery next page
+
+  NOTE: LT mapped as btn[6].value — test on device, may need axes[6] instead.
+
+TOUCH / ON-SCREEN JOYSTICKS (works without controller):
+  Left VJ   — Move
+  Right VJ  — Look — UP = look up (correct)
+  Tap       — Interact with highlighted object
+  Action buttons: DRAW / USE / CARDS
+
+KEYBOARD + MOUSE:
+  WASD / Arrows — Move | Shift — Sprint
+  Mouse drag    — Look (up = up, correct)
+  E             — Interact
+  Escape        — Close modal or whiteboard
+  F             — Fullscreen
+  Q             — Open East whiteboard
+  R             — Open West whiteboard
+
+CAMERA:
+  Euler YXZ. Pitch clamped ±81.8°. Height locked Y=1.7. Boundary clamped.
+  VERTICAL LOOK: CORRECTED — pushing up looks up on all input methods.
+  "Invert Y" toggle in settings reverses from the correct default.
+
+--------------------------------------------------------------------------------
+CONTROLLER MAPPING — GameSir G8+
+--------------------------------------------------------------------------------
+Standard Web Gamepad API. Detected as Xbox-style in Chrome Android.
+  Buttons: 0=A, 1=B, 2=X, 3=Y, 4=LB, 5=RB, 6=LT, 7=RT, 8=Select, 9=Start
+  Axes:    0=LeftX, 1=LeftY, 2=RightX, 3=RightY
+  Deadzone: 0.15 (configurable in settings)
+
+--------------------------------------------------------------------------------
+WHITEBOARD — PHASE 2 COMPLETE
+--------------------------------------------------------------------------------
+Two whiteboards: East wall and West wall.
+
+Draw Mode OFF:
+  - Normal navigation
+  - Saved drawings shown as textures on 3D walls
+  - Walls have subtle gold emissive glow when content is saved
+
+Draw Mode ON (DRAW button / Y gamepad / Q or R key):
+  - Full-screen 2D canvas overlay
+  - Navigation input disabled
+  - Wall auto-selected by camera facing direction
+
+Toolbar: 7 colors, 5 sizes, eraser, undo (20 steps), clear, save, PNG export,
+         wall switch button
+
+Input: PointerEvent API — touch, mouse, S Pen all handled uniformly
+Palm rejection: contactSize > 25px ignored during pen (pointerType="pen") use
+Strokes: quadratic bezier curves for smoothness
+
+Persistence:
+  Keys: forge_room_whiteboard_east / forge_room_whiteboard_west
+  Format: base64 JPEG @ 0.75 quality (~50-150KB per wall)
+  Auto-save: debounced 800ms after last stroke
+  On load: images applied as live Three.js MeshLambertMaterial textures
+
+--------------------------------------------------------------------------------
+CHRONICLE PANELS — PHASE 3 DETAIL
+--------------------------------------------------------------------------------
+South wall has 4 panels showing Chronicle app sections.
+
+Approach: fullscreen modal with iframe embedding lifeapp.html
+  - Same-origin (all files in same GitHub repo folder)
+  - Full interaction within the modal — not just a link
+  - Each panel taps to open that Chronicle tab directly
+  - Deep-link via URL hash: lifeapp.html#characters etc.
+    (requires lifeapp.html to read window.location.hash on load
+     and switch to that tab — may need a small patch to lifeapp.html,
+     or we pass a postMessage after iframe loads)
+
+Panel appearance on south wall:
+  - Larger, more prominent than Phase 1 stubs
+  - Each panel shows live preview data pulled from localStorage
+    (e.g. character count, book title, recent note snippet)
+  - Tap → fullscreen iframe modal with close button
+  - Gamepad B closes the iframe modal
+
+Chronicle tabs to open:
+  characters  — Character profiles
+  world       — World/lore entries
+  books       — Writing / chapters
+  notes       — Quick notes / journal
+
+--------------------------------------------------------------------------------
+SYNC ARCHITECTURE
+--------------------------------------------------------------------------------
+forge.html   ←─────────────────────────────→  forge-room.html
+lifeapp.html ←──── localStorage (shared) ──→  forge-room.html
+
+StorageEvent listener: card gallery auto-refreshes when cardforge_v3 changes.
+Chronicle panels: live iframe (same origin, full interaction).
+Whiteboard: auto-saves to localStorage, applies texture to 3D wall.
+
+--------------------------------------------------------------------------------
+BUILD PHASES — STATUS
+--------------------------------------------------------------------------------
+PHASE 1 — ROOM + CARD GALLERY ✅ COMPLETE
+  [x] Three.js room geometry (walls, floor, ceiling, beams, pillars)
+  [x] Procedural textures (plaster walls, cream tile floor, oak wood)
+  [x] Gallery track lighting (bright, no flicker)
+  [x] Dust mote particle system
+  [x] Scene fog
+  [x] First-person camera — VERTICAL LOOK CORRECTED
+  [x] Animated jump-to-wall
+  [x] Virtual joysticks (move + look, both corrected)
+  [x] Gamepad — full GameSir G8+ mapping
+  [x] Keyboard + mouse
+  [x] Room boundary clamping
+  [x] Card gallery north wall — reads cardforge_v3
+  [x] Per-card canvas textures with type colors, stats, cost
+  [x] 5 cards per page, pagination
+  [x] Demo cards fallback
+  [x] Card sort: name / cost / type
+  [x] Card tap → detail modal
+  [x] Playtest table (green felt, wood legs)
+  [x] Table tap → modal to launch playtest.html
+  [x] Chronicle panel stubs × 4 on south wall
+  [x] Wall labels (gold banners)
+  [x] HUD: crosshair, hint, room label, top bar
+  [x] Action buttons: DRAW / USE / CARDS
+  [x] Wall nav bar (PREV/NEXT + page count)
+  [x] Settings menu: FOV, sensitivity, speed, invertY, joystick,
+      perf mode, card sort, deadzone
+  [x] Toast notifications
+  [x] Loading screen with progress bar
+  [x] StorageEvent listener (live gallery sync)
+  [x] Raycaster interaction (every 3 frames)
+
+PHASE 1 BUG FIXES ✅ COMPLETE
+  [x] Vertical look inverted — FIXED (all 3 input methods)
+  [x] Invert Y toggle now inverts from correct baseline
+
+PHASE 1 RESKIN ✅ COMPLETE
+  [x] Dark dungeon → bright art gallery aesthetic
+  [x] White plaster walls with subtle panel seams
+  [x] Cream polished tile floor
+  [x] Off-white ceiling
+  [x] Light oak beams, pillars, table legs
+  [x] Gallery track lighting (7 overhead fixtures)
+  [x] HUD text updated to dark-gold-on-cream for readability
+  [x] Loading screen updated to gallery theme
+
+PHASE 2 — WHITEBOARDS ✅ COMPLETE
+  [x] East + West wall whiteboards
+  [x] PointerEvent input (touch + S Pen + mouse unified)
+  [x] S Pen palm rejection (contactSize > 25px)
+  [x] Smooth quadratic bezier strokes
+  [x] 7 color swatches
+  [x] 5 pen sizes
+  [x] Eraser mode (destination-out composite)
+  [x] Undo 20 steps (ImageData snapshots)
+  [x] Clear with confirm
+  [x] Auto-save debounced 800ms → localStorage JPEG
+  [x] Manual save button
+  [x] Load drawings as 3D wall textures on init
+  [x] Wall emissive glow when content saved
+  [x] PNG export download
+  [x] Wall switch button (east ↔ west without closing)
+  [x] Wall auto-detection by camera facing direction
+  [x] Draw mode disables navigation input
+  [x] Gamepad Y / Escape / B close whiteboard
+  [x] Q/R keyboard shortcuts for east/west walls
+  [x] Subtle grid background on canvas
+  [x] Canvas resize handling
+  [x] Save status indicator (SAVED / UNSAVED / CLEARED)
+  [x] fonts.ready await before gallery build (fixes canvas font timing)
+
+PHASE 3 — CHRONICLE PANELS ⬅ IN PROGRESS
+  [ ] Upgraded south wall panel visuals (live data preview)
+  [ ] Fullscreen iframe modal system
+  [ ] lifeapp.html deep-link via hash or postMessage
+  [ ] Tap panel → opens Chronicle at correct tab
+  [ ] Gamepad B / Escape closes iframe modal
+  [ ] Scroll support inside iframe (touch + gamepad D-pad)
+  [ ] Panel shows live counts from localStorage
+      (e.g. "12 characters", "3 books", "7 notes")
+
+PHASE 4 — PLAYTEST TABLE (planned)
+  [ ] Card spread preview on table surface (active deck)
+  [ ] Embedded playtest modal (iframe instead of new tab)
+  [ ] Dice roll button on table surface
+
+PHASE 5 — POLISH + EXTRAS (planned)
+  [ ] Ambient audio toggle (gallery ambience / soft music)
+  [ ] Notice board with sticky notes (localStorage)
+  [ ] Bookshelf showing Chronicle book titles
+  [ ] Second room behind a door
+  [ ] Room lighting presets (Gallery / Torch / Moonlight / Arcane)
+  [ ] PWA manifest (forge-room-manifest.json)
+  [ ] Service worker (forge-room-sw.js)
+  [ ] Install prompt
+  [ ] FPS counter toggle in settings
+  [ ] Camera position saved/restored between sessions
+  [ ] LOD for distant cards (colored rect, not full texture)
+  [ ] Performance: merge static geometry into BufferGeometry
+
+PHASE 6 — LIVE SYNC ENHANCEMENTS (planned)
+  [ ] Notification dot on Chronicle panels when lifeapp data changes
+  [ ] Export / import from within the room
+  [ ] Multi-tab detection
+
+--------------------------------------------------------------------------------
+SETTINGS (implemented)
+--------------------------------------------------------------------------------
+  Camera FOV:       55–100° (default 75)
+  Look sensitivity: 0.5–6.0 (default 2.5)
+  Move speed:       1–10 (default 4.0)
+  Invert Y:         toggle — inverts from CORRECT baseline (default off)
+  Virtual joystick: show/hide (default show)
+  Performance mode: lower quality, better FPS (default off)
+  Card sort:        name / cost / type (default name)
+  Gamepad deadzone: 0.05–0.35 (default 0.15)
+
+All saved to forge_room_settings in localStorage.
+
+--------------------------------------------------------------------------------
+KNOWN ISSUES / NOTES
+--------------------------------------------------------------------------------
+- GameSir G8+ LT: mapped as btn[6].value. Test on device — if sprint doesn't
+  work, try reading axes[6] instead.
+- Chronicle iframe deep-linking: lifeapp.html may need a small patch to read
+  location.hash on load and switch to that tab. Alternative: postMessage
+  from parent after iframe loads. Evaluate during Phase 3.
+- Perf mode toggle: requires page reload to fully apply renderer settings
+  (antialias, shadowMap). Runtime changes apply to particles/textures only.
+- Card texture fonts: fixed with document.fonts.ready await in init().
+- localStorage size: whiteboard JPEGs ~100KB each. Total budget ~5MB.
+  With 2 whiteboards + app data, should be well within limit.
+
+--------------------------------------------------------------------------------
+CONVERSATION / SESSION NOTES
+--------------------------------------------------------------------------------
+2026-02-23 — Session 1: Planning
+  - Primary device: Android phone, GameSir G8+, S Pen, GitHub Pages hosting
+  - Both flat app + 3D room as separate PWAs sharing same localStorage
+  - Build in phases. Whiteboard drawings must persist. Chronicle panels live.
+
+2026-02-23 — Session 2: Phase 1 built
+  - forge-room.html created with full room, lighting, controls, card gallery,
+    table, chronicle stubs, settings, virtual joysticks.
+  - Confirmed: on-screen joysticks work fully without controller.
+
+2026-02-23 — Session 3: Phase 2 + fixes
+  - Full whiteboard system built (Phase 2 complete).
+  - Bug fix: vertical look inverted — corrected on all 3 input methods.
+  - Reskin: dark dungeon → bright art gallery (white walls, cream floor).
+    User feedback: better for drawing visibility, cleaner aesthetic.
+  - Phase 3 (Chronicle panels) next.
+
+--------------------------------------------------------------------------------
+HOW TO UPDATE THIS FILE
+--------------------------------------------------------------------------------
+Plain text. Edit directly or ask Claude to update it.
+Always increment version number in header when saving a new version.
+Add new session notes at bottom of SESSION NOTES section.
+
+When starting a new conversation:
+1. Upload FORGE_ROOM_PROJECT.txt (latest version)
+2. Upload forge-room.html (current build)
+3. State which phase / what to work on
+
+================================================================================
+END OF DOCUMENT — v3
+================================================================================
