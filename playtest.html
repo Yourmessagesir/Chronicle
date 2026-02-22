@@ -1013,7 +1013,7 @@ function openClaimToast(zoneId){
   const z=G.layout?.zones?.find(x=>x.id===zoneId);
   const title=document.getElementById('claimToastTitle');
   if(title)title.textContent=(z?.spaceNum!=null?'#'+z.spaceNum+' — ':'')+esc(z?.label||'Space');
-  const isOwned=G.zoneOwners[zoneId]!=null;
+  const isOwned=G.zoneOwners?.[zoneId]!=null;
   const claimBtn=document.getElementById('claimBtn');
   const unclaimBtn=document.getElementById('unclaimBtn');
   if(claimBtn)claimBtn.style.display=isOwned?'none':'block';
@@ -2099,7 +2099,6 @@ document.addEventListener('mouseup',()=>{
 // ═══════════════════════════════════════════════════
 //  BOARDGAME MODE (freeplay — no decks, just board + dice + pieces + counters)
 // ═══════════════════════════════════════════════════
-function isBoardGameMode(){return G&&(G.game.mode==='boardgame'||G.game.mode==='freeplay');}
 function startBoardGame(layout){
   // Create a minimal game state for boardgame mode
   const game={
@@ -2120,7 +2119,8 @@ function startBoardGame(layout){
   G={game,layout,players,turn:0,activePlayer:0,phase:0,
     phases:game.phases,log:[],over:false,winner:null,
     selCard:null,selOwner:null,selLocation:null,
-    grid:null,lanes:null,comboStack:[],comboScore:0,fusions:[],constructStage:[]};
+    grid:null,lanes:null,comboStack:[],comboScore:0,fusions:[],constructStage:[],
+    zoneOwners:{}};
   pieces=[];
   showGameScreen(game,layout);
   initCounters();
