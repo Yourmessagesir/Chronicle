@@ -59,6 +59,28 @@ header h1{font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);letter-sp
 .pz-cards{flex:1;overflow:hidden;display:flex;flex-wrap:wrap;gap:3px;padding:4px;align-content:flex-start;}
 .pz-cards.horizontal{flex-direction:row;align-items:center;}
 .pz-cards.vertical{flex-direction:column;}
+/* ── BOARD SPACE (path zone) ── */
+.play-space{position:absolute;border:2px solid;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:box-shadow .15s,border-color .15s;}
+.play-space:hover{box-shadow:0 0 0 3px rgba(201,168,76,.4);}
+.play-space.claimed{box-shadow:0 0 0 3px var(--claimColor,#c9a84c);}
+.ps-num{font-family:'Cinzel',serif;font-size:13px;font-weight:700;pointer-events:none;line-height:1;}
+.ps-lbl{font-family:'Cinzel',serif;font-size:7px;opacity:.8;pointer-events:none;text-align:center;padding:0 3px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+.ps-owner{position:absolute;top:2px;right:2px;font-size:9px;font-family:'Cinzel',serif;font-weight:700;line-height:1;}
+.ps-type-badge{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:8px;opacity:.7;pointer-events:none;}
+/* ── PATH CONNECTIONS ── */
+#boardConnections{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:0;}
+/* ── CLAIM BUTTON in board game mode ── */
+.claim-toast{position:fixed;bottom:160px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--gold);padding:10px 18px;border-radius:8px;z-index:800;display:none;flex-direction:column;align-items:center;gap:8px;min-width:180px;}
+.claim-toast.open{display:flex;}
+.claim-toast h4{font-family:'Cinzel',serif;font-size:10px;color:var(--gold2);letter-spacing:.06em;}
+.claim-btn-row{display:flex;gap:8px;}
+.claim-btn-row button{flex:1;padding:7px 10px;border-radius:5px;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);}
+.claim-btn-row button.primary{background:var(--gold);color:#1a1400;border-color:var(--gold);font-weight:700;}
+.claim-btn-row button.danger{border-color:var(--red);color:var(--red);}
+/* ── OWNED SPACES display ── */
+.owned-spaces-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.owned-spaces-row .osn{font-family:'Cinzel',serif;font-size:10px;color:var(--gold2);}
+.owned-spaces-row .osc{font-size:11px;}
 /* ── MINI CARD ── */
 .mc{width:52px;height:72px;border:1.5px solid var(--border2);border-radius:4px;background:var(--bg3);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px;transition:all .12s;position:relative;flex-shrink:0;}
 .mc:hover{border-color:var(--gold);transform:scale(1.06);z-index:10;}
@@ -217,6 +239,16 @@ header h1{font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);letter-sp
 </div>
 
 <!-- ── DICE PANEL ── -->
+<!-- CLAIM SPACE PANEL (board game mode) -->
+<div id="claimToast" class="claim-toast">
+  <h4 id="claimToastTitle">BOARD SPACE</h4>
+  <div class="claim-btn-row">
+    <button class="primary" id="claimBtn" onclick="claimSpace()">⛳ CLAIM</button>
+    <button class="danger" id="unclaimBtn" onclick="unclaimSpace()" style="display:none;">✕ UNCLAIM</button>
+    <button onclick="closeClaimToast()">CANCEL</button>
+  </div>
+  <div id="claimPlayerRow" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;"></div>
+</div>
 <div id="dicePanel">
   <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--text3);letter-spacing:.08em;margin-bottom:8px;">🎲 DICE ROLLER</div>
   <div id="diceResult">—</div>
@@ -406,6 +438,8 @@ function _initGame(game, layout){
     // fusions
     fusions:D.fusions.filter(f=>!f.gameId||f.gameId===game.id),
     constructStage:[],
+    // zone ownership (board game mode)
+    zoneOwners:{}, // {zoneId: playerIndex}
   };
   if(game.mode==='grid'||game.mode==='traverse')initGrid(game);
   if(game.mode==='lanes')initLanes(game);
@@ -847,6 +881,43 @@ function buildBoard(layout, game){
       bg.style.cssText=`position:absolute;inset:0;border-radius:6px;pointer-events:none;z-index:0;background:url(${layout.bgImage}) center/cover no-repeat;opacity:${layout.bgOpacity!=null?layout.bgOpacity:0.35};`;
       board.appendChild(bg);
     }
+    // SVG layer for path connections
+    const svgNS='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(svgNS,'svg');
+    svg.id='boardConnections';
+    svg.setAttribute('width',layout.canvasW||800);
+    svg.setAttribute('height',layout.canvasH||580);
+    svg.setAttribute('viewBox',`0 0 ${layout.canvasW||800} ${layout.canvasH||580}`);
+    const defs=document.createElementNS(svgNS,'defs');
+    const marker=document.createElementNS(svgNS,'marker');
+    marker.setAttribute('id','ptArrow');marker.setAttribute('markerWidth','8');marker.setAttribute('markerHeight','6');
+    marker.setAttribute('refX','8');marker.setAttribute('refY','3');marker.setAttribute('orient','auto');
+    const poly=document.createElementNS(svgNS,'polygon');
+    poly.setAttribute('points','0 0, 8 3, 0 6');poly.setAttribute('fill','rgba(201,168,76,.5)');
+    marker.appendChild(poly);defs.appendChild(marker);svg.appendChild(defs);
+    // Draw connections
+    const conns=layout.connections||[];
+    conns.forEach(conn=>{
+      const a=layout.zones.find(z=>z.id===conn.from);
+      const b=layout.zones.find(z=>z.id===conn.to);
+      if(!a||!b)return;
+      const ax=a.x+a.w/2, ay=a.y+a.h/2;
+      const bx=b.x+b.w/2, by=b.y+b.h/2;
+      const dist=Math.sqrt((bx-ax)**2+(by-ay)**2);
+      const r=Math.min(a.w,a.h)/2+4;
+      const ratio=dist>0?(dist-r)/dist:1;
+      const line=document.createElementNS(svgNS,'line');
+      line.setAttribute('x1',ax+(bx-ax)*(1-ratio));
+      line.setAttribute('y1',ay+(by-ay)*(1-ratio));
+      line.setAttribute('x2',ax+(bx-ax)*ratio);
+      line.setAttribute('y2',ay+(by-ay)*ratio);
+      line.setAttribute('stroke','rgba(201,168,76,.45)');
+      line.setAttribute('stroke-width','2');
+      line.setAttribute('stroke-dasharray','6 3');
+      line.setAttribute('marker-end','url(#ptArrow)');
+      svg.appendChild(line);
+    });
+    board.appendChild(svg);
     // Build from layout zones
     layout.zones.forEach(z=>{
       if(z.isToken){
@@ -876,6 +947,11 @@ function buildBoard(layout, game){
         board.appendChild(tk);
         return;
       }
+      if(z.type==='space'){
+        // Board Space — circular numbered zone, claimable in board game mode
+        renderBoardSpace(z, board);
+        return;
+      }
       const el=document.createElement('div');
       el.className='play-zone';
       el.id='pz_'+z.type+'_'+(z.player||'any')+'_'+z.id;
@@ -895,6 +971,98 @@ function buildBoard(layout, game){
   if(game.mode==='grid'||game.mode==='traverse'){
     buildGridOverlay(game);
   }
+}
+// ═══════════════════════════════════════════════════
+//  BOARD SPACE ZONES (path/numbered spaces)
+// ═══════════════════════════════════════════════════
+const PLAYER_COLORS=['#4488cc','#cc4444','#44aa66','#c9a84c','#8855cc','#cc8844'];
+let _claimTargetZoneId=null;
+function renderBoardSpace(z, board){
+  const el=document.createElement('div');
+  el.className='play-space';
+  el.id='ps_'+z.id;
+  el.dataset.zoneId=z.id;
+  const ownerIdx=G?.zoneOwners?.[z.id];
+  const isOwned=ownerIdx!=null;
+  const ownerColor=isOwned?PLAYER_COLORS[ownerIdx%PLAYER_COLORS.length]:null;
+  let bgColor=z.color||'rgba(100,100,120,.2)';
+  let borderColor=z.border||'#606480';
+  if(isOwned){bgColor=ownerColor+'33';borderColor=ownerColor;}
+  // Space type tints
+  const typeColors={start:'rgba(68,200,100,.15)',corner:'rgba(80,80,80,.3)',jail:'rgba(200,68,68,.15)',chance:'rgba(200,160,68,.15)',bonus:'rgba(100,200,68,.15)'};
+  if(z.spaceType&&z.spaceType!=='normal'&&!isOwned)bgColor=(typeColors[z.spaceType]||bgColor);
+  el.style.cssText=`left:${z.x}px;top:${z.y}px;width:${z.w}px;height:${z.h}px;border-color:${borderColor};background:${bgColor};opacity:${z.opacity!=null?z.opacity:1};z-index:2;`;
+  if(isOwned)el.style.setProperty('--claimColor',ownerColor);
+  if(isOwned)el.classList.add('claimed');
+  const numLabel=z.spaceNum!=null?`<span class="ps-num" style="color:${isOwned?ownerColor:'inherit'}">${z.spaceNum}</span>`:'';
+  const lbl=z.label&&z.label!=='Board Space'?`<span class="ps-lbl">${esc(z.label)}</span>`:'';
+  const ownerBadge=isOwned?`<span class="ps-owner" style="color:${ownerColor}">P${ownerIdx+1}</span>`:'';
+  const typeBadge=z.spaceType&&z.spaceType!=='normal'?`<span class="ps-type-badge">${{start:'🏁',corner:'🔲',jail:'🚔',chance:'❓',bonus:'⭐'}[z.spaceType]||''}</span>`:'';
+  el.innerHTML=numLabel+lbl+ownerBadge+typeBadge;
+  if(z.claimable&&isBoardGameMode()){
+    el.addEventListener('click',()=>openClaimToast(z.id));
+  }
+  board.appendChild(el);
+}
+function isBoardGameMode(){
+  return G&&(G.game.mode==='boardgame'||G.game.mode==='freeplay');
+}
+function openClaimToast(zoneId){
+  if(!G)return;
+  _claimTargetZoneId=zoneId;
+  const z=G.layout?.zones?.find(x=>x.id===zoneId);
+  const title=document.getElementById('claimToastTitle');
+  if(title)title.textContent=(z?.spaceNum!=null?'#'+z.spaceNum+' — ':'')+esc(z?.label||'Space');
+  const isOwned=G.zoneOwners[zoneId]!=null;
+  const claimBtn=document.getElementById('claimBtn');
+  const unclaimBtn=document.getElementById('unclaimBtn');
+  if(claimBtn)claimBtn.style.display=isOwned?'none':'block';
+  if(unclaimBtn)unclaimBtn.style.display=isOwned?'block':'none';
+  // Player selection buttons
+  const row=document.getElementById('claimPlayerRow');
+  if(row){
+    row.innerHTML=G.players.map((p,i)=>`<button onclick="claimSpaceByPlayer(${i})" style="padding:5px 10px;border-radius:4px;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border:2px solid ${PLAYER_COLORS[i%PLAYER_COLORS.length]};background:${G.zoneOwners[_claimTargetZoneId]===i?PLAYER_COLORS[i%PLAYER_COLORS.length]+'44':'var(--bg3)'};color:${PLAYER_COLORS[i%PLAYER_COLORS.length]};">${p.name}</button>`).join('');
+  }
+  document.getElementById('claimToast').classList.add('open');
+}
+function claimSpaceByPlayer(pIdx){
+  if(!G||_claimTargetZoneId==null)return;
+  G.zoneOwners[_claimTargetZoneId]=pIdx;
+  const z=G.layout?.zones?.find(x=>x.id===_claimTargetZoneId);
+  glog(`${G.players[pIdx].name} claimed Space${z?.spaceNum!=null?' #'+z.spaceNum:''}${z?.label&&z.label!=='Board Space'?' ('+z.label+')':''}.`,'good');
+  closeClaimToast();
+  // Re-render just the space element
+  const board=document.getElementById('board');
+  const old=document.getElementById('ps_'+_claimTargetZoneId);
+  if(old&&z){old.replaceWith((()=>{const d=document.createElement('div');renderBoardSpace(z,{appendChild:c=>d.appendChild(c)});return d.firstChild;})());}
+  renderCounters();
+}
+function claimSpace(){
+  if(!G||_claimTargetZoneId==null)return;
+  claimSpaceByPlayer(G.activePlayer);
+}
+function unclaimSpace(){
+  if(!G||_claimTargetZoneId==null)return;
+  const z=G.layout?.zones?.find(x=>x.id===_claimTargetZoneId);
+  delete G.zoneOwners[_claimTargetZoneId];
+  glog(`Space${z?.spaceNum!=null?' #'+z.spaceNum:''} unclaimed.`);
+  closeClaimToast();
+  const board=document.getElementById('board');
+  const old=document.getElementById('ps_'+_claimTargetZoneId);
+  if(old&&z){old.replaceWith((()=>{const d=document.createElement('div');renderBoardSpace(z,{appendChild:c=>d.appendChild(c)});return d.firstChild;})());}
+  renderCounters();
+}
+function closeClaimToast(){document.getElementById('claimToast').classList.remove('open');_claimTargetZoneId=null;}
+function refreshAllSpaces(){
+  if(!G||!G.layout?.zones)return;
+  G.layout.zones.filter(z=>z.type==='space').forEach(z=>{
+    const old=document.getElementById('ps_'+z.id);
+    if(!old)return;
+    const board=document.getElementById('board');
+    const newEl=document.createElement('div');
+    renderBoardSpace(z,{appendChild:c=>newEl.appendChild(c)});
+    if(newEl.firstChild)old.replaceWith(newEl.firstChild);
+  });
 }
 function buildDefaultLayout(game, board){
   const mode=game.mode||'standard';
@@ -1715,6 +1883,24 @@ function renderCounterPanel(){
   if(!el)return;
   const players=G?.players||[];
   let html='<div style="padding:8px;">';
+  // ── Owned Spaces (board game mode) ──
+  if(G&&isBoardGameMode()&&G.layout?.zones){
+    const spaces=G.layout.zones.filter(z=>z.type==='space'&&z.claimable);
+    if(spaces.length){
+      html+=`<div style="font-family:'Cinzel',serif;font-size:9px;color:var(--text3);letter-spacing:.07em;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border);">OWNED SPACES</div>`;
+      players.forEach((p,i)=>{
+        const owned=spaces.filter(z=>G.zoneOwners[z.id]===i);
+        const col=PLAYER_COLORS[i%PLAYER_COLORS.length];
+        html+=`<div class="owned-spaces-row" style="border-color:${col}22;">
+          <span class="osn" style="color:${col};">${esc(p.name)}</span>
+          <span class="osc" style="color:${col};">${owned.length} space${owned.length!==1?'s':''}</span>
+        </div>`;
+      });
+      const unclaimed=spaces.filter(z=>G.zoneOwners[z.id]==null);
+      html+=`<div class="owned-spaces-row"><span style="font-size:10px;color:var(--text3);">Unclaimed</span><span style="font-size:10px;color:var(--text3);">${unclaimed.length}</span></div>`;
+      html+='<div style="height:8px;"></div>';
+    }
+  }
   // Custom counter add
   html+=`<button onclick="addCustomCounter()" style="width:100%;margin-bottom:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:6px;border-radius:5px;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;">+ ADD COUNTER</button>`;
   gameCounters.forEach((ctr,ci)=>{
@@ -1747,6 +1933,7 @@ function renderCounterPanel(){
   html+='</div>';
   el.innerHTML=html;
 }
+function renderCounters(){renderCounterPanel();} // alias
 function adjCtr(ci,key,delta){
   if(!gameCounters[ci])return;
   gameCounters[ci].vals[key]=(gameCounters[ci].vals[key]||0)+delta;

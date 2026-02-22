@@ -163,6 +163,16 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 /* ── TOKEN ZONES ── */
 .token-zone{border-radius:50%!important;border-style:solid;}
 #palPane-zones{display:flex;flex-direction:column;}
+/* ── SPACE ZONES ── */
+.space-zone{border-radius:50%!important;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.space-num{font-family:"Cinzel",serif;font-size:13px;font-weight:700;pointer-events:none;line-height:1;}
+.space-lbl{font-family:"Cinzel",serif;font-size:7px;opacity:.7;pointer-events:none;text-align:center;padding:0 2px;line-height:1.2;}
+/* ── PATH CONNECTIONS SVG ── */
+#connectionsLayer{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:0;}
+.conn-line{stroke-width:2;stroke-dasharray:6 3;fill:none;opacity:.55;}
+.ctbtn.pathon{border-color:#50c864;color:#50c864;}
+/* ── OWNERSHIP TINT on space zones in LB ── */
+.space-zone.claimable::after{content:"⛳";position:absolute;bottom:2px;right:2px;font-size:9px;opacity:.5;pointer-events:none;}
 </style>
 </head>
 <body>
@@ -195,6 +205,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       <button class="ctbtn" id="settingsBtn" onclick="toggleSettings()">&#9881;</button>
       <button class="ctbtn on" id="moveBtn" onclick="setMode('move')">&#10011; MOVE</button>
       <button class="ctbtn" id="delBtn" onclick="setMode('delete')">&#128465; DEL</button>
+      <button class="ctbtn" id="pathBtn" onclick="setMode('path')" title="Connect spaces with path arrows">&#10140; PATH</button>
       <button class="ctbtn" id="snapBtn" onclick="toggleSnap()">&#9920; SNAP</button>
       <button class="ctbtn on" id="lblBtn" onclick="toggleLabels()">&#128270; LBL</button>
       <button class="ctbtn" onclick="openBgModal()">&#127776; BG</button>
@@ -216,11 +227,14 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       </div>
       <div class="cs-row">
         <button class="ctbtn" onclick="clearCanvas()">&#128465; CLEAR ALL</button>
+        <button class="ctbtn" onclick="autoNumberSpaces()">&#35; AUTO-NUMBER SPACES</button>
+        <button class="ctbtn" onclick="clearConnections()">&#8960; CLEAR PATHS</button>
       </div>
     </div>
     <div id="canvasScroller">
       <div id="canvasInner">
         <div id="canvas">
+          <svg id="connectionsLayer" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="rgba(201,168,76,.6)"/></marker></defs></svg>
           <div id="canvasGuide">
             <div style="font-size:44px;margin-bottom:12px;">&#128506;</div>
             <div style="font-family:Cinzel,serif;font-size:11px;letter-spacing:.12em;margin-bottom:6px;">ZONES TAB &#8594; TAP A ZONE TYPE</div>
@@ -350,10 +364,9 @@ const ZONE_TYPES=[
   {type:"score",icon:"\u1f3c6",name:"Score Tracker",desc:"Points / objectives",color:"rgba(201,168,76,.1)",border:"#c9a84c",w:80,h:50},
   {type:"combo_stack",icon:"\u1f517",name:"Combo Stack",desc:"Co-op combo area",color:"rgba(200,100,200,.12)",border:"#c864c8",w:200,h:100},
   {type:"custom",icon:"\u25fb",name:"Custom Zone",desc:"Freely named zone",color:"rgba(80,80,100,.15)",border:"#505064",w:100,h:80},
+  {type:"space",icon:"\u2b21",name:"Board Space",desc:"Numbered path space",color:"rgba(100,100,120,.2)",border:"#606480",w:64,h:64},
 ];
-
 const TOKEN_TYPES=[
-  {type:'damage',icon:'💢',name:'Damage',desc:'Damage counter',color:'rgba(204,68,68,.25)',border:'#cc4444',w:48,h:48},
   {type:'buff',icon:'⬆',name:'Buff',desc:'+1/+1 or stat boost',color:'rgba(68,204,68,.2)',border:'#44cc44',w:48,h:48},
   {type:'debuff',icon:'⬇',name:'Debuff',desc:'−1/−1 or stat drop',color:'rgba(204,100,68,.2)',border:'#cc6444',w:48,h:48},
   {type:'shield',icon:'🛡',name:'Shield',desc:'Block / protect',color:'rgba(88,136,220,.22)',border:'#5588dd',w:48,h:48},
@@ -366,9 +379,12 @@ const TOKEN_TYPES=[
   {type:'coin',icon:'🪙',name:'Coin',desc:'Currency / trade token',color:'rgba(201,168,76,.25)',border:'#c9a84c',w:48,h:48},
   {type:'custom_token',icon:'◉',name:'Custom Token',desc:'Freely named token',color:'rgba(100,100,120,.2)',border:'#646478',w:48,h:48},
 ];
-let zones=[],selectedId=null,savedLayouts=[],currentMode="move",zoomLevel=1,lastDeleted=null;
+let zones=[],connections=[],selectedId=null,savedLayouts=[],currentMode="move",zoomLevel=1,lastDeleted=null;
+let pathSelectFirst=null; // for path-connection mode
 let drag=null,resize=null,shDrag=null,dragMoved=false;
 let bgImage=null,bgOpacity=0.35,snapGrid=false,snapSize=20,showZoneLabels=true;
+// Minimum pixel movement (in screen px) before a touch/click is treated as a drag
+const DRAG_THRESHOLD=8;
 function uid(){return"z_"+Date.now().toString(36)+Math.random().toString(36).slice(2);}
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function rgbToHex(c){if(!c||c.startsWith("#"))return c;const m=c.match(/\d+/g);if(!m||m.length<3)return"#888";return"#"+m.slice(0,3).map(n=>parseInt(n).toString(16).padStart(2,"0")).join("");}
@@ -439,7 +455,8 @@ function resizeCanvas(){
   document.getElementById("canvas").style.width=w+"px";
   document.getElementById("canvas").style.height=h+"px";
 }
-function clearCanvas(){if(zones.length&&!confirm("Clear all zones?"))return;zones=[];selectedId=null;renderCanvas();closeSheet();toast("Canvas cleared");}
+function clearConnections(){if(!connections.length)return toast("No paths to clear.");if(!confirm("Clear all path connections?"))return;connections=[];renderConnections();toast("Paths cleared");}
+function clearCanvas(){if(zones.length&&!confirm("Clear all zones?"))return;zones=[];connections=[];selectedId=null;renderCanvas();closeSheet();toast("Canvas cleared");}
 function zoomBy(d){zoomLevel=Math.max(.25,Math.min(3,zoomLevel+d));applyZoom();}
 function zoomFit(){
   const sc=document.getElementById("canvasScroller");
@@ -458,7 +475,68 @@ function applyZoom(){
   document.getElementById("zoomLbl").textContent=Math.round(zoomLevel*100)+"%";
 }
 function toggleSettings(){const s=document.getElementById("canvasSettings");const open=s.classList.toggle("open");document.getElementById("settingsBtn").classList.toggle("on",open);}
-function setMode(m){currentMode=m;document.getElementById("moveBtn").className="ctbtn"+(m==="move"?" on":"");document.getElementById("delBtn").className="ctbtn"+(m==="delete"?" delon":"");if(m==="delete")closeSheet();}
+function setMode(m){
+  currentMode=m;
+  pathSelectFirst=null;
+  document.getElementById("moveBtn").className="ctbtn"+(m==="move"?" on":"");
+  document.getElementById("delBtn").className="ctbtn"+(m==="delete"?" delon":"");
+  document.getElementById("pathBtn").className="ctbtn"+(m==="path"?" pathon":"");
+  if(m==="delete"||m==="path")closeSheet();
+  if(m==="path")toast("PATH mode: tap two spaces to connect them");
+}
+function handlePathTap(id){
+  const z=zones.find(x=>x.id===id);if(!z)return;
+  if(!pathSelectFirst){
+    pathSelectFirst=id;
+    selectedId=id;renderCanvas();
+    toast("First space selected — now tap the destination");
+  } else {
+    if(pathSelectFirst===id){pathSelectFirst=null;selectedId=null;renderCanvas();toast("Deselected");return;}
+    // Check for duplicate
+    const dup=connections.find(c=>(c.from===pathSelectFirst&&c.to===id)||(c.from===id&&c.to===pathSelectFirst));
+    if(dup){connections=connections.filter(c=>c!==dup);renderConnections();toast("Connection removed");pathSelectFirst=null;selectedId=null;renderCanvas();return;}
+    connections.push({from:pathSelectFirst,to:id});
+    renderConnections();
+    toast("Connected!");
+    pathSelectFirst=null;selectedId=null;renderCanvas();
+  }
+}
+function renderConnections(){
+  const svg=document.getElementById("connectionsLayer");
+  if(!svg)return;
+  const cw=+document.getElementById("canvasW").value||800;
+  const ch=+document.getElementById("canvasH").value||580;
+  svg.setAttribute("width",cw);svg.setAttribute("height",ch);
+  svg.setAttribute("viewBox",`0 0 ${cw} ${ch}`);
+  // Remove old lines (keep defs)
+  svg.querySelectorAll("line,path").forEach(el=>el.remove());
+  connections.forEach(conn=>{
+    const a=zones.find(x=>x.id===conn.from);
+    const b=zones.find(x=>x.id===conn.to);
+    if(!a||!b)return;
+    const ax=a.x+a.w/2, ay=a.y+a.h/2;
+    const bx=b.x+b.w/2, by=b.y+b.h/2;
+    // Shorten line to not overlap zone circles
+    const dist=Math.sqrt((bx-ax)**2+(by-ay)**2);
+    const r=Math.min(a.w,a.h)/2+4;
+    const ratio=dist>0?(dist-r)/dist:1;
+    const ex=ax+(bx-ax)*ratio, ey=ay+(by-ay)*ratio;
+    const sx=ax+(bx-ax)*(1-ratio), sy=ay+(by-ay)*(1-ratio);
+    const line=document.createElementNS("http://www.w3.org/2000/svg","line");
+    line.setAttribute("x1",sx);line.setAttribute("y1",sy);
+    line.setAttribute("x2",ex);line.setAttribute("y2",ey);
+    line.setAttribute("class","conn-line");
+    line.setAttribute("stroke",a.border||"#c9a84c");
+    line.setAttribute("marker-end","url(#arrowhead)");
+    svg.appendChild(line);
+  });
+}
+function autoNumberSpaces(){
+  // Number all space-type zones in their current order (top-to-bottom, left-to-right)
+  const spaces=zones.filter(z=>z.type==="space").sort((a,b)=>a.y===b.y?a.x-b.x:a.y-b.y);
+  spaces.forEach((z,i)=>{z.spaceNum=i+1;});
+  renderCanvas();toast("Spaces numbered 1–"+spaces.length);
+}
 function undoDelete(){if(!lastDeleted)return;zones.push(lastDeleted);lastDeleted=null;document.getElementById("undoBtn").style.display="none";renderCanvas();toast("Zone restored");}
 function deleteZone(id){lastDeleted=zones.find(x=>x.id===id);zones=zones.filter(x=>x.id!==id);if(selectedId===id){selectedId=null;closeSheet();}renderCanvas();document.getElementById("undoBtn").style.display="inline-block";toast("Deleted \u2014 tap \u21a9 to undo");}
 function duplicateZone(id){const z=zones.find(x=>x.id===id);if(!z)return;const nz={...z,id:uid(),x:Math.min(z.x+20,+document.getElementById("canvasW").value-z.w-4),y:Math.min(z.y+20,+document.getElementById("canvasH").value-z.h-4)};zones.push(nz);renderCanvas();setTimeout(()=>selectZone(nz.id),60);toast("Duplicated");}
@@ -476,6 +554,7 @@ function renderCanvas(){
   zones.forEach(createZoneEl);
   document.getElementById("canvasGuide").style.display=zones.length?"none":"block";
   document.getElementById("selLbl").textContent=zones.find(x=>x.id===selectedId)?.label||"";
+  renderConnections();
 }
 function createZoneEl(z){
   const canvas=document.getElementById("canvas");
@@ -488,48 +567,69 @@ function createZoneEl(z){
   if(isToken){
     // Tokens: big icon, count badge, no label needed
     el.innerHTML="<span class=\"zi\" style=\"font-size:22px;\">"+z.icon+"</span>"+(z.tokenCount>1?"<span style=\"position:absolute;top:-4px;right:-4px;background:#cc4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-weight:700;\">"+z.tokenCount+"</span>":"")+"<div class=\"rh\" id=\"rh_"+z.id+"\"></div>";
+  } else if(z.type==="space"){
+    el.className+=" space-zone"+(pathSelectFirst===z.id?" selected":"");
+    el.style.borderRadius="50%";
+    const numLabel=z.spaceNum!=null?`<span class="space-num">${z.spaceNum}</span>`:"";
+    const txtLabel=showZoneLabels&&z.label&&z.label!=="Board Space"?`<span class="space-lbl">${z.label}</span>`:"";
+    const claimIcon=z.claimable?"<span style=\"position:absolute;bottom:3px;right:3px;font-size:9px;opacity:.5;\">⛳</span>":"";
+    el.innerHTML=numLabel+txtLabel+claimIcon+"<div class=\"rh\" id=\"rh_"+z.id+"\"></div>";
   } else {
     el.innerHTML="<span class=\"zi\">"+z.icon+"</span>"+(showZoneLabels?"<span class=\"zl\">"+z.label+"</span>":"")+(z.player&&z.player!=="any"?"<span class=\"zp\">"+z.player+"</span>":"")+"<div class=\"rh\" id=\"rh_"+z.id+"\"></div>";
   }
+  const rh=el.querySelector(".rh");
+  // Resize handle — must stopPropagation so it never also triggers the zone drag listener
+  rh.addEventListener("touchstart",e=>{e.stopPropagation();onTS(e,"resize",z.id);},{passive:false});
+  rh.addEventListener("mousedown",e=>{e.stopPropagation();onMD(e,"resize",z.id);});
+  // Zone drag — only fires if the resize handle didn't already consume this event
   el.addEventListener("touchstart",e=>onTS(e,"drag",z.id),{passive:false});
-  el.querySelector(".rh").addEventListener("touchstart",e=>onTS(e,"resize",z.id),{passive:false});
   el.addEventListener("mousedown",e=>onMD(e,"drag",z.id));
-  el.querySelector(".rh").addEventListener("mousedown",e=>onMD(e,"resize",z.id));
   canvas.appendChild(el);
 }
 function onTS(e,action,id){
   e.stopPropagation();
-  if(action!=="resize"&&currentMode==="delete"){e.preventDefault();deleteZone(id);return;}
+  if(action==="drag"&&currentMode==="delete"){e.preventDefault();deleteZone(id);return;}
+  if(action==="drag"&&currentMode==="path"){e.preventDefault();handlePathTap(id);return;}
   e.preventDefault();
   const t=e.touches[0],z=zones.find(x=>x.id===id);if(!z)return;
-  if(action!=="resize"){
-    selectedId=id;
-    renderCanvas();
-    dragMoved=false;
-  }
+  // If resize is already active don't start a drag on top of it
+  if(action==="drag"&&resize)return;
+  if(action==="resize"&&drag){drag=null;dragMoved=false;}
   const st={id,sx:t.clientX,sy:t.clientY,ox:z.x,oy:z.y,ow:z.w,oh:z.h};
-  if(action==="resize")resize=st;else drag=st;
+  if(action==="resize"){resize=st;}
+  else{
+    drag=st;
+    dragMoved=false;
+    // Select visually but DON'T open the sheet yet — wait for touchend to confirm tap vs drag
+    if(selectedId!==id){selectedId=id;renderCanvas();}
+  }
 }
 function onMD(e,action,id){
   e.stopPropagation();
-  if(action!=="resize"&&currentMode==="delete"){deleteZone(id);return;}
+  if(action==="drag"&&currentMode==="delete"){deleteZone(id);return;}
+  if(action==="drag"&&currentMode==="path"){handlePathTap(id);return;}
   e.preventDefault();
   const z=zones.find(x=>x.id===id);if(!z)return;
-  if(action!=="resize"){
-    // Visually select without opening the sheet yet — wait to see if user drags
-    selectedId=id;
-    renderCanvas();
-    dragMoved=false;
-  }
+  if(action==="drag"&&resize)return;
+  if(action==="resize"&&drag){drag=null;dragMoved=false;}
   const st={id,sx:e.clientX,sy:e.clientY,ox:z.x,oy:z.y,ow:z.w,oh:z.h};
-  if(action==="resize")resize=st;else drag=st;
+  if(action==="resize"){resize=st;}
+  else{
+    drag=st;
+    dragMoved=false;
+    if(selectedId!==id){selectedId=id;renderCanvas();}
+  }
 }
 function gxy(e){if(e.touches)return{x:e.touches[0].clientX,y:e.touches[0].clientY};return{x:e.clientX,y:e.clientY};}
 function snap(v){return snapGrid?Math.round(v/snapSize)*snapSize:Math.round(v);}
 function applyDrag(e){
   if(!drag)return;
-  const{x,y}=gxy(e),dx=(x-drag.sx)/zoomLevel,dy=(y-drag.sy)/zoomLevel;
-  if(Math.abs(dx)>4||Math.abs(dy)>4)dragMoved=true;
+  const{x,y}=gxy(e);
+  const rawDx=x-drag.sx, rawDy=y-drag.sy;
+  // Only commit to dragging once past the threshold — prevents accidental moves on tap
+  if(!dragMoved&&Math.sqrt(rawDx*rawDx+rawDy*rawDy)<DRAG_THRESHOLD)return;
+  dragMoved=true;
+  const dx=rawDx/zoomLevel, dy=rawDy/zoomLevel;
   const z=zones.find(x=>x.id===drag.id);if(!z)return;
   const cw=+document.getElementById("canvasW").value,ch=+document.getElementById("canvasH").value;
   z.x=Math.max(0,Math.min(cw-z.w,snap(drag.ox+dx)));
@@ -539,32 +639,34 @@ function applyDrag(e){
 }
 function applyResize(e){
   if(!resize)return;
-  const{x,y}=gxy(e),dx=(x-resize.sx)/zoomLevel,dy=(y-resize.sy)/zoomLevel;
+  const{x,y}=gxy(e);
+  // dx/dy in canvas coords (account for zoom)
+  const dx=(x-resize.sx)/zoomLevel, dy=(y-resize.sy)/zoomLevel;
   const z=zones.find(x=>x.id===resize.id);if(!z)return;
-  z.w=Math.max(50,Math.round(resize.ow+dx));z.h=Math.max(36,Math.round(resize.oh+dy));
+  z.w=Math.max(50,snap(resize.ow+dx));
+  z.h=Math.max(36,snap(resize.oh+dy));
   const el=document.getElementById("zone_"+z.id);
   if(el){el.style.width=z.w+"px";el.style.height=z.h+"px";}
 }
 document.addEventListener("touchmove",e=>{if(drag||resize)e.preventDefault();applyDrag(e);applyResize(e);},{passive:false});
-document.addEventListener("touchend",()=>{
+document.addEventListener("touchend",e=>{
   if(drag){
-    const wasClick=!dragMoved;
+    const wasTap=!dragMoved;
     const dragId=drag.id;
     drag=null;
     renderCanvas();
-    if(wasClick)openPropsSheet(dragId);
+    if(wasTap)openPropsSheet(dragId);
   }
   if(resize){resize=null;renderCanvas();}
 });
 document.addEventListener("mousemove",e=>{applyDrag(e);applyResize(e);});
-document.addEventListener("mouseup",()=>{
+document.addEventListener("mouseup",e=>{
   if(drag){
-    const wasClick=!dragMoved;
+    const wasTap=!dragMoved;
     const dragId=drag.id;
     drag=null;
     renderCanvas();
-    // Only open the props sheet if the user clicked (didn't drag)
-    if(wasClick)openPropsSheet(dragId);
+    if(wasTap)openPropsSheet(dragId);
   }
   if(resize){resize=null;renderCanvas();}
 });
@@ -586,6 +688,25 @@ function openPropsSheet(id){
         <span id="tokCount_${z.id}" style="font-family:'Cinzel',serif;font-size:20px;color:var(--gold);min-width:40px;text-align:center;">${z.tokenCount||1}</span>
         <button onclick="adjTok('${z.id}',1)" style="width:36px;height:36px;font-size:20px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;cursor:pointer;">+</button>
       </div></div>`;
+  } else if(z.type==="space"){
+    html+=`
+    <div class="pf-grid">
+      <div class="pf"><label>SPACE NUMBER</label><input type="number" value="${z.spaceNum!=null?z.spaceNum:''}" placeholder="auto" min="0" oninput="zp('${z.id}','spaceNum',this.value===''?null:+this.value)"></div>
+      <div class="pf"><label>CLAIMABLE</label><select onchange="zp('${z.id}','claimable',this.value==='true')"><option value="false"${!z.claimable?" selected":""}>No</option><option value="true"${z.claimable?" selected":""}>Yes — can be owned</option></select></div>
+    </div>
+    <div class="pf"><label>SPACE TYPE</label><select onchange="zp('${z.id}','spaceType',this.value)">
+      <option value="normal"${(z.spaceType||'normal')==='normal'?' selected':''}>Normal</option>
+      <option value="start"${z.spaceType==='start'?' selected':''}>Start / Go</option>
+      <option value="corner"${z.spaceType==='corner'?' selected':''}>Corner</option>
+      <option value="jail"${z.spaceType==='jail'?' selected':''}>Jail / Penalty</option>
+      <option value="chance"${z.spaceType==='chance'?' selected':''}>Chance / Event</option>
+      <option value="bonus"${z.spaceType==='bonus'?' selected':''}>Bonus / Reward</option>
+    </select></div>
+    <div class="pf"><label>PLAYER OWNERSHIP</label><select onchange="zp('${z.id}','player',this.value)">${owns.map(p=>`<option value="${p}"${z.player===p?" selected":""}>${ownLabels[p]}</option>`).join("")}</select></div>
+    <div style="padding:8px 0;font-size:11px;color:var(--text2);">
+      Tip: Use <strong>⤏ PATH</strong> mode to draw arrows connecting spaces.
+      <button onclick="autoNumberSpaces()" style="margin-top:6px;width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:7px;border-radius:4px;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;">&#35; AUTO-NUMBER ALL SPACES</button>
+    </div>`;
   } else {
     html+=`<div class="pf"><label>PLAYER OWNERSHIP</label><select onchange="zp('${z.id}','player',this.value)">${owns.map(p=>`<option value="${p}"${z.player===p?" selected":""}>${ownLabels[p]}</option>`).join("")}</select></div>
     <div class="pf-grid">
@@ -667,7 +788,7 @@ function openSaveModal(){document.getElementById("saveLayoutName").value="";docu
 function saveLayout(){
   const name=document.getElementById("saveLayoutName").value.trim();
   if(!name)return toast("Layout needs a name.");
-  const layout={id:"layout_"+Date.now(),name,desc:document.getElementById("saveLayoutDesc").value,mode:document.getElementById("saveLayoutMode").value,players:+document.getElementById("layoutPlayers").value||2,canvasW:+document.getElementById("canvasW").value||800,canvasH:+document.getElementById("canvasH").value||580,zones:JSON.parse(JSON.stringify(zones)),bgImage:bgImage||null,bgOpacity:bgOpacity,created:Date.now()};
+  const layout={id:"layout_"+Date.now(),name,desc:document.getElementById("saveLayoutDesc").value,mode:document.getElementById("saveLayoutMode").value,players:+document.getElementById("layoutPlayers").value||2,canvasW:+document.getElementById("canvasW").value||800,canvasH:+document.getElementById("canvasH").value||580,zones:JSON.parse(JSON.stringify(zones)),connections:JSON.parse(JSON.stringify(connections)),bgImage:bgImage||null,bgOpacity:bgOpacity,created:Date.now()};
   const ei=savedLayouts.findIndex(l=>l.name===name);
   if(ei>=0){if(!confirm("Replace \""+name+"\"?"))return;savedLayouts[ei]=layout;}else savedLayouts.push(layout);
   persistLayouts();closeModal("saveModal");toast("Saved \""+name+"\"!");
@@ -676,6 +797,7 @@ function loadLayout(id){
   const l=savedLayouts.find(x=>x.id===id);if(!l)return;
   if(zones.length&&!confirm("Load \""+l.name+"\"? Replaces current canvas."))return;
   zones=JSON.parse(JSON.stringify(l.zones));
+  connections=JSON.parse(JSON.stringify(l.connections||[]));
   document.getElementById("canvasW").value=l.canvasW||800;
   document.getElementById("canvasH").value=l.canvasH||580;
   document.getElementById("layoutPlayers").value=l.players||2;
@@ -692,7 +814,7 @@ function renderSavedLayouts(){
 function exportToPlaytest(){
   if(!zones.length)return toast("Add some zones first.");
   const name=prompt("Layout name for playtest:","My Layout")||"My Layout";
-  const layout={id:"active_"+Date.now(),name,mode:document.getElementById("saveLayoutMode")?.value||"standard",players:+document.getElementById("layoutPlayers").value||2,canvasW:+document.getElementById("canvasW").value||800,canvasH:+document.getElementById("canvasH").value||580,zones:JSON.parse(JSON.stringify(zones)),bgImage:bgImage||null,bgOpacity:bgOpacity};
+  const layout={id:"active_"+Date.now(),name,mode:document.getElementById("saveLayoutMode")?.value||"standard",players:+document.getElementById("layoutPlayers").value||2,canvasW:+document.getElementById("canvasW").value||800,canvasH:+document.getElementById("canvasH").value||580,zones:JSON.parse(JSON.stringify(zones)),connections:JSON.parse(JSON.stringify(connections)),bgImage:bgImage||null,bgOpacity:bgOpacity};
   localStorage.setItem("cardforge_active_layout",JSON.stringify(layout));
   toast("Sent to Playtest!");
   setTimeout(()=>window.open("playtest.html","_blank"),400);
