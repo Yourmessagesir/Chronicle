@@ -1090,7 +1090,6 @@ function galleryScroll(dir){
 //  TABLE (center) — PHASE 4
 // ═══════════════════════════════════════════════════════════════════
 let tableMesh;
-let tableCardMeshes = [];   // mini cards on table surface
 let diceMesh = null;        // d6 on table
 let diceRolling = false;
 let diceRollT = 0;
@@ -1214,20 +1213,8 @@ function rollDice(sides=6){
 const TABLE_CX=0, TABLE_CZ=2, TABLE_Y=0.982;
 const TABLE_W=5.4, TABLE_D=3.4;   // usable felt area
 
-let tableCardMeshes=[];  // all 3D objects on table surface (clearable)
 
 // --- helpers ---
-function cardTypeColor(type){
-  const t=(type||'').toLowerCase();
-  if(t.includes('creature')||t.includes('unit')) return '#3a8a3a';
-  if(t.includes('spell')||t.includes('action')) return '#3a4a9a';
-  if(t.includes('trap')||t.includes('secret')) return '#8a3a3a';
-  if(t.includes('artifact')||t.includes('equipment')) return '#7a7a3a';
-  if(t.includes('enchant')||t.includes('aura')) return '#6a3a8a';
-  if(t.includes('hero')||t.includes('champion')) return '#8a6a20';
-  return '#2a4a6a';
-}
-
 function makeCardQuad(card, w, h){
   // Returns a PlaneGeometry mesh with card texture
   const cw=Math.round(w*80), ch=Math.round(h*80);
@@ -3195,11 +3182,11 @@ function _buildBooks(sx, sz, FLOOR, SW, SH, SHELVES, SD){
     if(cd.writing) titles = [...titles, ...(cd.writing||[]).map(w => w.title||'Chapter')];
   }catch(e){}
   if(!titles.length) titles = [
-    'The Wanderer's Tale','World Atlas','Spell Codex','Campaign Log',
+    'The Wanderer\'s Tale','World Atlas','Spell Codex','Campaign Log',
     'NPC Roster','Quest Journal','Battle Records','Lore Compendium',
     'Character Sheets','Bestiary','Maps & Charts','Faction Guide',
-    'History of Realms','Alchemist's Notes','The Night's Edge',
-    'Dungeon Master's Eye','Chronicle Vol.I','Chronicle Vol.II',
+    'History of Realms','Alchemist\'s Notes','The Night\'s Edge',
+    'Dungeon Master\'s Eye','Chronicle Vol.I','Chronicle Vol.II',
     'Realm Codex','Shadow Lore',
   ];
 
