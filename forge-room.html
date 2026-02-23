@@ -224,6 +224,51 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
   resize:none;font-family:inherit;min-height:44px;max-height:90px;}
 #stickyInput:focus{outline:none;border-color:#c9a84c;}
 
+/* ── BOOK READER ── */
+#bookOverlay{position:fixed;inset:0;z-index:92;display:none;flex-direction:column;background:#13100c;}
+#bookOverlay.open{display:flex;}
+#bookBar{display:flex;align-items:center;gap:8px;padding:0 12px;height:48px;
+  background:#0e0c08;border-bottom:1px solid rgba(180,140,60,0.22);flex-shrink:0;}
+#bookBar h2{font-family:'Cinzel',serif;font-size:11px;color:#c9a84c;letter-spacing:.14em;
+  flex:1;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bbtn{background:transparent;border:1px solid rgba(180,140,60,0.32);color:#907840;
+  padding:5px 11px;border-radius:4px;font-family:'Cinzel',serif;font-size:8px;
+  letter-spacing:.08em;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.bbtn:hover{color:#c9a84c;border-color:rgba(180,140,60,0.65);}
+.bbtn.save-flash{color:#6abf6a;border-color:#6abf6a;}
+#bookBody{display:flex;flex:1;overflow:hidden;min-height:0;}
+/* Sidebar */
+#bookSidebar{width:170px;flex-shrink:0;background:#0a0806;
+  border-right:1px solid rgba(180,140,60,0.14);display:flex;flex-direction:column;overflow:hidden;}
+#bookSidebar h3{font-family:'Cinzel',serif;font-size:9px;color:#706040;letter-spacing:.14em;
+  padding:10px 12px 8px;border-bottom:1px solid rgba(180,140,60,0.1);flex-shrink:0;margin:0;}
+#chapterList{flex:1;overflow-y:auto;padding:4px 0;}
+.ch-item{padding:9px 12px 8px;cursor:pointer;border-left:2px solid transparent;
+  border-bottom:1px solid rgba(255,255,255,0.03);transition:all .12s;}
+.ch-item:hover{background:rgba(180,140,60,0.07);color:#c9a84c;}
+.ch-item.active{border-left-color:#c9a84c;background:rgba(180,140,60,0.1);}
+.ch-item .ch-n{font-family:'Cinzel',serif;font-size:8px;color:#605040;letter-spacing:.1em;display:block;margin-bottom:2px;}
+.ch-item .ch-t{font-size:12px;color:#a09070;display:block;line-height:1.3;}
+.ch-item.active .ch-t{color:#c9a84c;}
+#addChBtn{padding:10px 12px;border-top:1px solid rgba(180,140,60,0.12);flex-shrink:0;}
+#addChBtn button{width:100%;background:rgba(180,140,60,0.1);border:1px solid rgba(180,140,60,0.25);
+  color:#907840;padding:7px;border-radius:4px;font-family:'Cinzel',serif;font-size:9px;
+  letter-spacing:.08em;cursor:pointer;}
+#addChBtn button:hover{color:#c9a84c;border-color:rgba(180,140,60,0.5);}
+/* Content pane */
+#bookContent{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+#chTitle{font-family:'Cinzel',serif;font-size:15px;color:#c9a84c;letter-spacing:.1em;
+  padding:13px 18px 9px;border-bottom:1px solid rgba(180,140,60,0.1);
+  outline:none;flex-shrink:0;}
+#chTitle[placeholder]:empty::before{content:attr(placeholder);color:#4a3a28;}
+#chEditor{flex:1;background:transparent;border:none;resize:none;font-size:15px;
+  color:#ccc4b0;line-height:1.82;padding:16px 22px;font-family:'Georgia',serif;
+  overflow-y:auto;outline:none;}
+#chEditor::placeholder{color:#3a3020;}
+#bookFooter{padding:5px 18px;font-family:'Cinzel',serif;font-size:9px;color:#504030;
+  border-top:1px solid rgba(180,140,60,0.1);display:flex;justify-content:space-between;
+  flex-shrink:0;letter-spacing:.06em;}
+
 /* ── INSTALL BANNER ── */
 #installBanner{position:fixed;bottom:0;left:0;right:0;z-index:300;
   background:rgba(250,248,240,0.97);border-top:1px solid rgba(180,155,90,0.5);
@@ -496,8 +541,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
     <span style="font-size:18px;color:var(--gold);">✦</span>
     <h2>THE CHRONICLE</h2>
     <div id="chronicleTabBar">
-      <button class="chr-tab-btn active" data-sec="book"        onclick="chrSwitchTab(this,'book')">📖 BOOK</button>
-      <button class="chr-tab-btn"        data-sec="comic"       onclick="chrSwitchTab(this,'comic')">🎨 COMIC</button>
+      <button class="chr-tab-btn active" data-sec="comic"       onclick="chrSwitchTab(this,'comic')">🎨 COMIC</button>
       <button class="chr-tab-btn"        data-sec="rpg"         onclick="chrSwitchTab(this,'rpg')">⚔ RPG</button>
       <button class="chr-tab-btn"        data-sec="board"       onclick="chrSwitchTab(this,'board')">📋 BOARD</button>
     </div>
@@ -560,6 +604,32 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
     <div id="stickyAdd">
       <textarea id="stickyInput" placeholder="Write a note… (Enter to pin)" maxlength="300" rows="2"></textarea>
       <button style="background:#c9a84c;border:none;color:#2a1800;padding:9px 14px;border-radius:4px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;cursor:pointer;font-weight:700;white-space:nowrap;" onclick="addStickyNote()">PIN ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- Book Reader Overlay -->
+<div id="bookOverlay">
+  <div id="bookBar">
+    <span style="font-size:18px;flex-shrink:0;">📖</span>
+    <h2 id="bookTitleBar">—</h2>
+    <button class="bbtn" id="bookSaveBtn" onclick="bookSave()">💾 SAVE</button>
+    <button class="bbtn" style="margin-left:4px;" onclick="bookClose()">✕ CLOSE</button>
+  </div>
+  <div id="bookBody">
+    <div id="bookSidebar">
+      <h3>CHAPTERS</h3>
+      <div id="chapterList"></div>
+      <div id="addChBtn"><button onclick="bookAddChapter()">＋ NEW CHAPTER</button></div>
+    </div>
+    <div id="bookContent">
+      <div id="chTitle" contenteditable="true" spellcheck="false"
+           placeholder="Chapter title…" oninput="bookDirty()"></div>
+      <textarea id="chEditor" placeholder="Begin writing…" oninput="bookDirty()"></textarea>
+      <div id="bookFooter">
+        <span id="bookSaveStatus">—</span>
+        <span id="bookWordCount">0 words</span>
+      </div>
     </div>
   </div>
 </div>
@@ -1137,127 +1207,310 @@ function rollDice(sides=6){
 }
 
 // ── Card spread on table surface ──────────────────────────
-function buildTableCardSpread(){
-  // Remove old spread
+// ═══════════════════════════════════════════════════════════════════
+//  GAME SURFACE — renders active layout / deck spread on table felt
+// ═══════════════════════════════════════════════════════════════════
+// Table: group at (0,0,2), felt surface y≈0.978, usable 5.7×3.7 world units
+const TABLE_CX=0, TABLE_CZ=2, TABLE_Y=0.982;
+const TABLE_W=5.4, TABLE_D=3.4;   // usable felt area
+
+let tableCardMeshes=[];  // all 3D objects on table surface (clearable)
+
+// --- helpers ---
+function cardTypeColor(type){
+  const t=(type||'').toLowerCase();
+  if(t.includes('creature')||t.includes('unit')) return '#3a8a3a';
+  if(t.includes('spell')||t.includes('action')) return '#3a4a9a';
+  if(t.includes('trap')||t.includes('secret')) return '#8a3a3a';
+  if(t.includes('artifact')||t.includes('equipment')) return '#7a7a3a';
+  if(t.includes('enchant')||t.includes('aura')) return '#6a3a8a';
+  if(t.includes('hero')||t.includes('champion')) return '#8a6a20';
+  return '#2a4a6a';
+}
+
+function makeCardQuad(card, w, h){
+  // Returns a PlaneGeometry mesh with card texture
+  const cw=Math.round(w*80), ch=Math.round(h*80);
+  const cv=document.createElement('canvas'); cv.width=Math.max(48,cw); cv.height=Math.max(64,ch);
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  // Background gradient
+  const grd=ctx.createLinearGradient(0,0,0,H);
+  grd.addColorStop(0,'#1c2230'); grd.addColorStop(1,'#0e1018');
+  ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+  // Type colour bar top
+  ctx.fillStyle=cardTypeColor(card.type); ctx.fillRect(0,0,W,Math.max(3,H*0.05));
+  // Gold border
+  ctx.strokeStyle='#c9a84c'; ctx.lineWidth=Math.max(1,W*0.03);
+  ctx.strokeRect(ctx.lineWidth/2,ctx.lineWidth/2,W-ctx.lineWidth,H-ctx.lineWidth);
+  // Cost circle
+  const cr=Math.max(6,W*0.14);
+  ctx.fillStyle='rgba(201,168,76,0.2)'; ctx.beginPath(); ctx.arc(W-cr-2,cr+2,cr,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#e8c96a'; ctx.font=`bold ${Math.max(7,cr)}px sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(String(card.cost||0), W-cr-2, cr+2);
+  // Card name
+  ctx.fillStyle='#d4cfc0'; ctx.font=`bold ${Math.max(6,Math.round(W*0.13))}px sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  const name=(card.name||'?').slice(0,12);
+  ctx.fillText(name, W/2, Math.max(3,H*0.06));
+  // Art area (coloured rect)
+  const artY=H*0.16, artH=H*0.44;
+  ctx.fillStyle=cardTypeColor(card.type)+'44';
+  ctx.fillRect(W*0.08, artY, W*0.84, artH);
+  // Type icon
+  const icons={'creature':'🐉','unit':'⚔','spell':'✨','action':'💥','trap':'⚠','artifact':'⚙','enchant':'🌀','aura':'🌸','hero':'👑','champion':'🏆'};
+  let icon='🃏'; const tp=(card.type||'').toLowerCase();
+  for(const [k,v] of Object.entries(icons)){if(tp.includes(k)){icon=v;break;}}
+  ctx.font=`${Math.max(10,Math.round(artH*0.55))}px serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(icon, W/2, artY+artH/2);
+  // Stats bar bottom
+  if(card.power!==undefined||card.toughness!==undefined){
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(0,H*0.84,W,H*0.16);
+    ctx.fillStyle='#e8c96a'; ctx.font=`bold ${Math.max(7,Math.round(H*0.1))}px sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(`${card.power||0}/${card.toughness||0}`, W/2, H*0.92);
+  }
+  return new THREE.Mesh(
+    new THREE.PlaneGeometry(w,h),
+    new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv),side:THREE.FrontSide})
+  );
+}
+
+function makeZonePlane(label, color, ww, wd){
+  const px=Math.max(64,Math.round(ww*60)), py=Math.max(32,Math.round(wd*60));
+  const cv=document.createElement('canvas'); cv.width=px; cv.height=py;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle=color+'44'; ctx.fillRect(0,0,px,py);
+  ctx.strokeStyle=color+'bb'; ctx.lineWidth=3;
+  ctx.strokeRect(2,2,px-4,py-4);
+  // Dashed inner line
+  ctx.setLineDash([6,4]);
+  ctx.strokeStyle=color+'66'; ctx.lineWidth=1;
+  ctx.strokeRect(6,6,px-12,py-12);
+  ctx.setLineDash([]);
+  if(label){
+    const fs=Math.max(8,Math.min(18,px/6));
+    ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font=`bold ${fs}px Cinzel,serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(label.toUpperCase().slice(0,14), px/2, py/2);
+  }
+  return new THREE.Mesh(
+    new THREE.PlaneGeometry(ww,wd),
+    new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv),transparent:true,opacity:0.80})
+  );
+}
+
+function clearTableSurface(){
   tableCardMeshes.forEach(m=>{
     scene.remove(m);
-    if(m.material?.map) m.material.map.dispose();
-    m.material?.dispose();
+    if(Array.isArray(m.material)) m.material.forEach(mt=>{mt.map?.dispose();mt.dispose();});
+    else{m.material?.map?.dispose();m.material?.dispose();}
     m.geometry?.dispose();
   });
-  tableCardMeshes = [];
+  tableCardMeshes=[];
+}
 
-  loadForgeData();
-  let cards = forgeData.cards;
-  // Try to get active deck
-  let spreadCards = [];
+// Main entry: called on init + storage change
+function buildTableCardSpread(){
+  clearTableSurface();
+
+  // Try active layout first
+  let layout=null;
   try{
-    const activeId = localStorage.getItem('cardforge_active_layout');
-    // active layout stores a layout, not a deck — use decks instead
-    if(forgeData.decks && forgeData.decks.length){
-      // Use first deck's card IDs to pull the spread
-      const deck = forgeData.decks[0];
-      const deckCardIds = deck.cards || deck.cardIds || [];
-      if(deckCardIds.length){
-        spreadCards = deckCardIds
-          .map(id=>typeof id==='string'
-            ? forgeData.cards.find(c=>c.id===id)
-            : forgeData.cards.find(c=>c.id===id?.id||c.id===id))
-          .filter(Boolean)
-          .slice(0,7);
-      }
+    const lid=localStorage.getItem('cardforge_active_layout');
+    const raw=localStorage.getItem('cardforge_layouts_v2');
+    if(raw){
+      const all=JSON.parse(raw);
+      layout=lid?all.find(l=>l.id===lid||l.name===lid):null;
+      if(!layout) layout=all[0]||null;
     }
   }catch(e){}
 
-  // Fallback: use first 5-7 cards
-  if(!spreadCards.length && cards.length){
-    spreadCards = cards.slice(0,Math.min(7,cards.length));
+  if(layout && (layout.zones?.length||layout.placedCards?.length||layout.cards?.length)){
+    _renderLayout(layout);
+  } else {
+    _renderDeckSpread();
   }
-  if(!spreadCards.length) return; // no cards = clean green felt
+}
 
-  // Lay cards in a slight fan/arc across the table top
-  const count = spreadCards.length;
-  const TABLE_Y = 0.99;  // just above felt (world coords: table is at y=0, top at y=0.9+0.09≈0.99+tableGroup.y=0)
-  // tableGroup is at (0,0,2), so table top world Y = 0.978+0 ≈ 0.98
-  const WORLD_Y = 0.98;
-  const spreadW = Math.min(5.0, count * 0.75);
-  const startX = -spreadW/2;
-  const angleRange = count > 1 ? 0.25 : 0; // subtle fan spread
+function _worldXZ(nx,ny){
+  // nx,ny in 0-1 range → world x,z on table felt
+  return {
+    x: TABLE_CX + (nx-0.5)*TABLE_W,
+    z: TABLE_CZ + (ny-0.5)*TABLE_D
+  };
+}
 
-  spreadCards.forEach((card,i)=>{
-    const t = count>1 ? i/(count-1) : 0.5;
-    const x = startX + t*spreadW;
-    const z = 2 + Math.sin(t*Math.PI)*0.2 - 0.3; // slight arc, table at z=2
-    const angle = (t-0.5)*angleRange;
+function _renderLayout(layout){
+  // Determine coordinate space of layout
+  const zones=layout.zones||[];
+  const placed=layout.placedCards||layout.cards||[];
+  const tokens=layout.tokens||[];
 
-    // Mini card texture (smaller version of gallery card)
-    const cw=80,ch=112;
-    const c2=document.createElement('canvas');c2.width=cw;c2.height=ch;
-    const ctx=c2.getContext('2d');
-    const grad=ctx.createLinearGradient(0,0,0,ch);
-    grad.addColorStop(0,'#1c2030');grad.addColorStop(1,'#0e1018');
-    ctx.fillStyle=grad;ctx.fillRect(0,0,cw,ch);
-    // Color bar
-    ctx.fillStyle=cardTypeColor(card.type||'');
-    ctx.fillRect(0,0,cw,5);
-    // Gold border
-    ctx.strokeStyle='#c9a84c';ctx.lineWidth=2;ctx.strokeRect(1,1,cw-2,ch-2);
-    // Cost
-    ctx.fillStyle='rgba(201,168,76,0.15)';ctx.beginPath();ctx.arc(cw-13,13,10,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='#c9a84c';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cw-13,13,10,0,Math.PI*2);ctx.stroke();
-    ctx.fillStyle='#e8c96a';ctx.font='bold 9px Cinzel,serif';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(String(card.cost||0),cw-13,13);
-    // Name
-    ctx.fillStyle='#d4cfc0';ctx.font='bold 7px Cinzel,serif';ctx.textAlign='left';ctx.textBaseline='top';
-    const name=card.name||'Unknown';
-    ctx.fillText(name.length>10?name.slice(0,9)+'…':name, 4, 8);
-    // Type icon
-    const icons={creature:'🐉',spell:'✨',trap:'⚠',artifact:'⚙',enchantment:'🌀',hero:'⚔'};
-    const tp=(card.type||'').toLowerCase();
-    let icon='🃏';for(const [k,v] of Object.entries(icons)){if(tp.includes(k)){icon=v;break;}}
-    ctx.font='22px serif';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(icon,cw/2,55);
+  // Find bounding box to normalise
+  let maxX=1,maxY=1;
+  zones.forEach(z=>{maxX=Math.max(maxX,(z.x||0)+(z.w||1));maxY=Math.max(maxY,(z.y||0)+(z.h||1));});
+  placed.forEach(p=>{maxX=Math.max(maxX,p.x||0);maxY=Math.max(maxY,p.y||0);});
+  // If coords look like pixels (>2), keep as-is; if already 0-1, treat maxX/Y as 1
+  const isNorm=maxX<=1.01&&maxY<=1.01;
+  if(isNorm){maxX=1;maxY=1;}
 
-    const tex = new THREE.CanvasTexture(c2);
-    // Card face mesh — lay flat on table
-    const CARD_SCALE_W = 0.55, CARD_SCALE_H = 0.77;
-    const mat = new THREE.MeshLambertMaterial({map:tex,side:THREE.FrontSide});
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_SCALE_W,CARD_SCALE_H),mat);
-    mesh.rotation.x = -Math.PI/2;        // flat on table
-    mesh.rotation.z = angle;
-    mesh.position.set(x, WORLD_Y+0.001, z);
-    mesh.userData = {
-      interactable:true, type:'tableCard',
-      card, label:`${card.name||'Card'} [TAP to inspect]`
-    };
-    scene.add(mesh);
-    tableCardMeshes.push(mesh);
+  const ZONE_COLORS=['#1a4a2a','#1a2a4a','#3a1a1a','#3a2a1a','#2a1a3a','#1a3a3a'];
 
-    // Thin backing shadow
-    const shadowMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.15});
-    const shadow=new THREE.Mesh(new THREE.PlaneGeometry(CARD_SCALE_W+0.04,CARD_SCALE_H+0.04),shadowMat);
-    shadow.rotation.x=-Math.PI/2;shadow.rotation.z=angle;
-    shadow.position.set(x+0.02,WORLD_Y,z+0.02);
-    scene.add(shadow);
-    tableCardMeshes.push(shadow);
+  // Draw zones
+  zones.forEach((z,zi)=>{
+    const nx=(z.x||0)/maxX, ny=(z.y||0)/maxY;
+    const nw=(z.w||maxX*0.25)/maxX, nh=(z.h||maxY*0.25)/maxY;
+    const wp=_worldXZ(nx+nw/2, ny+nh/2);
+    const ww=nw*TABLE_W, wd=nh*TABLE_D;
+    const col=z.color||z.colour||ZONE_COLORS[zi%ZONE_COLORS.length];
+    const zm=makeZonePlane(z.label||z.name||'', col, Math.max(0.2,ww), Math.max(0.2,wd));
+    zm.rotation.x=-Math.PI/2;
+    zm.position.set(wp.x, TABLE_Y+0.001, wp.z);
+    scene.add(zm); tableCardMeshes.push(zm);
+
+    // Cards inside this zone
+    const zCards=(z.cards||[]).slice(0,8).map(ref=>
+      typeof ref==='string'||typeof ref==='number'
+        ? forgeData.cards.find(c=>c.id==ref||c.id===String(ref))
+        : (forgeData.cards.find(c=>c.id==ref?.id)||ref)
+    ).filter(Boolean);
+
+    const spacing=Math.min(0.28,(ww-0.1)/(zCards.length||1));
+    const startX=wp.x-(zCards.length-1)*spacing/2;
+    zCards.forEach((card,ci)=>{
+      const cx2=startX+ci*spacing;
+      const cz2=wp.z+(ci%2)*0.1-0.05;
+      const cm=makeCardQuad(card,0.42,0.60);
+      cm.rotation.x=-Math.PI/2;
+      cm.rotation.z=(Math.random()-0.5)*0.12;
+      cm.position.set(cx2,TABLE_Y+0.003+ci*0.0005,cz2);
+      cm.userData={interactable:true,type:'tableCard',card,label:card.name||'Card'};
+      scene.add(cm); tableCardMeshes.push(cm);
+    });
   });
 
-  // Deck label card at top-left if deck name available
-  if(forgeData.decks?.length){
-    const deckName = forgeData.decks[0]?.name || 'ACTIVE DECK';
-    const lc=document.createElement('canvas');lc.width=200;lc.height=40;
+  // Placed/floating cards
+  placed.forEach(pc=>{
+    const card=forgeData.cards.find(c=>c.id==(pc.cardId||pc.id))||pc;
+    if(!card?.name&&!card?.type) return;
+    const nx=(pc.x||Math.random()*0.8+0.1)/maxX;
+    const ny=(pc.y||Math.random()*0.8+0.1)/maxY;
+    const wp=_worldXZ(nx,ny);
+    const angle=((pc.rotation||0)*Math.PI/180);
+    const cm=makeCardQuad(card,0.44,0.62);
+    cm.rotation.x=-Math.PI/2;
+    cm.rotation.z=angle;
+    cm.position.set(wp.x,TABLE_Y+0.003,wp.z);
+    cm.userData={interactable:true,type:'tableCard',card,label:card.name||'Card'};
+    scene.add(cm); tableCardMeshes.push(cm);
+  });
+
+  // Tokens as coloured discs
+  tokens.forEach(tok=>{
+    const nx=(tok.x||0.5)/maxX, ny=(tok.y||0.5)/maxY;
+    const wp=_worldXZ(nx,ny);
+    const col=tok.color||tok.colour||'#c9a84c';
+    const disc=new THREE.Mesh(
+      new THREE.CylinderGeometry(0.10,0.10,0.025,16),
+      new THREE.MeshLambertMaterial({color:new THREE.Color(col)})
+    );
+    disc.position.set(wp.x,TABLE_Y+0.013,wp.z);
+    scene.add(disc); tableCardMeshes.push(disc);
+    // Label on top
+    if(tok.label){
+      const tc=document.createElement('canvas');tc.width=48;tc.height=48;
+      const tctx=tc.getContext('2d');
+      tctx.fillStyle=col;tctx.beginPath();tctx.arc(24,24,22,0,Math.PI*2);tctx.fill();
+      tctx.fillStyle='rgba(255,255,255,0.85)';tctx.font='bold 10px sans-serif';
+      tctx.textAlign='center';tctx.textBaseline='middle';
+      tctx.fillText(tok.label.slice(0,3),24,24);
+      const tm=new THREE.Mesh(new THREE.PlaneGeometry(0.18,0.18),
+        new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(tc),transparent:true}));
+      tm.rotation.x=-Math.PI/2;tm.position.set(wp.x,TABLE_Y+0.027,wp.z);
+      scene.add(tm);tableCardMeshes.push(tm);
+    }
+  });
+
+  // Layout name label at table south edge
+  if(layout.name){
+    const lc=document.createElement('canvas');lc.width=256;lc.height=36;
     const lctx=lc.getContext('2d');
-    lctx.fillStyle='rgba(201,168,76,0.12)';lctx.fillRect(0,0,200,40);
-    lctx.strokeStyle='rgba(201,168,76,0.4)';lctx.lineWidth=1;lctx.strokeRect(0,0,200,40);
-    lctx.fillStyle='#a08040';lctx.font='bold 11px Cinzel,serif';lctx.textAlign='center';
-    lctx.textBaseline='middle';
-    lctx.fillText(deckName.slice(0,20).toUpperCase(),100,20);
-    const ltex=new THREE.CanvasTexture(lc);
-    const lm=new THREE.Mesh(new THREE.PlaneGeometry(1.9,0.38),new THREE.MeshBasicMaterial({map:ltex,transparent:true}));
+    lctx.fillStyle='rgba(201,168,76,0.1)';lctx.fillRect(0,0,256,36);
+    lctx.strokeStyle='rgba(201,168,76,0.35)';lctx.lineWidth=1;lctx.strokeRect(0,0,256,36);
+    lctx.fillStyle='#a08040';lctx.font='bold 11px Cinzel,serif';
+    lctx.textAlign='center';lctx.textBaseline='middle';
+    lctx.fillText(layout.name.toUpperCase().slice(0,28),128,18);
+    const lm=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.33),
+      new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(lc),transparent:true}));
     lm.rotation.x=-Math.PI/2;
-    lm.position.set(-1.8, WORLD_Y+0.002, 3.5);
-    scene.add(lm);
-    tableCardMeshes.push(lm);
+    lm.position.set(TABLE_CX,TABLE_Y+0.002,TABLE_CZ+TABLE_D/2+0.2);
+    scene.add(lm);tableCardMeshes.push(lm);
+  }
+}
+
+function _renderDeckSpread(){
+  // No layout — show standard zone outlines + first deck's cards
+  const ZONES=[
+    {label:'DRAW PILE', col:'#204060', nx:0.05, ny:0.15, nw:0.16, nh:0.70},
+    {label:'PLAY AREA',  col:'#1a3a22', nx:0.23, ny:0.05, nw:0.54, nh:0.90},
+    {label:'HAND',       col:'#1a2a50', nx:0.23, ny:0.0,  nw:0.54, nh:0.20},
+    {label:'DISCARD',    col:'#3a1a1a', nx:0.79, ny:0.15, nw:0.16, nh:0.70},
+  ];
+  ZONES.forEach(z=>{
+    const wp=_worldXZ(z.nx+z.nw/2, z.ny+z.nh/2);
+    const ww=z.nw*TABLE_W, wd=z.nh*TABLE_D;
+    const zm=makeZonePlane(z.label,z.col,ww,wd);
+    zm.rotation.x=-Math.PI/2;zm.position.set(wp.x,TABLE_Y+0.001,wp.z);
+    scene.add(zm);tableCardMeshes.push(zm);
+  });
+
+  // Place cards from first deck in the play area
+  let spreadCards=[];
+  if(forgeData.decks?.length){
+    const deck=forgeData.decks[0];
+    const ids=deck.cards||deck.cardIds||[];
+    spreadCards=ids.map(id=>typeof id==='object'
+      ? (forgeData.cards.find(c=>c.id===id?.id)||id)
+      : forgeData.cards.find(c=>c.id===id||c.id===String(id))
+    ).filter(Boolean).slice(0,12);
+  }
+  if(!spreadCards.length) spreadCards=forgeData.cards.slice(0,8);
+
+  const playWP=_worldXZ(0.5,0.5);
+  const cols=Math.min(6,spreadCards.length);
+  const rows=Math.ceil(spreadCards.length/cols);
+  const xStep=TABLE_W*0.45/(Math.max(1,cols-1)||1);
+  const zStep=TABLE_D*0.55/(Math.max(1,rows-1)||1);
+
+  spreadCards.forEach((card,i)=>{
+    const col=i%cols, row=Math.floor(i/cols);
+    const wx=playWP.x+(col-(cols-1)/2)*xStep;
+    const wz=playWP.z+(row-(rows-1)/2)*zStep;
+    const cm=makeCardQuad(card,0.44,0.62);
+    cm.rotation.x=-Math.PI/2;
+    cm.rotation.z=(Math.random()-0.5)*0.08;
+    cm.position.set(wx,TABLE_Y+0.003+i*0.0003,wz);
+    cm.userData={interactable:true,type:'tableCard',card,label:card.name||'Card'};
+    scene.add(cm);tableCardMeshes.push(cm);
+  });
+
+  // Deck name label
+  if(forgeData.decks?.[0]?.name){
+    const dc=document.createElement('canvas');dc.width=256;dc.height=36;
+    const dctx=dc.getContext('2d');
+    dctx.fillStyle='rgba(201,168,76,0.1)';dctx.fillRect(0,0,256,36);
+    dctx.strokeStyle='rgba(201,168,76,0.3)';dctx.lineWidth=1;dctx.strokeRect(0,0,256,36);
+    dctx.fillStyle='#a08040';dctx.font='bold 11px Cinzel,serif';
+    dctx.textAlign='center';dctx.textBaseline='middle';
+    dctx.fillText(forgeData.decks[0].name.toUpperCase().slice(0,28),128,18);
+    const dm=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.33),
+      new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(dc),transparent:true}));
+    dm.rotation.x=-Math.PI/2;
+    dm.position.set(TABLE_CX,TABLE_Y+0.002,TABLE_CZ+TABLE_D/2+0.2);
+    scene.add(dm);tableCardMeshes.push(dm);
   }
 }
 
@@ -1335,16 +1588,6 @@ function getChronicleData(){
 
 // Map our panel keys to lifeapp section IDs and display info
 const CHRONICLE_TABS = [
-  {
-    label:'BOOK',      icon:'📖', key:'book',     sec:'book',
-    color:'#cc8844',
-    preview: d => {
-      const books = d?.books||[];
-      const active = books.find(b=>b.id===d?.activeBookId)||books[0];
-      const chapters = active?.chapters?.length||0;
-      return { count: active?.title||'No book yet', items: [`${chapters} chapter${chapters!==1?'s':''}`] };
-    }
-  },
   {
     label:'COMIC',     icon:'🎨', key:'comic',    sec:'comic',
     color:'#cc4488',
@@ -1460,7 +1703,7 @@ function makeChroniclePanel(tab, x){
 }
 
 function buildChroniclePanels(){
-  const xs = [-7, -2.4, 2.4, 7];
+  const xs = [-5, 0, 5];  // 3 panels (BOOK removed — bookshelf takes that space)
   CHRONICLE_TABS.forEach((tab,i) => makeChroniclePanel(tab, xs[i]));
 }
 
@@ -1625,9 +1868,9 @@ function doInteract(obj){
   else if(type==='tableCard') openCardModal(obj.userData.card||obj.userData);
   else if(type==='table') openPlaytest();
   else if(type==='dice') rollDice(6);
-  else if(type==='chronicle') openChronicle(obj.userData.sec||obj.userData.tab||'book');
+  else if(type==='chronicle') openChronicle(obj.userData.sec||obj.userData.tab||'comic');
   else if(type==='noticeBoard') openStickyBoard();
-  else if(type==='book') openChronicle('book');
+  else if(type==='book') bookOpen(obj.userData.title||null);
   else if(type==='door') enterRoom2();
   else if(type==='exitDoor') exitRoom2();
 }
@@ -2452,7 +2695,7 @@ function pollGamepad(delta){
   // Button events (edge detect)
   const pressed=i=>btns[i]&&btns[i].pressed&&!GP_PREV_BTN[i];
   if(pressed(0)){triggerInteract();}        // A
-  if(pressed(1)){if(drawMode)wbClose();else if(document.getElementById('stickyOverlay').classList.contains('open'))closeStickyBoard();else if(document.getElementById('playtestOverlay').classList.contains('open'))closePlatyest();else if(document.getElementById('chronicleOverlay').classList.contains('open'))chrClose();else if(inRoom2)exitRoom2();else closeModal();}  // B
+  if(pressed(1)){if(drawMode)wbClose();else if(document.getElementById('bookOverlay').classList.contains('open'))bookClose();else if(document.getElementById('stickyOverlay').classList.contains('open'))closeStickyBoard();else if(document.getElementById('playtestOverlay').classList.contains('open'))closePlatyest();else if(document.getElementById('chronicleOverlay').classList.contains('open'))chrClose();else if(inRoom2)exitRoom2();else closeModal();}  // B
   if(pressed(3)){if(drawMode)wbClose();else toggleDrawMode();}  // Y
   if(pressed(2)){jumpToWall('north');}       // X
   if(pressed(9)){openSettings();}            // Start
@@ -2479,6 +2722,7 @@ window.addEventListener('keydown',e=>{
   if(e.code==='KeyE')triggerInteract();
   if(e.code==='Escape'){
     if(drawMode) wbClose();
+    else if(document.getElementById('bookOverlay').classList.contains('open')) bookClose();
     else if(document.getElementById('stickyOverlay').classList.contains('open')) closeStickyBoard();
     else if(document.getElementById('playtestOverlay').classList.contains('open')) closePlatyest();
     else if(document.getElementById('chronicleOverlay').classList.contains('open')) chrClose();
@@ -2516,9 +2760,16 @@ window.addEventListener('mousemove',e=>{
 //  MOVEMENT & CLAMP
 // ═══════════════════════════════════════════════════════════════════
 function clampCamera(){
-  camera.position.x=Math.max(-ROOM_W/2+0.5, Math.min(ROOM_W/2-0.5, camera.position.x));
-  camera.position.y=1.7; // locked height
-  camera.position.z=Math.max(-ROOM_D/2+0.5, Math.min(ROOM_D/2-0.5, camera.position.z));
+  camera.position.y = 1.7; // locked height
+  if(inRoom2){
+    // Room 2 bounds (14 wide, 12 deep, centered at ROOM2_X, z=7)
+    const R2W=14, R2D=12;
+    camera.position.x = Math.max(ROOM2_X - R2W/2 + 0.5, Math.min(ROOM2_X + R2W/2 - 0.5, camera.position.x));
+    camera.position.z = Math.max(7.0 - R2D/2 + 0.5, Math.min(7.0 + R2D/2 - 0.5, camera.position.z));
+  } else {
+    camera.position.x = Math.max(-ROOM_W/2+0.5, Math.min(ROOM_W/2-0.5, camera.position.x));
+    camera.position.z = Math.max(-ROOM_D/2+0.5, Math.min(ROOM_D/2-0.5, camera.position.z));
+  }
 }
 
 function applyVJMovement(delta){
@@ -2890,81 +3141,128 @@ document.getElementById('stickyInput').addEventListener('keydown',e=>{
 //  PHASE 5 — BOOKSHELF (south wall, left side — Chronicle books)
 // ═══════════════════════════════════════════════════════════════════
 function buildBookshelf(){
-  const sx=-5.5, sz=ROOM_D/2-0.22, sy=1.55;
-  const sw=4.2, sh=3.0, shelves=3;
-  const fMat=new THREE.MeshLambertMaterial({color:0x5c3418});
-  // Back panel
-  const back=new THREE.Mesh(new THREE.BoxGeometry(0.05,sh,sw),fMat);
-  back.rotation.y=Math.PI;back.position.set(sx,sy,sz);scene.add(back);
-  // Shelf planks
-  for(let i=0;i<=shelves;i++){
-    const py=sy-sh/2+i*(sh/shelves);
-    const plank=new THREE.Mesh(new THREE.BoxGeometry(0.05,sw,0.32),fMat);
-    plank.rotation.y=Math.PI;plank.position.set(sx,py,sz-0.16);scene.add(plank);
-  }
-  // Side walls
-  [-sw/2,sw/2].forEach(xo=>{
-    const s=new THREE.Mesh(new THREE.BoxGeometry(0.05,sh+0.05,0.32),fMat);
-    s.rotation.y=Math.PI;s.position.set(sx,sy,sz-0.16);
-    // skip for now — back panel is enough visually
+  // Bookshelf on south wall, LEFT side — books face NORTH into room
+  // South wall is at z=+ROOM_D/2. Shelf sits against it.
+  const SW = 7.0;    // width along south wall (x-axis)
+  const SH = 3.8;    // total height
+  const SD = 0.55;   // depth into room (z-axis)
+  const SHELVES = 4;
+  const sx = -4.5;   // center x (left/west side of south wall)
+  const sz = ROOM_D/2 - SD/2 - 0.01; // z-center of shelf unit
+  const FLOOR = 0.0;
+
+  const woodMat  = new THREE.MeshLambertMaterial({color:0x4a2810});
+  const woodDark = new THREE.MeshLambertMaterial({color:0x3a2010});
+
+  // Back panel flush against south wall
+  const back = new THREE.Mesh(new THREE.BoxGeometry(SW, SH, 0.04), woodDark);
+  back.position.set(sx, FLOOR + SH/2, ROOM_D/2 - 0.03);
+  scene.add(back);
+
+  // Left + right side panels
+  [-SW/2, SW/2].forEach(xo => {
+    const side = new THREE.Mesh(new THREE.BoxGeometry(0.06, SH, SD), woodMat);
+    side.position.set(sx + xo, FLOOR + SH/2, sz);
+    scene.add(side);
   });
-  // Books
-  _buildBooks(sx,sz,sy,sw,sh,shelves);
-  // Label
-  const lbl=new THREE.Mesh(new THREE.PlaneGeometry(3.2,0.38),
-    new THREE.MeshBasicMaterial({map:makeLabelTexture('📚 CHRONICLES','TAP A BOOK TO READ'),transparent:true}));
-  lbl.rotation.y=Math.PI;
-  lbl.position.set(sx,sy+sh/2+0.28,sz+0.06);scene.add(lbl);
+
+  // Horizontal shelf planks (bottom = floor level, top = SH)
+  for(let i = 0; i <= SHELVES; i++){
+    const py = FLOOR + i * (SH / SHELVES);
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(SW - 0.08, 0.06, SD), woodMat);
+    plank.position.set(sx, py + 0.03, sz);
+    scene.add(plank);
+  }
+
+  // Label above
+  const lbl = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.8, 0.44),
+    new THREE.MeshBasicMaterial({map: makeLabelTexture('📚 CHRONICLE LIBRARY','TAP A BOOK TO READ'), transparent:true})
+  );
+  lbl.rotation.y = Math.PI;
+  lbl.position.set(sx, FLOOR + SH + 0.32, ROOM_D/2 - 0.08);
+  scene.add(lbl);
+
+  // Fill shelves with books
+  _buildBooks(sx, sz, FLOOR, SW, SH, SHELVES, SD);
 }
 
-function _buildBooks(sx,sz,sy,sw,sh,shelves){
-  let titles=[];
+function _buildBooks(sx, sz, FLOOR, SW, SH, SHELVES, SD){
+  let titles = [];
   try{
-    const cd=JSON.parse(localStorage.getItem('chronicle_data')||'{}');
-    titles=(cd.books||[]).map(b=>b.title||'Untitled');
-    // Also grab writing entries if present
-    if(cd.writing) titles=[...titles,...(cd.writing||[]).map(w=>w.title||'Chapter')];
+    const cd = JSON.parse(localStorage.getItem('chronicle_data')||'{}');
+    titles = (cd.books||[]).map(b => b.title||'Untitled');
+    if(cd.writing) titles = [...titles, ...(cd.writing||[]).map(w => w.title||'Chapter')];
   }catch(e){}
-  if(!titles.length) titles=['The Wanderer\'s Tale','World Atlas','Spell Codex','Campaign Log','NPC Roster','Quest Journal','Battle Records','Lore Compendium','Character Sheets'];
-  const BOOK_COLS=['#8b2020','#204080','#206040','#806020','#602080','#402020','#1c5060','#604040','#204060','#806040','#402060','#208040'];
-  const sHeight=sh/shelves;
-  let bi=0;
-  for(let s=0;s<shelves&&bi<titles.length;s++){
-    const sy2=sy-sh/2+s*sHeight+sHeight*0.5+0.06;
-    const maxBooks=Math.floor(sw/0.26);
-    const count=Math.min(titles.length-bi,maxBooks);
-    const totalW=count*0.26;
-    const startX=sx-totalW/2+0.13;
-    for(let b=0;b<count&&bi<titles.length;b++,bi++){
-      const bx2=startX+b*0.26;
-      const bh2=sHeight*0.78+Math.random()*0.12;
-      const bw2=0.20+Math.random()*0.06;
-      const col=BOOK_COLS[bi%BOOK_COLS.length];
-      // Spine canvas texture
-      const sc=document.createElement('canvas');sc.width=32;sc.height=128;
-      const sctx=sc.getContext('2d');
-      sctx.fillStyle=col;sctx.fillRect(0,0,32,128);
-      sctx.fillStyle='rgba(255,255,255,0.12)';sctx.fillRect(0,0,2,128);
-      sctx.fillStyle='rgba(0,0,0,0.25)';sctx.fillRect(30,0,2,128);
-      sctx.save();sctx.translate(16,64);sctx.rotate(-Math.PI/2);
-      sctx.fillStyle='rgba(255,255,255,0.82)';sctx.font='bold 8px sans-serif';
-      sctx.textAlign='center';sctx.textBaseline='middle';
-      sctx.fillText((titles[bi]||'').slice(0,16),0,0);
+  if(!titles.length) titles = [
+    'The Wanderer's Tale','World Atlas','Spell Codex','Campaign Log',
+    'NPC Roster','Quest Journal','Battle Records','Lore Compendium',
+    'Character Sheets','Bestiary','Maps & Charts','Faction Guide',
+    'History of Realms','Alchemist's Notes','The Night's Edge',
+    'Dungeon Master's Eye','Chronicle Vol.I','Chronicle Vol.II',
+    'Realm Codex','Shadow Lore',
+  ];
+
+  const BOOK_COLS = [
+    '#8b2020','#204080','#206040','#806020','#602080',
+    '#1c5060','#604040','#7a3030','#205050','#806040',
+    '#402060','#208040','#503010','#204060','#6a2040',
+    '#305080','#408030','#703020','#2a5030','#804050',
+  ];
+
+  const shelfH  = SH / SHELVES;         // vertical space per shelf bay
+  const BOOK_W  = 0.28;                  // spine thickness (x-axis)
+  const maxPerShelf = Math.floor((SW - 0.12) / BOOK_W);
+
+  let bi = 0;
+  for(let s = 0; s < SHELVES && bi < titles.length; s++){
+    const shelfFloorY = FLOOR + s * shelfH + 0.06;  // top of this shelf plank
+    const count = Math.min(titles.length - bi, maxPerShelf);
+    const totalW = count * BOOK_W;
+    const startX = sx - totalW/2 + BOOK_W/2;
+
+    for(let b = 0; b < count && bi < titles.length; b++, bi++){
+      const bx = startX + b * BOOK_W;
+      const bh = shelfH * 0.84 + (Math.random() - 0.5) * 0.1;
+      const bd = SD * 0.70 + Math.random() * 0.08;
+      const col = BOOK_COLS[bi % BOOK_COLS.length];
+
+      // Spine texture (32x128, spine = +z face, faces into room)
+      const sc = document.createElement('canvas'); sc.width=32; sc.height=128;
+      const sctx = sc.getContext('2d');
+      sctx.fillStyle = col; sctx.fillRect(0,0,32,128);
+      sctx.fillStyle = 'rgba(255,255,255,0.15)'; sctx.fillRect(0,0,2,128);
+      sctx.fillStyle = 'rgba(0,0,0,0.25)'; sctx.fillRect(30,0,2,128);
+      sctx.fillStyle = 'rgba(201,168,76,0.32)'; sctx.fillRect(0,8,32,3); sctx.fillRect(0,117,32,3);
+      sctx.save(); sctx.translate(16,64); sctx.rotate(-Math.PI/2);
+      sctx.fillStyle = 'rgba(255,255,255,0.9)'; sctx.font = 'bold 8px sans-serif';
+      sctx.textAlign = 'center'; sctx.textBaseline = 'middle';
+      sctx.fillText((titles[bi]||'').slice(0,16), 0, 0);
       sctx.restore();
-      const stex=new THREE.CanvasTexture(sc);
-      const bookMats=[
-        new THREE.MeshLambertMaterial({color:new THREE.Color(col).multiplyScalar(0.75)}),
-        new THREE.MeshLambertMaterial({color:new THREE.Color(col).multiplyScalar(0.75)}),
-        new THREE.MeshLambertMaterial({color:0xf0e8d0}),
-        new THREE.MeshLambertMaterial({color:0xf0e8d0}),
-        new THREE.MeshLambertMaterial({map:stex}),
-        new THREE.MeshLambertMaterial({color:new THREE.Color(col).multiplyScalar(0.65)}),
+
+      const c3 = new THREE.Color(col);
+      // BoxGeometry faces: +x, -x, +y(top), -y, +z(SPINE→room), -z(back)
+      const bookMats = [
+        new THREE.MeshLambertMaterial({color: c3.clone().multiplyScalar(0.72)}),
+        new THREE.MeshLambertMaterial({color: c3.clone().multiplyScalar(0.72)}),
+        new THREE.MeshLambertMaterial({color: 0xf0e8d0}),
+        new THREE.MeshLambertMaterial({color: 0xe8e0c8}),
+        new THREE.MeshLambertMaterial({map: new THREE.CanvasTexture(sc)}),
+        new THREE.MeshLambertMaterial({color: c3.clone().multiplyScalar(0.62)}),
       ];
-      const bMesh=new THREE.Mesh(new THREE.BoxGeometry(0.28,bh2,bw2),bookMats);
-      bMesh.rotation.y=Math.PI;
-      bMesh.position.set(bx2,sy2,sz-0.14);
-      bMesh.userData={interactable:true,type:'book',title:titles[bi],
-        label:`"${(titles[bi]||'').slice(0,22)}" — Open Chronicles`};
+      const bMesh = new THREE.Mesh(new THREE.BoxGeometry(BOOK_W - 0.02, bh, bd), bookMats);
+      // Position: books stand upright on shelf, spine faces -z (into room = -z since south wall)
+      // South wall is at +z, room is at -z side of shelf
+      // So spine (+z face of book) should face toward -z = into room
+      // But books are against south wall, room is at -z of their position
+      // spine faces +z → that goes INTO the wall. We need spine at -z face.
+      // Rotate 180° around Y so +z face (spine) now faces room (-z direction)
+      bMesh.rotation.y = Math.PI;
+      bMesh.position.set(bx, shelfFloorY + bh/2, sz + SD/2 - bd/2 - 0.01);
+      bMesh.userData = {
+        interactable: true, type: 'book', title: titles[bi],
+        label: `"${(titles[bi]||'').slice(0,22)}" — Open Chronicles`
+      };
       scene.add(bMesh);
     }
   }
@@ -2973,116 +3271,161 @@ function _buildBooks(sx,sz,sy,sw,sh,shelves){
 // ═══════════════════════════════════════════════════════════════════
 //  PHASE 5 — SECOND ROOM ("The Study") + DOOR
 // ═══════════════════════════════════════════════════════════════════
-const ROOM2_Z=-60; // offset in scene space (well away from main room)
-let inRoom2=false;
-let _room2Lights=[];
+// ═══════════════════════════════════════════════════════════════════
+//  PHASE 5 — SECOND ROOM ("The Study") + DOOR ON EAST WALL
+// ═══════════════════════════════════════════════════════════════════
+// Door is on the EAST wall (south end).
+// Room 2 is placed east of the main room (positive X offset).
+const ROOM2_X = ROOM_W/2 + 25; // center X of Room 2 in world space
+let inRoom2 = false;
+let _room2Lights = [];
 
 function buildDoor(){
-  const dx=ROOM_W/2-2.2, dz=-ROOM_D/2, dh=3.0, dw=1.5;
-  // Wood frame
-  const fMat=new THREE.MeshLambertMaterial({color:0x5c3418});
-  // Top lintel
-  const lintel=new THREE.Mesh(new THREE.BoxGeometry(dw+0.28,0.18,0.14),fMat);
-  lintel.position.set(dx,dh+0.09,dz+0.05);scene.add(lintel);
-  // Side jambs
-  [-dw/2-0.1,dw/2+0.1].forEach(xo=>{
-    const j=new THREE.Mesh(new THREE.BoxGeometry(0.14,dh,0.14),fMat);
-    j.position.set(dx+xo,dh/2,dz+0.05);scene.add(j);
+  // Door on east wall (x=+ROOM_W/2), near south end
+  const dz = 7.0;        // z position (south side of east wall)
+  const dex = ROOM_W/2;  // east wall x position
+  const dh = 3.0, dw = 1.5;
+
+  const fMat = new THREE.MeshLambertMaterial({color:0x5c3418});
+  // Top lintel (runs along z-axis)
+  const lintel = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.18, dw+0.28), fMat);
+  lintel.position.set(dex - 0.05, dh + 0.09, dz);
+  scene.add(lintel);
+  // Side jambs (vertical, also along z-axis since wall faces x)
+  [dz - dw/2 - 0.1, dz + dw/2 + 0.1].forEach(zo => {
+    const j = new THREE.Mesh(new THREE.BoxGeometry(0.14, dh, 0.14), fMat);
+    j.position.set(dex - 0.05, dh/2, zo);
+    scene.add(j);
   });
-  // Door surface
-  const dc=document.createElement('canvas');dc.width=128;dc.height=256;
-  const dctx=dc.getContext('2d');
-  dctx.fillStyle='#4e2c0e';dctx.fillRect(0,0,128,256);
-  // Panels
-  dctx.strokeStyle='rgba(180,140,60,0.45)';dctx.lineWidth=3;dctx.strokeRect(8,8,112,240);
+
+  // Door surface canvas
+  const dc = document.createElement('canvas'); dc.width=128; dc.height=256;
+  const dctx = dc.getContext('2d');
+  dctx.fillStyle = '#4e2c0e'; dctx.fillRect(0,0,128,256);
+  dctx.strokeStyle = 'rgba(180,140,60,0.45)'; dctx.lineWidth = 3;
+  dctx.strokeRect(8,8,112,240);
   [[12,12,104,108],[12,134,104,108]].forEach(([x,y,w,h])=>{
-    dctx.fillStyle='rgba(0,0,0,0.18)';dctx.fillRect(x,y,w,h);
-    dctx.strokeStyle='rgba(180,140,60,0.35)';dctx.lineWidth=1;dctx.strokeRect(x,y,w,h);
+    dctx.fillStyle='rgba(0,0,0,0.18)'; dctx.fillRect(x,y,w,h);
+    dctx.strokeStyle='rgba(180,140,60,0.35)'; dctx.lineWidth=1; dctx.strokeRect(x,y,w,h);
   });
   // Handle
-  dctx.fillStyle='#c9a84c';dctx.beginPath();dctx.arc(100,128,7,0,Math.PI*2);dctx.fill();
-  dctx.strokeStyle='#e8d06a';dctx.lineWidth=1.5;dctx.beginPath();dctx.arc(100,128,7,0,Math.PI*2);dctx.stroke();
-  // Label
-  dctx.fillStyle='rgba(201,168,76,0.55)';dctx.font='bold 10px Cinzel,serif';dctx.textAlign='center';dctx.textBaseline='bottom';
-  dctx.fillText('THE STUDY',64,252);
-  const doorMesh=new THREE.Mesh(new THREE.PlaneGeometry(dw,dh),
-    new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(dc),side:THREE.DoubleSide}));
-  doorMesh.position.set(dx,dh/2,dz+0.06);
-  doorMesh.userData={interactable:true,type:'door',label:'Enter The Study [TAP ⬡]'};
+  dctx.fillStyle='#c9a84c'; dctx.beginPath(); dctx.arc(20,128,7,0,Math.PI*2); dctx.fill();
+  dctx.strokeStyle='#e8d06a'; dctx.lineWidth=1.5; dctx.beginPath(); dctx.arc(20,128,7,0,Math.PI*2); dctx.stroke();
+  dctx.fillStyle='rgba(201,168,76,0.6)'; dctx.font='bold 10px Cinzel,serif';
+  dctx.textAlign='center'; dctx.textBaseline='bottom';
+  dctx.fillText('THE STUDY', 64, 252);
+
+  const doorMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(dw, dh),
+    new THREE.MeshLambertMaterial({map: new THREE.CanvasTexture(dc), side: THREE.DoubleSide})
+  );
+  // East wall faces -x, so plane needs to face -x → rotate -90° around Y
+  doorMesh.rotation.y = -Math.PI/2;
+  doorMesh.position.set(dex - 0.06, dh/2, dz);
+  doorMesh.userData = {interactable:true, type:'door', label:'Enter The Study [TAP ⬡]'};
   scene.add(doorMesh);
+
   // Sign above door
-  const sign=new THREE.Mesh(new THREE.PlaneGeometry(2.2,0.36),
-    new THREE.MeshBasicMaterial({map:makeLabelTexture('✦ THE STUDY','PRIVATE WRITING ROOM'),transparent:true}));
-  sign.position.set(dx,dh+0.42,dz+0.08);scene.add(sign);
+  const sign = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.4, 0.38),
+    new THREE.MeshBasicMaterial({map: makeLabelTexture('✦ THE STUDY','PRIVATE WRITING ROOM'), transparent:true})
+  );
+  sign.rotation.y = -Math.PI/2;
+  sign.position.set(dex - 0.08, dh + 0.38, dz);
+  scene.add(sign);
 }
 
 function buildRoom2(){
-  const R2W=12,R2H=4.5,R2D=14;
-  const OZ=ROOM2_Z;
-  const wallMat=new THREE.MeshLambertMaterial({color:0x241c10});
-  const floorMat=new THREE.MeshLambertMaterial({color:0x1a1408});
-  const ceilMat=new THREE.MeshLambertMaterial({color:0x1e1a0e});
-  // Room geometry
+  // Study room: placed east of main room at ROOM2_X
+  // Entry is from west wall of Study (at x = ROOM2_X - R2W/2)
+  const R2W=14, R2H=4.5, R2D=12;
+  const OX = ROOM2_X;
+  const OZ = 7.0; // aligned with door z position
+
+  const wallMat  = new THREE.MeshLambertMaterial({color:0x241c10});
+  const floorMat = new THREE.MeshLambertMaterial({color:0x1a1408});
+  const ceilMat  = new THREE.MeshLambertMaterial({color:0x1e1a0e});
+
+  // Floor, ceiling, 4 walls
   [
-    [new THREE.PlaneGeometry(R2W,R2D),[0,0,OZ],[-Math.PI/2,0,0],floorMat],
-    [new THREE.PlaneGeometry(R2W,R2D),[0,R2H,OZ],[Math.PI/2,0,0],ceilMat],
-    [new THREE.PlaneGeometry(R2W,R2H),[0,R2H/2,OZ-R2D/2],[0,0,0],wallMat],
-    [new THREE.PlaneGeometry(R2W,R2H),[0,R2H/2,OZ+R2D/2],[0,Math.PI,0],wallMat],
-    [new THREE.PlaneGeometry(R2D,R2H),[R2W/2,R2H/2,OZ],[0,-Math.PI/2,0],wallMat],
-    [new THREE.PlaneGeometry(R2D,R2H),[-R2W/2,R2H/2,OZ],[0,Math.PI/2,0],wallMat],
+    [new THREE.PlaneGeometry(R2W,R2D), [OX, 0,   OZ], [-Math.PI/2,0,0], floorMat],
+    [new THREE.PlaneGeometry(R2W,R2D), [OX, R2H, OZ], [ Math.PI/2,0,0], ceilMat],
+    // North wall (+z side)
+    [new THREE.PlaneGeometry(R2W,R2H), [OX, R2H/2, OZ+R2D/2], [0,Math.PI,0], wallMat],
+    // South wall (-z side)
+    [new THREE.PlaneGeometry(R2W,R2H), [OX, R2H/2, OZ-R2D/2], [0,0,0], wallMat],
+    // East wall (+x side)
+    [new THREE.PlaneGeometry(R2D,R2H), [OX+R2W/2, R2H/2, OZ], [0,-Math.PI/2,0], wallMat],
+    // West wall (-x side) — this is where the entry is
+    [new THREE.PlaneGeometry(R2D,R2H), [OX-R2W/2, R2H/2, OZ], [0, Math.PI/2,0], wallMat],
   ].forEach(([geo,pos,rot,mat])=>{
-    const m=new THREE.Mesh(geo,mat);
-    m.position.set(...pos);m.rotation.set(...rot);scene.add(m);
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(...pos); m.rotation.set(...rot); scene.add(m);
   });
-  // Ambient + candle light (hidden until entered)
-  const r2amb=new THREE.AmbientLight(0x604820,0.45);r2amb.visible=false;scene.add(r2amb);
-  const r2candle=new THREE.PointLight(0xff8020,1.4,7);r2candle.position.set(0,1.8,OZ+2);r2candle.visible=false;scene.add(r2candle);
-  _room2Lights=[r2amb,r2candle];
-  // Candle ref stored for flicker
-  scene.userData.r2Candle=r2candle;
+
+  // Lights (hidden until entered)
+  const r2amb = new THREE.AmbientLight(0x604820, 0.45); r2amb.visible=false; scene.add(r2amb);
+  const r2candle = new THREE.PointLight(0xff8020, 1.4, 8);
+  r2candle.position.set(OX, 1.8, OZ); r2candle.visible=false; scene.add(r2candle);
+  _room2Lights = [r2amb, r2candle];
+  scene.userData.r2Candle = r2candle;
+
   // Desk
-  const deskMat=new THREE.MeshLambertMaterial({color:0x3c2010});
-  const desk=new THREE.Mesh(new THREE.BoxGeometry(2.8,0.1,1.4),deskMat);
-  desk.position.set(0,0.82,OZ+2);scene.add(desk);
-  [[-1.3,0,-0.6],[-1.3,0,0.6],[1.3,0,-0.6],[1.3,0,0.6]].forEach(([x,_,z])=>{
-    const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.07,0.82,6),deskMat);
-    leg.position.set(x,0.41,OZ+2+z);scene.add(leg);
+  const deskMat = new THREE.MeshLambertMaterial({color:0x3c2010});
+  const desk = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.1, 1.4), deskMat);
+  desk.position.set(OX, 0.82, OZ - 2); scene.add(desk);
+  [[-1.3,-0.6],[-1.3,0.6],[1.3,-0.6],[1.3,0.6]].forEach(([lx,lz])=>{
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.07,0.82,6), deskMat);
+    leg.position.set(OX+lx, 0.41, OZ-2+lz); scene.add(leg);
   });
   // Candle on desk
-  const wax=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.045,0.22,8),
+  const wax = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.045,0.22,8),
     new THREE.MeshLambertMaterial({color:0xf0e0a0}));
-  wax.position.set(1.1,0.98,OZ+1.5);scene.add(wax);
-  const flame=new THREE.Mesh(new THREE.SphereGeometry(0.04,6,4),
+  wax.position.set(OX+1.1, 0.98, OZ-1.5); scene.add(wax);
+  const flame = new THREE.Mesh(new THREE.SphereGeometry(0.04,6,4),
     new THREE.MeshBasicMaterial({color:0xff9020}));
-  flame.position.set(1.1,1.1,OZ+1.5);scene.add(flame);
-  scene.userData.r2Flame=flame;
-  // Exit door on south wall of room 2
-  const exdc=document.createElement('canvas');exdc.width=128;exdc.height=256;
-  const ectx=exdc.getContext('2d');
-  ectx.fillStyle='#4e2c0e';ectx.fillRect(0,0,128,256);
-  ectx.strokeStyle='rgba(180,140,60,0.4)';ectx.lineWidth=2;ectx.strokeRect(8,8,112,240);
-  ectx.fillStyle='#c9a84c';ectx.beginPath();ectx.arc(28,128,7,0,Math.PI*2);ectx.fill();
-  ectx.fillStyle='rgba(201,168,76,0.6)';ectx.font='bold 10px Cinzel,serif';ectx.textAlign='center';ectx.textBaseline='bottom';
-  ectx.fillText('← WORKSHOP',64,252);
-  const exitMesh=new THREE.Mesh(new THREE.PlaneGeometry(1.5,3.0),
-    new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(exdc),side:THREE.DoubleSide}));
-  exitMesh.position.set(R2W/2-2.2,1.5,OZ+R2D/2-0.06);
-  exitMesh.rotation.y=Math.PI;
-  exitMesh.userData={interactable:true,type:'exitDoor',label:'Return to Workshop [TAP ⬡]'};
+  flame.position.set(OX+1.1, 1.10, OZ-1.5); scene.add(flame);
+  scene.userData.r2Flame = flame;
+
+  // Exit door on west wall of room 2 (back into main room)
+  const exdc = document.createElement('canvas'); exdc.width=128; exdc.height=256;
+  const ectx = exdc.getContext('2d');
+  ectx.fillStyle='#4e2c0e'; ectx.fillRect(0,0,128,256);
+  ectx.strokeStyle='rgba(180,140,60,0.4)'; ectx.lineWidth=2; ectx.strokeRect(8,8,112,240);
+  ectx.fillStyle='#c9a84c'; ectx.beginPath(); ectx.arc(108,128,7,0,Math.PI*2); ectx.fill();
+  ectx.fillStyle='rgba(201,168,76,0.6)'; ectx.font='bold 10px Cinzel,serif';
+  ectx.textAlign='center'; ectx.textBaseline='bottom';
+  ectx.fillText('← WORKSHOP', 64, 252);
+
+  const exitMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.5, 3.0),
+    new THREE.MeshLambertMaterial({map: new THREE.CanvasTexture(exdc), side: THREE.DoubleSide})
+  );
+  exitMesh.rotation.y = Math.PI/2; // west wall faces +x
+  exitMesh.position.set(OX - R2W/2 + 0.06, 1.5, OZ);
+  exitMesh.userData = {interactable:true, type:'exitDoor', label:'Return to Workshop [TAP ⬡]'};
   scene.add(exitMesh);
-  // Room label
-  const rlbl=new THREE.Mesh(new THREE.PlaneGeometry(3.8,0.46),
-    new THREE.MeshBasicMaterial({map:makeLabelTexture('✦ THE STUDY','QUIET ROOM FOR WRITING & REFLECTION'),transparent:true}));
-  rlbl.position.set(0,R2H-0.3,OZ-R2D/2+0.14);scene.add(rlbl);
+
+  // Room label on north wall
+  const rlbl = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.5, 0.46),
+    new THREE.MeshBasicMaterial({map: makeLabelTexture('✦ THE STUDY','QUIET ROOM FOR WRITING & REFLECTION'), transparent:true})
+  );
+  rlbl.position.set(OX, R2H-0.3, OZ-R2D/2+0.14); scene.add(rlbl);
 }
 
 function enterRoom2(skipAnim=false){
   inRoom2=true; settings.currentRoom='room2';
-  camera.position.set(ROOM_W/2-2.2,1.7,ROOM2_Z+5);
-  yaw=Math.PI; pitch=0;
+  // Spawn just inside the west wall of Room 2, facing east (into the room)
+  camera.position.set(ROOM2_X - ROOM_W/2*0.85, 1.7, 7.0);
+  yaw = 0; pitch = 0; // facing east (+x direction = yaw=0)
   _room2Lights.forEach(l=>l.visible=true);
   const fl=document.getElementById('room2Flash');
-  if(skipAnim){ scene.background=new THREE.Color(0x1a1208); scene.fog=new THREE.Fog(0x1a1208,5,16); return; }
+  if(skipAnim){
+    scene.background=new THREE.Color(0x1a1208);
+    scene.fog=new THREE.Fog(0x1a1208,5,16);
+    return;
+  }
   fl.classList.add('flash');
   setTimeout(()=>{
     scene.background=new THREE.Color(0x1a1208);
@@ -3091,11 +3434,13 @@ function enterRoom2(skipAnim=false){
     toast('You entered The Study ✦');
   },420);
 }
+
 function exitRoom2(){
   inRoom2=false; settings.currentRoom='main';
   _room2Lights.forEach(l=>l.visible=false);
-  camera.position.set(ROOM_W/2-2.6,1.7,-ROOM_D/2+2.5);
-  yaw=Math.PI/2; pitch=0;
+  // Spawn back into main room just inside the east wall, near the door
+  camera.position.set(ROOM_W/2 - 2.5, 1.7, 7.0);
+  yaw = Math.PI; pitch = 0; // facing west (back into room)
   const fl=document.getElementById('room2Flash');
   fl.classList.add('flash');
   setTimeout(()=>{
@@ -3104,6 +3449,166 @@ function exitRoom2(){
     toast('Back in the Workshop ✦');
   },420);
 }
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  BOOK READER — reads + writes chronicle_data.books in localStorage
+// ═══════════════════════════════════════════════════════════════════
+const bookR = {
+  bookId:    null,    // id of open book
+  chIdx:     0,       // current chapter index
+  dirty:     false,   // unsaved changes flag
+  _book:     null,    // live book object reference
+  _isDemo:   false,   // true = no real data, don't try to save
+};
+
+function bookOpen(titleHint){
+  // Load chronicle data and find the matching book
+  const cd = getChronicleData() || {};
+  const books = cd.books || [];
+  let book = books.find(b => b.title === titleHint) || books[0] || null;
+
+  if(!book){
+    // Create a demo book inline so the UI still works
+    book = {
+      id: null,
+      title: titleHint || 'Untitled Book',
+      chapters: [{id:'demo1', title:'Chapter 1', content:'No Chronicle book data found.\n\nOpen the Chronicle app and create a book first, then come back here to read and write from the Forge Room.'}]
+    };
+    bookR._isDemo = true;
+  } else {
+    bookR._isDemo = false;
+  }
+
+  bookR.bookId = book.id;
+  bookR.chIdx  = 0;
+  bookR.dirty  = false;
+  bookR._book  = book;
+
+  document.getElementById('bookTitleBar').textContent = book.title || 'Untitled';
+  document.getElementById('bookOverlay').classList.add('open');
+  history.pushState({page:'forge-room'}, '');
+
+  _bookRenderSidebar();
+  _bookLoadChapter(0);
+}
+
+function bookClose(){
+  if(bookR.dirty) bookSave();
+  document.getElementById('bookOverlay').classList.remove('open');
+  bookR.dirty = false;
+}
+
+function _bookRenderSidebar(){
+  const chapters = bookR._book?.chapters || [];
+  const list = document.getElementById('chapterList');
+  list.innerHTML = '';
+  if(!chapters.length){
+    list.innerHTML='<div style="padding:12px 14px;color:#504030;font-size:11px;font-family:Cinzel,serif;">No chapters yet</div>';
+    return;
+  }
+  chapters.forEach((ch, i) => {
+    const el = document.createElement('div');
+    el.className = 'ch-item' + (i===bookR.chIdx?' active':'');
+    el.innerHTML = `<span class="ch-n">CH. ${i+1}</span><span class="ch-t">${(ch.title||'Untitled').slice(0,28)}</span>`;
+    el.onclick = () => { if(bookR.dirty) bookSave(); _bookLoadChapter(i); };
+    list.appendChild(el);
+  });
+}
+
+function _bookLoadChapter(idx){
+  const chapters = bookR._book?.chapters || [];
+  bookR.chIdx = Math.max(0, Math.min(idx, chapters.length-1));
+  const ch = chapters[bookR.chIdx];
+
+  // Update sidebar
+  document.querySelectorAll('.ch-item').forEach((el,i) => el.classList.toggle('active', i===bookR.chIdx));
+
+  const titleEl = document.getElementById('chTitle');
+  const editor  = document.getElementById('chEditor');
+
+  if(ch){
+    titleEl.textContent = ch.title || '';
+    editor.value = ch.content || '';
+  } else {
+    titleEl.textContent = '';
+    editor.value = '';
+  }
+
+  bookR.dirty = false;
+  document.getElementById('bookSaveBtn').textContent = '💾 SAVE';
+  document.getElementById('bookSaveBtn').classList.remove('save-flash');
+  _bookUpdateFooter();
+}
+
+function bookSave(){
+  if(bookR._isDemo){ bookR.dirty=false; toast('No Chronicle data to save to — open Chronicle app first'); return; }
+  const cd = getChronicleData();
+  if(!cd) return;
+
+  const books = cd.books||[];
+  const bi = books.findIndex(b=>b.id===bookR.bookId);
+  if(bi<0) return;
+
+  const ch = books[bi].chapters?.[bookR.chIdx];
+  if(!ch) return;
+
+  ch.title   = (document.getElementById('chTitle').textContent||'').trim() || ch.title;
+  ch.content = document.getElementById('chEditor').value;
+
+  // Also update in-memory reference
+  bookR._book = books[bi];
+
+  try{
+    cd.books = books;
+    localStorage.setItem(STORE_CHRONICLE, JSON.stringify(cd));
+    bookR.dirty = false;
+    const btn = document.getElementById('bookSaveBtn');
+    btn.textContent = '✓ SAVED';
+    btn.classList.add('save-flash');
+    setTimeout(()=>{ btn.textContent='💾 SAVE'; btn.classList.remove('save-flash'); }, 2000);
+    _bookRenderSidebar(); // refresh in case title changed
+    toast('Chapter saved ✦','good');
+  }catch(e){ toast('Save failed — localStorage full?','bad'); }
+}
+
+function bookAddChapter(){
+  if(bookR._isDemo){ toast('No Chronicle data — open Chronicle app first'); return; }
+  if(bookR.dirty) bookSave();
+
+  const cd = getChronicleData(); if(!cd) return;
+  const bi = (cd.books||[]).findIndex(b=>b.id===bookR.bookId);
+  if(bi<0) return;
+
+  cd.books[bi].chapters = cd.books[bi].chapters||[];
+  const newCh = {id:'ch_'+Date.now(), title:`Chapter ${cd.books[bi].chapters.length+1}`, content:''};
+  cd.books[bi].chapters.push(newCh);
+
+  localStorage.setItem(STORE_CHRONICLE, JSON.stringify(cd));
+  bookR._book = cd.books[bi];
+  _bookRenderSidebar();
+  _bookLoadChapter(cd.books[bi].chapters.length-1);
+  document.getElementById('chEditor').focus();
+  toast('New chapter added','good');
+}
+
+function bookDirty(){
+  bookR.dirty = true;
+  _bookUpdateFooter();
+}
+
+function _bookUpdateFooter(){
+  const text = document.getElementById('chEditor').value;
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  document.getElementById('bookWordCount').textContent = `${words} word${words!==1?'s':''}`;
+  const total = bookR._book?.chapters?.length||0;
+  document.getElementById('bookSaveStatus').textContent = bookR._isDemo
+    ? 'Demo — changes not saved'
+    : `Chapter ${bookR.chIdx+1} of ${total}${bookR.dirty?' · unsaved':''}`;
+}
+
+// Auto-save when editor loses focus
+document.getElementById('chEditor').addEventListener('blur', ()=>{ if(bookR.dirty) bookSave(); });
 
 function setLoad(pct,msg){
   document.getElementById('loadBar').style.width=pct+'%';
@@ -3203,6 +3708,9 @@ let backPressTimer = null;
 history.pushState({page:'forge-room'}, '');
 window.addEventListener('popstate', e=>{
   if(drawMode){ wbClose(); history.pushState({page:'forge-room'},''); return; }
+  if(document.getElementById('bookOverlay').classList.contains('open')){
+    bookClose(); history.pushState({page:'forge-room'},''); return;
+  }
   if(document.getElementById('stickyOverlay').classList.contains('open')){
     closeStickyBoard(); history.pushState({page:'forge-room'},''); return;
   }
