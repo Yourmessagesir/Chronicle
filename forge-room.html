@@ -2,11 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0d0d0f">
+<meta name="screen-orientation" content="any">
+<meta name="theme-color" content="#f0ede6">
+<link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Forge%20Room%22%2C%22short_name%22%3A%22Forge%20Room%22%2C%22start_url%22%3A%22forge-room.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f0ede6%22%2C%22theme_color%22%3A%22%23c9a84c%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%2527http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%2527%2520viewBox%3D%25270%25200%252064%252064%2527%253E%253Crect%2520width%3D%252764%2527%2520height%3D%252764%2527%2520fill%3D%2527%2523c9a84c%2527%2F%253E%253Ctext%2520x%3D%252732%2527%2520y%3D%252746%2527%2520font-size%3D%252740%2527%2520text-anchor%3D%2527middle%2527%2520fill%3D%2527white%2527%253E%25E2%259C%25A6%253C%2F%2520text%253E%253C%2F%2520svg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
 <title>Forge Room</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
 <style>
@@ -180,6 +182,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
 #chronicleLoading p{font-family:'Cinzel',serif;font-size:11px;color:var(--text2);
   letter-spacing:.1em;}
 
+/* ── INSTALL BANNER ── */
+#installBanner{position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:rgba(250,248,240,0.97);border-top:1px solid rgba(180,155,90,0.5);
+  display:none;align-items:center;gap:12px;padding:10px 16px;
+  font-family:'Cinzel',serif;}
+#installBanner.show{display:flex;}
+#installBanner p{flex:1;font-size:10px;color:#5a4010;letter-spacing:.08em;}
+#installBanner button{background:var(--gold);border:none;color:#2a1800;
+  padding:8px 16px;border-radius:4px;font-family:'Cinzel',serif;font-size:9px;
+  letter-spacing:.08em;cursor:pointer;font-weight:700;}
+#installBanner .dismiss{background:transparent;border:1px solid rgba(180,155,90,0.4);
+  color:#8a6820;padding:6px 10px;}
+
 /* ── TOAST ── */
 #toast{position:fixed;bottom:180px;left:50%;transform:translateX(-50%);
   background:rgba(13,15,20,0.95);border:1px solid var(--border);
@@ -190,13 +205,46 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
 #toast.good{border-color:var(--green);color:var(--green);}
 #toast.bad{border-color:var(--red);color:var(--red);}
 
+/* ── PLAYTEST IFRAME OVERLAY ── */
+#playtestOverlay{position:fixed;inset:0;z-index:80;display:none;flex-direction:column;
+  background:#0d0f14;}
+#playtestOverlay.open{display:flex;}
+#playtestHeader{display:flex;align-items:center;gap:10px;padding:0 14px;
+  background:#0d0f14;border-bottom:1px solid var(--border);
+  height:48px;flex-shrink:0;}
+#playtestHeader h2{font-family:'Cinzel',serif;font-size:12px;color:var(--gold2);
+  letter-spacing:.15em;flex:1;}
+#playtestHeader .pt-btn{background:transparent;border:1px solid var(--border);
+  color:var(--text2);padding:5px 12px;border-radius:4px;
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:.08em;
+  cursor:pointer;white-space:nowrap;transition:all .15s;}
+#playtestHeader .pt-btn:hover{color:var(--gold);border-color:var(--gold);}
+#playtestFrame{flex:1;border:none;display:block;width:100%;background:#0d0f14;}
+#playtestLoading{position:absolute;inset:48px 0 0 0;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;background:#0d0f14;z-index:1;pointer-events:none;transition:opacity .4s;}
+#playtestLoading.hidden{opacity:0;pointer-events:none;}
+#playtestLoading p{font-family:'Cinzel',serif;font-size:11px;color:var(--text2);
+  letter-spacing:.1em;}
+
+/* ── DICE RESULT ── */
+#diceResult{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:150;pointer-events:none;opacity:0;transition:opacity .2s;
+  font-family:'Cinzel',serif;text-align:center;}
+#diceResult .dice-num{font-size:72px;color:var(--gold2);
+  text-shadow:0 0 30px rgba(201,168,76,0.8), 0 0 60px rgba(201,168,76,0.4);
+  line-height:1;display:block;}
+#diceResult .dice-label{font-size:11px;color:var(--text2);letter-spacing:.15em;
+  margin-top:4px;display:block;}
+#diceResult.show{opacity:1;}
+
 /* ── MINIMAP (future) ── */
 #minimap{position:fixed;top:52px;right:12px;width:70px;height:70px;
   border:1px solid var(--border);border-radius:4px;
   background:rgba(13,15,20,0.7);display:none;pointer-events:none;}
 
 /* Scrollable card wall UI */
-#wallNav{position:fixed;bottom:160px;left:50%;transform:translateX(-50%);
+#wallNav{position:fixed;bottom:170px;left:50%;transform:translateX(-50%);
   display:flex;gap:8px;z-index:20;pointer-events:auto;opacity:0;
   transition:opacity .3s;}
 #wallNav.show{opacity:1;}
@@ -207,7 +255,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
 
 /* ── WHITEBOARD OVERLAY ── */
 #wbOverlay{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;
-  background:rgba(8,10,16,0.96);}
+  background:rgba(8,10,16,0.98);}
 #wbOverlay.open{display:flex;}
 
 #wbHeader{display:flex;align-items:center;gap:10px;padding:8px 14px;
@@ -217,8 +265,33 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
   letter-spacing:.15em;flex:1;}
 #wbWallLabel{font-size:9px;color:var(--text2);letter-spacing:.1em;font-family:'Cinzel',serif;}
 
-#wbCanvas{flex:1;display:block;touch-action:none;cursor:crosshair;}
+/* Scrollable canvas viewport */
+#wbViewport{flex:1;overflow:hidden;position:relative;touch-action:none;
+  background:#0e1018;}
+
+#wbCanvas{display:block;position:absolute;top:0;left:0;cursor:crosshair;touch-action:none;}
 #wbCanvas.erasing{cursor:cell;}
+#wbCanvas.panning{cursor:grab;}
+#wbCanvas.panning:active{cursor:grabbing;}
+
+/* Zoom controls */
+#wbZoomBar{position:absolute;top:8px;right:8px;z-index:5;
+  display:flex;flex-direction:column;gap:4px;}
+.wb-zoom-btn{width:34px;height:34px;border-radius:4px;
+  background:rgba(13,15,20,0.9);border:1px solid var(--border);
+  color:var(--text);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;}
+.wb-zoom-btn:active{border-color:var(--gold);color:var(--gold);}
+#wbZoomLabel{font-family:'Cinzel',serif;font-size:8px;color:var(--text2);
+  text-align:center;letter-spacing:.06em;}
+
+/* Pan mode toggle */
+#wbPanBtn{padding:5px 10px;border-radius:4px;background:rgba(255,255,255,0.05);
+  border:1px solid var(--border);color:var(--text2);cursor:pointer;
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:.06em;
+  white-space:nowrap;flex-shrink:0;transition:all .15s;}
+#wbPanBtn.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.12);}
 
 #wbToolbar{display:flex;align-items:center;gap:6px;padding:8px 12px;
   background:rgba(13,15,20,0.95);border-top:1px solid var(--border);
@@ -307,15 +380,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
   <button class="abtn" id="btnDraw" onclick="toggleDrawMode()" title="Whiteboard">
     ✏<span class="abtn-label">DRAW</span>
   </button>
-  <button class="abtn" id="btnInteract" onclick="triggerInteract()" title="Interact">
-    ⬡<span class="abtn-label">USE</span>
-  </button>
-  <button class="abtn" id="btnGallery" onclick="jumpToWall('north')" title="Card Gallery">
-    🃏<span class="abtn-label">CARDS</span>
-  </button>
-  <button class="abtn" id="btnChronicle" onclick="openChronicle('calendar')" title="Chronicle">
-    ✦<span class="abtn-label">CHRON</span>
-  </button>
 </div>
 
 <!-- Wall navigation -->
@@ -335,7 +399,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
     <span id="wbSaveStatus" style="font-family:'Cinzel',serif;font-size:8px;color:var(--text2);letter-spacing:.08em;margin-right:8px;"></span>
     <button class="wb-btn" onclick="wbClose()" style="font-size:10px;padding:6px 14px;">✕ CLOSE</button>
   </div>
-  <canvas id="wbCanvas"></canvas>
+  <div id="wbViewport">
+    <canvas id="wbCanvas"></canvas>
+    <div id="wbZoomBar">
+      <button class="wb-zoom-btn" onclick="wbZoom(1.25)" title="Zoom In">+</button>
+      <div id="wbZoomLabel">100%</div>
+      <button class="wb-zoom-btn" onclick="wbZoom(0.8)" title="Zoom Out">−</button>
+      <button class="wb-zoom-btn" onclick="wbResetView()" title="Reset View" style="font-size:11px;">⌂</button>
+    </div>
+  </div>
   <div id="wbCursor"></div>
   <div id="wbToolbar">
     <div class="wb-section">
@@ -359,6 +431,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
     <div class="wb-section">
       <span class="wb-section-label">TOOL</span>
       <button class="wb-btn" id="wbEraserBtn" onclick="wbToggleEraser()">⌫ ERASE</button>
+      <button class="wb-btn" id="wbPanBtn" onclick="wbTogglePan()">✋ PAN</button>
       <button class="wb-btn" onclick="wbUndo()">↩ UNDO</button>
       <span id="wbUndoCount" style="font-size:9px;color:var(--text2);font-family:'Cinzel',serif;min-width:16px;text-align:center;">0</span>
     </div>
@@ -381,13 +454,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
     <span style="font-size:18px;color:var(--gold);">✦</span>
     <h2>THE CHRONICLE</h2>
     <div id="chronicleTabBar">
-      <button class="chr-tab-btn active" data-sec="calendar"    onclick="chrSwitchTab(this,'calendar')">📅 CALENDAR</button>
-      <button class="chr-tab-btn"        data-sec="persona"     onclick="chrSwitchTab(this,'persona')">🪞 PERSONA</button>
-      <button class="chr-tab-btn"        data-sec="people"      onclick="chrSwitchTab(this,'people')">👤 PEOPLE</button>
-      <button class="chr-tab-btn"        data-sec="book"        onclick="chrSwitchTab(this,'book')">📖 BOOK</button>
-      <button class="chr-tab-btn"        data-sec="board"       onclick="chrSwitchTab(this,'board')">📋 BOARD</button>
+      <button class="chr-tab-btn active" data-sec="book"        onclick="chrSwitchTab(this,'book')">📖 BOOK</button>
       <button class="chr-tab-btn"        data-sec="comic"       onclick="chrSwitchTab(this,'comic')">🎨 COMIC</button>
       <button class="chr-tab-btn"        data-sec="rpg"         onclick="chrSwitchTab(this,'rpg')">⚔ RPG</button>
+      <button class="chr-tab-btn"        data-sec="board"       onclick="chrSwitchTab(this,'board')">📋 BOARD</button>
     </div>
     <button id="chronicleClose" onclick="chrClose()">✕</button>
   </div>
@@ -400,12 +470,43 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
   </div>
 </div>
 
+<!-- Playtest Iframe Overlay -->
+<div id="playtestOverlay">
+  <div id="playtestHeader">
+    <span style="font-size:18px;color:var(--gold);">⚔</span>
+    <h2>PLAYTEST TABLE</h2>
+    <button class="pt-btn" onclick="window.open('playtest.html','_blank')">↗ NEW TAB</button>
+    <button class="pt-btn" id="playtestClose" onclick="closePlatyest()" style="margin-left:4px;">✕ CLOSE</button>
+  </div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;">
+    <div id="playtestLoading">
+      <div style="font-size:28px;">⚔</div>
+      <p>LOADING PLAYTEST...</p>
+    </div>
+    <iframe id="playtestFrame" src="" allow="fullscreen"></iframe>
+  </div>
+</div>
+
+<!-- Dice Result Display -->
+<div id="diceResult">
+  <span class="dice-num" id="diceNum">6</span>
+  <span class="dice-label" id="diceLabel">D6</span>
+</div>
+
 <!-- Modal -->
 <div id="modal">
   <div id="modalInner">
     <button id="modalClose" onclick="closeModal()">✕</button>
     <div id="modalBody"></div>
   </div>
+</div>
+
+<!-- Install Banner -->
+<div id="installBanner">
+  <span style="font-size:20px;">✦</span>
+  <p>ADD FORGE ROOM TO HOME SCREEN</p>
+  <button onclick="doInstall()">INSTALL</button>
+  <button class="dismiss" onclick="document.getElementById('installBanner').classList.remove('show')">✕</button>
 </div>
 
 <!-- Toast -->
@@ -440,7 +541,9 @@ let settings = {
   perfMode: false,
   ambientSound: false,
   cardSort: 'name',
-  lighting: 'torch'
+  lighting: 'torch',
+  cardsPerPage: 5,
+  cardRows: 1,
 };
 
 function loadSettings(){
@@ -598,14 +701,14 @@ function buildRoom(){
   // Register materials for whiteboard texture updates
   wbRegisterMaterials(matWE, matWW);
 
-  // Wooden beams on ceiling
+  // Wooden beams on ceiling — shortened to not cover whiteboard walls
   for(let i=-8;i<=8;i+=4){
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(ROOM_W,0.2,0.3), matWood);
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(ROOM_W-2.0,0.2,0.3), matWood);
     beam.position.set(0,ROOM_H-0.1,i); scene.add(beam);
   }
-  // Side pillars
+  // Side pillars — only on N/S ends, not covering whiteboard walls
   [-ROOM_W/2+0.15, ROOM_W/2-0.15].forEach(x=>{
-    [-8,-4,0,4,8].forEach(z=>{
+    [-10, -6, 10, 6].forEach(z=>{  // Only near N and S walls
       const pillar=new THREE.Mesh(new THREE.BoxGeometry(0.3,ROOM_H,0.3),matWood);
       pillar.position.set(x,ROOM_H/2,z); scene.add(pillar);
     });
@@ -662,8 +765,8 @@ function buildLighting(){
 // ═══════════════════════════════════════════════════════════════════
 const cardMeshes = [];
 let galleryPage = 0;
-const CARDS_PER_PAGE = 5;
 const CARD_W = 2.8, CARD_H = 3.8;
+function getCardsPerPage(){ return settings.cardsPerPage || 5; }
 
 const TYPE_COLORS = {
   creature:'#4488cc', spell:'#aa44cc', trap:'#cc4444',
@@ -810,17 +913,24 @@ function buildGallery(page=0){
   else if(settings.cardSort==='type') cards.sort((a,b)=>(a.type||'').localeCompare(b.type||''));
   else cards.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
 
-  const start = page * CARDS_PER_PAGE;
-  const pageCards = cards.slice(start, start+CARDS_PER_PAGE);
-  const totalPages = Math.ceil(cards.length/CARDS_PER_PAGE);
+  const cpp = getCardsPerPage();
+  const rows = Math.max(1, settings.cardRows || 1);
+  const cols = Math.ceil(cpp / rows);
+
+  const start = page * cpp;
+  const pageCards = cards.slice(start, start+cpp);
+  const totalPages = Math.ceil(cards.length/cpp);
 
   const spacing = 3.4;
-  const totalW = (pageCards.length-1)*spacing;
+  const rowSpacing = 4.2;
+  const totalW = (cols-1)*spacing;
   const startX = -totalW/2;
 
   pageCards.forEach((card,i)=>{
-    const x = startX + i*spacing;
-    const y = ROOM_H/2 + 0.2;
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x = startX + col*spacing;
+    const y = ROOM_H/2 + 0.2 - row*rowSpacing*(rows>1?0.8:0);
     const z = -ROOM_D/2 + 0.15;
     const m = makeCardFrameMesh(card, x, y, z);
     scene.add(m);
@@ -837,15 +947,22 @@ function buildGallery(page=0){
 function galleryScroll(dir){
   loadForgeData();
   const cards = forgeData.cards.length ? forgeData.cards : [{},{},{},{},{},{},{}];
-  const total = Math.ceil(cards.length/CARDS_PER_PAGE);
+  const cpp = getCardsPerPage();
+  const total = Math.ceil(cards.length/cpp);
   const next = ((galleryPage+dir)+total)%total;
   buildGallery(next);
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  TABLE (center)
+//  TABLE (center) — PHASE 4
 // ═══════════════════════════════════════════════════════════════════
 let tableMesh;
+let tableCardMeshes = [];   // mini cards on table surface
+let diceMesh = null;        // d6 on table
+let diceRolling = false;
+let diceRollT = 0;
+let diceRollResult = 1;
+
 function buildTable(){
   const tableGroup = new THREE.Group();
   // Table top
@@ -875,6 +992,7 @@ function buildTable(){
   trim.position.y=0.97;tableGroup.add(trim);
 
   tableGroup.position.set(0,0,2);
+  // Table group itself is interactable for "open playtest"
   tableGroup.userData={interactable:true,type:'table',label:'Open Playtest'};
   tableMesh=tableGroup;
   scene.add(tableGroup);
@@ -882,6 +1000,216 @@ function buildTable(){
   // Subtle light over table
   const tableLight=new THREE.PointLight(0x446633, 0.8, 6);
   tableLight.position.set(0,3,2);scene.add(tableLight);
+
+  // Build dice and card spread after table is placed
+  buildDice();
+  buildTableCardSpread();
+}
+
+// ── Dice (d6) on table ────────────────────────────────────
+function makeDiceTexture(face){
+  // face 1-6 — simple white dots on dark bg
+  const c2=document.createElement('canvas');c2.width=64;c2.height=64;
+  const ctx=c2.getContext('2d');
+  ctx.fillStyle='#1a1a2e';ctx.beginPath();
+  ctx.roundRect(2,2,60,60,10);ctx.fill();
+  ctx.strokeStyle='rgba(201,168,76,0.6)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.roundRect(2,2,60,60,10);ctx.stroke();
+  ctx.fillStyle='#e8c96a';
+  const dots={
+    1:[[32,32]],
+    2:[[18,18],[46,46]],
+    3:[[18,18],[32,32],[46,46]],
+    4:[[18,18],[46,18],[18,46],[46,46]],
+    5:[[18,18],[46,18],[32,32],[18,46],[46,46]],
+    6:[[18,14],[46,14],[18,32],[46,32],[18,50],[46,50]],
+  };
+  (dots[face]||dots[1]).forEach(([x,y])=>{
+    ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();
+  });
+  return new THREE.CanvasTexture(c2);
+}
+
+function buildDice(){
+  // Create d6 as a BoxGeometry with per-face materials
+  const faces = [1,6,2,5,3,4]; // standard d6 opposite-faces-sum-7
+  const mats = faces.map(f=>new THREE.MeshLambertMaterial({map:makeDiceTexture(f)}));
+  const geo = new THREE.BoxGeometry(0.35,0.35,0.35);
+  diceMesh = new THREE.Mesh(geo, mats);
+  diceMesh.position.set(2.2, 1.21, 1.2);  // top-right area of table
+  diceMesh.userData = {
+    interactable:true, type:'dice',
+    label:'Roll Dice [TAP ⬡]'
+  };
+  scene.add(diceMesh);
+}
+
+function rollDice(sides=6){
+  if(diceRolling) return;
+  diceRolling = true;
+  diceRollT = 0;
+  diceRollResult = Math.floor(Math.random()*sides)+1;
+
+  // Show dice spin animation (handled in animateTable)
+  const el = document.getElementById('diceResult');
+  const numEl = document.getElementById('diceNum');
+  const lblEl = document.getElementById('diceLabel');
+  numEl.textContent = '?';
+  lblEl.textContent = `D${sides}`;
+  el.classList.add('show');
+
+  // Tumble, then reveal
+  let ticks = 0;
+  const interval = setInterval(()=>{
+    ticks++;
+    numEl.textContent = Math.floor(Math.random()*sides)+1;
+    if(ticks >= 8){
+      clearInterval(interval);
+      numEl.textContent = diceRollResult;
+      diceRolling = false;
+      toast(`🎲 Rolled ${diceRollResult} on D${sides}`, 'good');
+      setTimeout(()=>el.classList.remove('show'), 2200);
+    }
+  }, 80);
+}
+
+// ── Card spread on table surface ──────────────────────────
+function buildTableCardSpread(){
+  // Remove old spread
+  tableCardMeshes.forEach(m=>{
+    scene.remove(m);
+    if(m.material?.map) m.material.map.dispose();
+    m.material?.dispose();
+    m.geometry?.dispose();
+  });
+  tableCardMeshes = [];
+
+  loadForgeData();
+  let cards = forgeData.cards;
+  // Try to get active deck
+  let spreadCards = [];
+  try{
+    const activeId = localStorage.getItem('cardforge_active_layout');
+    // active layout stores a layout, not a deck — use decks instead
+    if(forgeData.decks && forgeData.decks.length){
+      // Use first deck's card IDs to pull the spread
+      const deck = forgeData.decks[0];
+      const deckCardIds = deck.cards || deck.cardIds || [];
+      if(deckCardIds.length){
+        spreadCards = deckCardIds
+          .map(id=>typeof id==='string'
+            ? forgeData.cards.find(c=>c.id===id)
+            : forgeData.cards.find(c=>c.id===id?.id||c.id===id))
+          .filter(Boolean)
+          .slice(0,7);
+      }
+    }
+  }catch(e){}
+
+  // Fallback: use first 5-7 cards
+  if(!spreadCards.length && cards.length){
+    spreadCards = cards.slice(0,Math.min(7,cards.length));
+  }
+  if(!spreadCards.length) return; // no cards = clean green felt
+
+  // Lay cards in a slight fan/arc across the table top
+  const count = spreadCards.length;
+  const TABLE_Y = 0.99;  // just above felt (world coords: table is at y=0, top at y=0.9+0.09≈0.99+tableGroup.y=0)
+  // tableGroup is at (0,0,2), so table top world Y = 0.978+0 ≈ 0.98
+  const WORLD_Y = 0.98;
+  const spreadW = Math.min(5.0, count * 0.75);
+  const startX = -spreadW/2;
+  const angleRange = count > 1 ? 0.25 : 0; // subtle fan spread
+
+  spreadCards.forEach((card,i)=>{
+    const t = count>1 ? i/(count-1) : 0.5;
+    const x = startX + t*spreadW;
+    const z = 2 + Math.sin(t*Math.PI)*0.2 - 0.3; // slight arc, table at z=2
+    const angle = (t-0.5)*angleRange;
+
+    // Mini card texture (smaller version of gallery card)
+    const cw=80,ch=112;
+    const c2=document.createElement('canvas');c2.width=cw;c2.height=ch;
+    const ctx=c2.getContext('2d');
+    const grad=ctx.createLinearGradient(0,0,0,ch);
+    grad.addColorStop(0,'#1c2030');grad.addColorStop(1,'#0e1018');
+    ctx.fillStyle=grad;ctx.fillRect(0,0,cw,ch);
+    // Color bar
+    ctx.fillStyle=cardTypeColor(card.type||'');
+    ctx.fillRect(0,0,cw,5);
+    // Gold border
+    ctx.strokeStyle='#c9a84c';ctx.lineWidth=2;ctx.strokeRect(1,1,cw-2,ch-2);
+    // Cost
+    ctx.fillStyle='rgba(201,168,76,0.15)';ctx.beginPath();ctx.arc(cw-13,13,10,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#c9a84c';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cw-13,13,10,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='#e8c96a';ctx.font='bold 9px Cinzel,serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(String(card.cost||0),cw-13,13);
+    // Name
+    ctx.fillStyle='#d4cfc0';ctx.font='bold 7px Cinzel,serif';ctx.textAlign='left';ctx.textBaseline='top';
+    const name=card.name||'Unknown';
+    ctx.fillText(name.length>10?name.slice(0,9)+'…':name, 4, 8);
+    // Type icon
+    const icons={creature:'🐉',spell:'✨',trap:'⚠',artifact:'⚙',enchantment:'🌀',hero:'⚔'};
+    const tp=(card.type||'').toLowerCase();
+    let icon='🃏';for(const [k,v] of Object.entries(icons)){if(tp.includes(k)){icon=v;break;}}
+    ctx.font='22px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(icon,cw/2,55);
+
+    const tex = new THREE.CanvasTexture(c2);
+    // Card face mesh — lay flat on table
+    const CARD_SCALE_W = 0.55, CARD_SCALE_H = 0.77;
+    const mat = new THREE.MeshLambertMaterial({map:tex,side:THREE.FrontSide});
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_SCALE_W,CARD_SCALE_H),mat);
+    mesh.rotation.x = -Math.PI/2;        // flat on table
+    mesh.rotation.z = angle;
+    mesh.position.set(x, WORLD_Y+0.001, z);
+    mesh.userData = {
+      interactable:true, type:'tableCard',
+      card, label:`${card.name||'Card'} [TAP to inspect]`
+    };
+    scene.add(mesh);
+    tableCardMeshes.push(mesh);
+
+    // Thin backing shadow
+    const shadowMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.15});
+    const shadow=new THREE.Mesh(new THREE.PlaneGeometry(CARD_SCALE_W+0.04,CARD_SCALE_H+0.04),shadowMat);
+    shadow.rotation.x=-Math.PI/2;shadow.rotation.z=angle;
+    shadow.position.set(x+0.02,WORLD_Y,z+0.02);
+    scene.add(shadow);
+    tableCardMeshes.push(shadow);
+  });
+
+  // Deck label card at top-left if deck name available
+  if(forgeData.decks?.length){
+    const deckName = forgeData.decks[0]?.name || 'ACTIVE DECK';
+    const lc=document.createElement('canvas');lc.width=200;lc.height=40;
+    const lctx=lc.getContext('2d');
+    lctx.fillStyle='rgba(201,168,76,0.12)';lctx.fillRect(0,0,200,40);
+    lctx.strokeStyle='rgba(201,168,76,0.4)';lctx.lineWidth=1;lctx.strokeRect(0,0,200,40);
+    lctx.fillStyle='#a08040';lctx.font='bold 11px Cinzel,serif';lctx.textAlign='center';
+    lctx.textBaseline='middle';
+    lctx.fillText(deckName.slice(0,20).toUpperCase(),100,20);
+    const ltex=new THREE.CanvasTexture(lc);
+    const lm=new THREE.Mesh(new THREE.PlaneGeometry(1.9,0.38),new THREE.MeshBasicMaterial({map:ltex,transparent:true}));
+    lm.rotation.x=-Math.PI/2;
+    lm.position.set(-1.8, WORLD_Y+0.002, 3.5);
+    scene.add(lm);
+    tableCardMeshes.push(lm);
+  }
+}
+
+// ── Table animation (dice spin, card hover glow) ──────────
+function animateTable(t){
+  if(diceMesh){
+    if(diceRolling){
+      diceMesh.rotation.x += 0.18;
+      diceMesh.rotation.y += 0.23;
+      diceMesh.rotation.z += 0.09;
+    } else {
+      // Gentle idle bob
+      diceMesh.position.y = 1.21 + Math.sin(t*1.2)*0.006;
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -923,8 +1251,8 @@ function addWallLabels(){
 
   // Table sign
   const tableSign=new THREE.Mesh(
-    new THREE.PlaneGeometry(2.5,0.45),
-    new THREE.MeshBasicMaterial({map:makeLabelTexture('PLAYTEST TABLE','TAP TO PLAY'),transparent:true})
+    new THREE.PlaneGeometry(3.0,0.45),
+    new THREE.MeshBasicMaterial({map:makeLabelTexture('PLAYTEST TABLE','TAP TABLE · ROLL DICE ✦ TAP D6'),transparent:true})
   );
   tableSign.position.set(0,2.0,0.05);tableSign.rotation.x=-0.2;scene.add(tableSign);
 }
@@ -945,15 +1273,6 @@ function getChronicleData(){
 // Map our panel keys to lifeapp section IDs and display info
 const CHRONICLE_TABS = [
   {
-    label:'PEOPLE',    icon:'👤', key:'people',   sec:'people',
-    color:'#4488cc',
-    preview: d => {
-      const n = d?.people?.length||0;
-      const names = (d?.people||[]).slice(0,3).map(p=>p.name||'Unknown');
-      return { count: `${n} character${n!==1?'s':''}`, items: names };
-    }
-  },
-  {
     label:'BOOK',      icon:'📖', key:'book',     sec:'book',
     color:'#cc8844',
     preview: d => {
@@ -964,12 +1283,10 @@ const CHRONICLE_TABS = [
     }
   },
   {
-    label:'CALENDAR',  icon:'📅', key:'calendar', sec:'calendar',
-    color:'#44aa66',
+    label:'COMIC',     icon:'🎨', key:'comic',    sec:'comic',
+    color:'#cc4488',
     preview: d => {
-      const entries = d?.entries||[];
-      const recent = entries.slice(-3).reverse().map(e=>e.note||e.mood||'Entry');
-      return { count: `${entries.length} journal entr${entries.length!==1?'ies':'y'}`, items: recent };
+      return { count: 'Comics & Storyboards', items: ['Pages','Panels','Scripts'] };
     }
   },
   {
@@ -977,6 +1294,13 @@ const CHRONICLE_TABS = [
     color:'#8855cc',
     preview: d => {
       return { count: 'RPG World & Playtest', items: ['Maps','Characters','Sessions'] };
+    }
+  },
+  {
+    label:'BOARD',     icon:'📋', key:'board',    sec:'board',
+    color:'#44aa66',
+    preview: d => {
+      return { count: 'Board Game Design', items: ['Rules','Components','Playtests'] };
     }
   },
 ];
@@ -1115,7 +1439,7 @@ let chrCurrentSec = 'calendar';
 let chrFrameLoaded = false;
 
 function openChronicle(sec){
-  sec = sec || 'calendar';
+  sec = sec || 'book';
   chrCurrentSec = sec;
 
   // Update tab bar active state
@@ -1235,8 +1559,10 @@ function doInteract(obj){
   if(!obj?.userData) return;
   const {type, card, tab} = obj.userData;
   if(type==='card') openCardModal(card||obj.userData);
+  else if(type==='tableCard') openCardModal(obj.userData.card||obj.userData);
   else if(type==='table') openPlaytest();
-  else if(type==='chronicle') openChronicle(obj.userData.sec||obj.userData.tab||'calendar');
+  else if(type==='dice') rollDice(6);
+  else if(type==='chronicle') openChronicle(obj.userData.sec||obj.userData.tab||'book');
 }
 
 // Tap on canvas
@@ -1288,17 +1614,27 @@ function openCardModal(card){
 }
 
 function openPlaytest(){
-  document.getElementById('modalBody').innerHTML=`
-    <div style="padding:20px;text-align:center;">
-      <div style="font-size:36px;margin-bottom:12px;">⚔</div>
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold2);margin-bottom:8px;">PLAYTEST TABLE</div>
-      <p style="color:var(--text2);font-size:13px;margin-bottom:20px;">Launch the full playtest interface to play your card game or run a board game simulation.</p>
-      <div style="display:flex;gap:8px;justify-content:center;">
-        <button class="hbtn" style="padding:12px 24px;" onclick="window.open('playtest.html','_blank')">▶ Launch Playtest</button>
-        <button class="hbtn" style="padding:12px 24px;" onclick="closeModal()">Cancel</button>
-      </div>
-    </div>`;
-  document.getElementById('modal').classList.add('open');
+  const overlay  = document.getElementById('playtestOverlay');
+  const frame    = document.getElementById('playtestFrame');
+  const loading  = document.getElementById('playtestLoading');
+
+  overlay.classList.add('open');
+  loading.classList.remove('hidden');
+
+  // If already loaded, just show
+  if(frame.src && frame.src.includes('playtest.html')){
+    setTimeout(()=>loading.classList.add('hidden'), 200);
+    return;
+  }
+
+  frame.onload = ()=>{
+    loading.classList.add('hidden');
+  };
+  frame.src = 'playtest.html';
+}
+
+function closePlatyest(){
+  document.getElementById('playtestOverlay').classList.remove('open');
 }
 
 function closeModal(){document.getElementById('modal').classList.remove('open');}
@@ -1344,11 +1680,21 @@ function openSettings(){
       </select>
     </div>
     <div class="settings-row">
+      <div><div class="settings-label">CARDS PER ROW</div><div class="settings-sub">${settings.cardsPerPage||5} cards shown</div></div>
+      <select onchange="settings.cardsPerPage=+this.value;buildGallery(0);this.previousElementSibling.children[1].textContent=this.value+' cards shown'">
+        <option value="3" ${(settings.cardsPerPage||5)===3?'selected':''}>3 — Fewer, Larger</option>
+        <option value="5" ${(settings.cardsPerPage||5)===5?'selected':''}>5 — Default</option>
+        <option value="8" ${(settings.cardsPerPage||5)===8?'selected':''}>8 — More Cards</option>
+        <option value="10" ${(settings.cardsPerPage||5)===10?'selected':''}>10 — Many Cards</option>
+      </select>
+    </div>
+    <div class="settings-row">
       <div><div class="settings-label">GAMEPAD DEADZONE</div><div class="settings-sub">${settings.deadzone}</div></div>
       <input type="range" min="0.05" max="0.35" step="0.01" value="${settings.deadzone}" oninput="settings.deadzone=+this.value;this.previousElementSibling.children[1].textContent=this.value">
     </div>
     <div style="margin-top:16px;display:flex;gap:8px;">
       <button class="hbtn" style="flex:1;padding:10px;" onclick="saveSettings();closeModal();toast('Settings saved','good')">✓ Save Settings</button>
+      <button class="hbtn" style="flex:1;padding:10px;" onclick="if(deferredInstallPrompt){closeModal();doInstall();}else{toast('Already installed or use browser Add to Home Screen','good');}">📲 Install</button>
       <button class="hbtn" style="flex:1;padding:10px;" onclick="closeModal()">Cancel</button>
     </div>
     <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
@@ -1371,70 +1717,120 @@ function updateJoystickVisibility(){
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  WHITEBOARD SYSTEM — PHASE 2
+//  WHITEBOARD SYSTEM — PHASE 2 + PAN/ZOOM
 // ═══════════════════════════════════════════════════════════════════
 let drawMode = false;
 
+// Wall aspect ratio: ROOM_D(24) x ROOM_H(6) = 4:1 landscape
+const WB_ASPECT = 24 / 6; // 4.0 — width:height of the actual wall
+const WB_CANVAS_HEIGHT = 1200; // fixed internal canvas height
+const WB_CANVAS_WIDTH = Math.round(WB_CANVAS_HEIGHT * WB_ASPECT); // 4800
+
 // State
 const WB = {
-  wall: 'east',          // 'east' or 'west'
+  wall: 'east',
   color: '#d4cfc0',
   size: 5,
   erasing: false,
+  panMode: false,
   drawing: false,
+  panning: false,
   lastX: 0,
   lastY: 0,
+  // Pan/zoom
+  zoom: 1.0,
+  panX: 0,
+  panY: 0,
+  panStartX: 0,
+  panStartY: 0,
   undoStack: [],
   maxUndo: 20,
   saveTimer: null,
-  penActive: false,      // true if stylus currently in use
+  penActive: false,
   dirty: false,
 };
 
-// Three.js texture references for wall update
+// Three.js texture references
 let wbEastMaterial = null;
 let wbWestMaterial = null;
 
 const wbCanvas = document.getElementById('wbCanvas');
 const wbCtx = wbCanvas.getContext('2d');
+const wbViewport = document.getElementById('wbViewport');
 const wbCursorEl = document.getElementById('wbCursor');
 const wbSaveStatusEl = document.getElementById('wbSaveStatus');
 const wbUndoCountEl = document.getElementById('wbUndoCount');
 
+function wbUpdateTransform(){
+  wbCanvas.style.transformOrigin = '0 0';
+  wbCanvas.style.transform = `translate(${WB.panX}px,${WB.panY}px) scale(${WB.zoom})`;
+  const pct = Math.round(WB.zoom * 100);
+  const lbl = document.getElementById('wbZoomLabel');
+  if(lbl) lbl.textContent = pct + '%';
+}
+
+function wbFitToView(){
+  // Fit canvas into viewport maintaining aspect ratio
+  const vw = wbViewport.clientWidth;
+  const vh = wbViewport.clientHeight;
+  const scaleX = vw / WB_CANVAS_WIDTH;
+  const scaleY = vh / WB_CANVAS_HEIGHT;
+  WB.zoom = Math.min(scaleX, scaleY);
+  // Center it
+  WB.panX = (vw - WB_CANVAS_WIDTH * WB.zoom) / 2;
+  WB.panY = (vh - WB_CANVAS_HEIGHT * WB.zoom) / 2;
+  wbUpdateTransform();
+}
+
+function wbZoom(factor){
+  const vw = wbViewport.clientWidth;
+  const vh = wbViewport.clientHeight;
+  const cx = vw/2, cy = vh/2;
+  const prevZoom = WB.zoom;
+  WB.zoom = Math.max(0.1, Math.min(5.0, WB.zoom * factor));
+  // Zoom toward center
+  WB.panX = cx - (cx - WB.panX) * (WB.zoom / prevZoom);
+  WB.panY = cy - (cy - WB.panY) * (WB.zoom / prevZoom);
+  wbUpdateTransform();
+}
+
+function wbResetView(){
+  wbFitToView();
+}
+
 function wbResize(){
-  // Save current content before resize
-  let saved = null;
-  if(wbCanvas.width > 0 && wbCanvas.height > 0){
-    saved = wbCtx.getImageData(0, 0, wbCanvas.width, wbCanvas.height);
+  // Canvas is fixed size — just refit the view
+  if(wbCanvas.width !== WB_CANVAS_WIDTH || wbCanvas.height !== WB_CANVAS_HEIGHT){
+    // First time setup: size the canvas
+    const saved = wbCanvas.width > 0 ? null : null; // will reload from storage
+    wbCanvas.width = WB_CANVAS_WIDTH;
+    wbCanvas.height = WB_CANVAS_HEIGHT;
+    wbCanvas.style.width = WB_CANVAS_WIDTH + 'px';
+    wbCanvas.style.height = WB_CANVAS_HEIGHT + 'px';
+    wbCtx.fillStyle = '#0e1018';
+    wbCtx.fillRect(0,0,WB_CANVAS_WIDTH,WB_CANVAS_HEIGHT);
+    wbDrawGrid();
   }
-  wbCanvas.width  = window.innerWidth;
-  wbCanvas.height = window.innerHeight - 48 - 64; // minus header + toolbar
-  // Restore background
-  wbCtx.fillStyle = '#0e1018';
-  wbCtx.fillRect(0, 0, wbCanvas.width, wbCanvas.height);
-  // Draw subtle grid
-  wbDrawGrid();
-  // Restore saved
-  if(saved) wbCtx.putImageData(saved, 0, 0);
+  // Refit
+  requestAnimationFrame(()=>wbFitToView());
 }
 
 function wbDrawGrid(){
   wbCtx.save();
   wbCtx.strokeStyle = 'rgba(42,47,69,0.4)';
-  wbCtx.lineWidth = 0.5;
-  const step = 40;
-  for(let x=0;x<wbCanvas.width;x+=step){
-    wbCtx.beginPath();wbCtx.moveTo(x,0);wbCtx.lineTo(x,wbCanvas.height);wbCtx.stroke();
+  wbCtx.lineWidth = 1.5;
+  const step = 80;
+  for(let x=0;x<WB_CANVAS_WIDTH;x+=step){
+    wbCtx.beginPath();wbCtx.moveTo(x,0);wbCtx.lineTo(x,WB_CANVAS_HEIGHT);wbCtx.stroke();
   }
-  for(let y=0;y<wbCanvas.height;y+=step){
-    wbCtx.beginPath();wbCtx.moveTo(0,y);wbCtx.lineTo(wbCanvas.width,y);wbCtx.stroke();
+  for(let y=0;y<WB_CANVAS_HEIGHT;y+=step){
+    wbCtx.beginPath();wbCtx.moveTo(0,y);wbCtx.lineTo(WB_CANVAS_WIDTH,y);wbCtx.stroke();
   }
-  // Corner label
-  wbCtx.fillStyle = 'rgba(201,168,76,0.15)';
-  wbCtx.font = '11px Cinzel, serif';
+  wbCtx.fillStyle = 'rgba(201,168,76,0.12)';
+  wbCtx.font = '22px Cinzel, serif';
   wbCtx.textAlign = 'right';
   wbCtx.textBaseline = 'bottom';
-  wbCtx.fillText((WB.wall==='east'?'EAST':'WEST') + ' WALL', wbCanvas.width-12, wbCanvas.height-10);
+  wbCtx.fillText((WB.wall==='east'?'EAST':'WEST') + ' WALL', WB_CANVAS_WIDTH-24, WB_CANVAS_HEIGHT-20);
   wbCtx.restore();
 }
 
@@ -1442,13 +1838,12 @@ function wbLoadSaved(){
   const key = STORE_WB(WB.wall);
   const saved = localStorage.getItem(key);
   wbCtx.fillStyle = '#0e1018';
-  wbCtx.fillRect(0,0,wbCanvas.width,wbCanvas.height);
+  wbCtx.fillRect(0,0,WB_CANVAS_WIDTH,WB_CANVAS_HEIGHT);
   wbDrawGrid();
   if(saved){
     const img = new Image();
     img.onload = ()=>{
-      wbCtx.drawImage(img, 0, 0, wbCanvas.width, wbCanvas.height);
-      wbCtx.restore && wbCtx.restore();
+      wbCtx.drawImage(img, 0, 0, WB_CANVAS_WIDTH, WB_CANVAS_HEIGHT);
     };
     img.src = saved;
     wbSaveStatusEl.textContent = '● SAVED';
@@ -1463,7 +1858,7 @@ function wbLoadSaved(){
 }
 
 function wbPushUndo(){
-  WB.undoStack.push(wbCtx.getImageData(0,0,wbCanvas.width,wbCanvas.height));
+  WB.undoStack.push(wbCtx.getImageData(0,0,WB_CANVAS_WIDTH,WB_CANVAS_HEIGHT));
   if(WB.undoStack.length > WB.maxUndo) WB.undoStack.shift();
   wbUndoCountEl.textContent = WB.undoStack.length;
 }
@@ -1481,8 +1876,10 @@ function wbSetColor(el){
   el.classList.add('active');
   WB.color = el.dataset.color;
   WB.erasing = false;
-  wbCanvas.classList.remove('erasing');
+  WB.panMode = false;
+  wbCanvas.classList.remove('erasing','panning');
   document.getElementById('wbEraserBtn').classList.remove('active');
+  document.getElementById('wbPanBtn').classList.remove('active');
 }
 
 function wbSetSize(el){
@@ -1494,12 +1891,24 @@ function wbSetSize(el){
 
 function wbToggleEraser(){
   WB.erasing = !WB.erasing;
+  if(WB.erasing) WB.panMode = false;
   wbCanvas.classList.toggle('erasing', WB.erasing);
+  wbCanvas.classList.remove('panning');
   document.getElementById('wbEraserBtn').classList.toggle('active', WB.erasing);
+  document.getElementById('wbPanBtn').classList.remove('active');
+}
+
+function wbTogglePan(){
+  WB.panMode = !WB.panMode;
+  if(WB.panMode){ WB.erasing = false; }
+  wbCanvas.classList.toggle('panning', WB.panMode);
+  wbCanvas.classList.remove('erasing');
+  document.getElementById('wbPanBtn').classList.toggle('active', WB.panMode);
+  document.getElementById('wbEraserBtn').classList.remove('active');
 }
 
 function wbUpdateCursor(){
-  const sz = Math.max(WB.size, 4);
+  const sz = Math.max(WB.size * WB.zoom, 4);
   wbCursorEl.style.width  = sz + 'px';
   wbCursorEl.style.height = sz + 'px';
   wbCursorEl.style.borderColor = WB.erasing ? 'rgba(204,68,68,0.8)' : 'rgba(201,168,76,0.7)';
@@ -1514,14 +1923,12 @@ function wbScheduleSave(){
 
 function wbSave(auto=false){
   const key = STORE_WB(WB.wall);
-  // Save as JPEG for size efficiency, PNG loses transparency but we don't need it
   const data = wbCanvas.toDataURL('image/jpeg', 0.75);
   try {
     localStorage.setItem(key, data);
     wbSaveStatusEl.textContent = auto ? '✓ AUTO-SAVED' : '✓ SAVED';
     wbSaveStatusEl.style.color = 'var(--green)';
     WB.dirty = false;
-    // Apply as 3D wall texture
     wbApplyTextureToWall(WB.wall, data);
     if(!auto) toast('Whiteboard saved!', 'good');
   } catch(e){
@@ -1544,14 +1951,11 @@ function wbClear(){
   if(!confirm('Clear this whiteboard? This cannot be undone.')) return;
   wbPushUndo();
   wbCtx.fillStyle = '#0e1018';
-  wbCtx.fillRect(0, 0, wbCanvas.width, wbCanvas.height);
+  wbCtx.fillRect(0, 0, WB_CANVAS_WIDTH, WB_CANVAS_HEIGHT);
   wbDrawGrid();
   WB.undoStack = []; wbUndoCountEl.textContent = '0';
   WB.dirty = true;
-  wbSave(true);
-  // Remove from localStorage
   localStorage.removeItem(STORE_WB(WB.wall));
-  // Clear wall texture
   wbApplyTextureToWall(WB.wall, null);
   wbSaveStatusEl.textContent = '○ CLEARED';
   wbSaveStatusEl.style.color = 'var(--text2)';
@@ -1564,21 +1968,27 @@ function wbSwitchWall(){
   document.getElementById('wbWallLabel').textContent = (WB.wall==='east'?'EAST':'WEST') + ' WALL';
   document.getElementById('wbWallBtn').textContent = WB.wall==='east' ? '↔ SWITCH (→ WEST)' : '↔ SWITCH (→ EAST)';
   wbLoadSaved();
+  wbDrawGrid();
 }
 
-// ── Drawing logic ──────────────────────────────────────────
-function wbGetXY(e){
-  const r = wbCanvas.getBoundingClientRect();
-  return { x: e.clientX - r.left, y: e.clientY - r.top };
+// Convert viewport coords to canvas coords
+function wbViewToCanvas(vx, vy){
+  const r = wbViewport.getBoundingClientRect();
+  // vx,vy relative to viewport
+  const rx = vx - r.left;
+  const ry = vy - r.top;
+  // Invert transform: subtract pan then divide by zoom
+  const cx = (rx - WB.panX) / WB.zoom;
+  const cy = (ry - WB.panY) / WB.zoom;
+  return {x: cx, y: cy};
 }
 
-function wbStrokeStart(x, y){
+function wbStrokeStart(cx, cy){
   wbPushUndo();
   WB.drawing = true;
-  WB.lastX = x; WB.lastY = y;
+  WB.lastX = cx; WB.lastY = cy;
   wbCtx.beginPath();
-  wbCtx.moveTo(x, y);
-
+  wbCtx.moveTo(cx, cy);
   if(WB.erasing){
     wbCtx.globalCompositeOperation = 'destination-out';
     wbCtx.lineWidth = WB.size * 2.5;
@@ -1589,25 +1999,23 @@ function wbStrokeStart(x, y){
   }
   wbCtx.lineCap = 'round';
   wbCtx.lineJoin = 'round';
-  // Dot for single tap
-  wbCtx.arc(x, y, (WB.erasing ? WB.size*1.25 : WB.size/2), 0, Math.PI*2);
+  wbCtx.arc(cx, cy, (WB.erasing ? WB.size*1.25 : WB.size/2), 0, Math.PI*2);
   wbCtx.fill();
   if(WB.erasing) wbCtx.fillStyle = 'rgba(0,0,0,1)';
   else wbCtx.fillStyle = WB.color;
   wbCtx.beginPath();
-  wbCtx.moveTo(x, y);
+  wbCtx.moveTo(cx, cy);
 }
 
-function wbStrokeMove(x, y){
+function wbStrokeMove(cx, cy){
   if(!WB.drawing) return;
-  // Quadratic curve for smooth lines
-  const mx = (WB.lastX + x) / 2;
-  const my = (WB.lastY + y) / 2;
+  const mx = (WB.lastX + cx) / 2;
+  const my = (WB.lastY + cy) / 2;
   wbCtx.quadraticCurveTo(WB.lastX, WB.lastY, mx, my);
   wbCtx.stroke();
   wbCtx.beginPath();
   wbCtx.moveTo(mx, my);
-  WB.lastX = x; WB.lastY = y;
+  WB.lastX = cx; WB.lastY = cy;
   WB.dirty = true;
 }
 
@@ -1618,68 +2026,126 @@ function wbStrokeEnd(){
   wbScheduleSave();
 }
 
-// Palm rejection: ignore touches with large contact area when pen is active
 function isPalmTouch(e){
   if(!WB.penActive) return false;
   if(e.pointerType === 'touch'){
     const size = Math.max(e.width||0, e.height||0);
-    return size > 25; // large contact = palm, not fingertip
+    return size > 25;
   }
   return false;
 }
 
-// Pointer events (handles touch, mouse, S Pen)
-wbCanvas.addEventListener('pointerdown', e=>{
+// Two-finger pinch zoom state
+const wbPinch = {active:false, ids:[], startDist:0, startZoom:1, midX:0, midY:0, startPanX:0, startPanY:0};
+
+wbViewport.addEventListener('pointerdown', e=>{
   if(e.pointerType === 'pen') WB.penActive = true;
   if(isPalmTouch(e)) return;
   e.preventDefault();
-  wbCanvas.setPointerCapture(e.pointerId);
-  const {x,y} = wbGetXY(e);
+  wbViewport.setPointerCapture(e.pointerId);
+
+  // Track fingers for pinch
+  if(e.pointerType === 'touch'){
+    wbPinch.ids.push(e.pointerId);
+    if(wbPinch.ids.length === 2){
+      // Start pinch — cancel any drawing
+      WB.drawing = false;
+      wbPinch.active = true;
+      return;
+    }
+    if(wbPinch.active) return;
+  }
+
+  if(WB.panMode){
+    WB.panning = true;
+    WB.panStartX = e.clientX - WB.panX;
+    WB.panStartY = e.clientY - WB.panY;
+    return;
+  }
+
+  const {x,y} = wbViewToCanvas(e.clientX, e.clientY);
   wbStrokeStart(x, y);
-  // Show cursor
   wbCursorEl.style.display = 'block';
   wbCursorEl.style.left = e.clientX + 'px';
   wbCursorEl.style.top  = e.clientY + 'px';
   wbUpdateCursor();
 }, {passive:false});
 
-wbCanvas.addEventListener('pointermove', e=>{
+wbViewport.addEventListener('pointermove', e=>{
   if(isPalmTouch(e)) return;
   e.preventDefault();
-  const {x,y} = wbGetXY(e);
+
+  // Pinch zoom
+  if(wbPinch.active && wbPinch.ids.length >= 2){
+    // We'd need to track pointer positions — simplified: use gesturechange fallback
+    return;
+  }
+
+  if(WB.panning){
+    WB.panX = e.clientX - WB.panStartX;
+    WB.panY = e.clientY - WB.panStartY;
+    wbUpdateTransform();
+    return;
+  }
+
+  const {x,y} = wbViewToCanvas(e.clientX, e.clientY);
   wbStrokeMove(x, y);
   wbCursorEl.style.left = e.clientX + 'px';
   wbCursorEl.style.top  = e.clientY + 'px';
 }, {passive:false});
 
-wbCanvas.addEventListener('pointerup', e=>{
+wbViewport.addEventListener('pointerup', e=>{
   if(e.pointerType === 'pen') WB.penActive = false;
   e.preventDefault();
+  // Remove from pinch tracking
+  const idx = wbPinch.ids.indexOf(e.pointerId);
+  if(idx >= 0) wbPinch.ids.splice(idx, 1);
+  if(wbPinch.ids.length < 2) wbPinch.active = false;
+
+  WB.panning = false;
   wbStrokeEnd();
 }, {passive:false});
 
-wbCanvas.addEventListener('pointercancel', e=>{
+wbViewport.addEventListener('pointercancel', e=>{
   WB.penActive = false;
+  const idx = wbPinch.ids.indexOf(e.pointerId);
+  if(idx >= 0) wbPinch.ids.splice(idx, 1);
+  if(wbPinch.ids.length < 2) wbPinch.active = false;
+  WB.panning = false;
   wbStrokeEnd();
 });
 
-wbCanvas.addEventListener('pointerleave', ()=>{
+wbViewport.addEventListener('pointerleave', ()=>{
   wbCursorEl.style.display = 'none';
   if(WB.drawing) wbStrokeEnd();
+  WB.panning = false;
 });
 
-wbCanvas.addEventListener('pointerenter', ()=>{
+wbViewport.addEventListener('pointerenter', ()=>{
   wbCursorEl.style.display = 'block';
   wbUpdateCursor();
 });
 
-// ── Apply drawing as 3D wall texture ──────────────────────
+// Mouse wheel zoom
+wbViewport.addEventListener('wheel', e=>{
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  // Zoom toward mouse pointer
+  const r = wbViewport.getBoundingClientRect();
+  const mx = e.clientX - r.left;
+  const my = e.clientY - r.top;
+  const prevZoom = WB.zoom;
+  WB.zoom = Math.max(0.1, Math.min(5.0, WB.zoom * factor));
+  WB.panX = mx - (mx - WB.panX) * (WB.zoom / prevZoom);
+  WB.panY = my - (my - WB.panY) * (WB.zoom / prevZoom);
+  wbUpdateTransform();
+}, {passive:false});
+
+// Apply drawing as 3D wall texture
 function wbApplyTextureToWall(wall, dataURL){
-  // Find the material to update
   const mat = wall === 'east' ? wbEastMaterial : wbWestMaterial;
   if(!mat) return;
   if(!dataURL){
-    // Reset to default stone
     mat.map = makeStoneTexture(256,256,false);
     mat.map.repeat.set(3,2);
     mat.map.needsUpdate = true;
@@ -1692,20 +2158,17 @@ function wbApplyTextureToWall(wall, dataURL){
     const t = new THREE.Texture(img);
     t.needsUpdate = true;
     mat.map = t;
-    mat.emissive = new THREE.Color(0.05, 0.04, 0.01); // subtle gold glow
+    mat.emissive = new THREE.Color(0.05, 0.04, 0.01);
     mat.needsUpdate = true;
   };
   img.src = dataURL;
 }
 
-// ── Open/Close whiteboard ──────────────────────────────────
 function toggleDrawMode(){
-  // Determine which wall to open based on camera facing
   const angle = ((yaw * 180 / Math.PI) % 360 + 360) % 360;
   if(angle > 45 && angle < 135)       WB.wall = 'west';
   else if(angle > 225 && angle < 315) WB.wall = 'east';
-  else WB.wall = 'east'; // default
-
+  else WB.wall = 'east';
   wbOpen();
 }
 
@@ -1716,9 +2179,18 @@ function wbOpen(wall=null){
   document.getElementById('wbOverlay').classList.add('open');
   document.getElementById('wbWallLabel').textContent = (WB.wall==='east'?'EAST':'WEST') + ' WALL';
   document.getElementById('wbWallBtn').textContent = WB.wall==='east' ? '↔ SWITCH (→ WEST)' : '↔ SWITCH (→ EAST)';
-  // Resize and load
-  wbResize();
+  // Setup canvas if first time
+  if(wbCanvas.width !== WB_CANVAS_WIDTH){
+    wbCanvas.width = WB_CANVAS_WIDTH;
+    wbCanvas.height = WB_CANVAS_HEIGHT;
+    wbCanvas.style.width = WB_CANVAS_WIDTH + 'px';
+    wbCanvas.style.height = WB_CANVAS_HEIGHT + 'px';
+    wbCtx.fillStyle = '#0e1018';
+    wbCtx.fillRect(0,0,WB_CANVAS_WIDTH,WB_CANVAS_HEIGHT);
+    wbDrawGrid();
+  }
   wbLoadSaved();
+  requestAnimationFrame(()=>wbFitToView());
 }
 
 function wbClose(){
@@ -1728,25 +2200,23 @@ function wbClose(){
   document.getElementById('wbOverlay').classList.remove('open');
   wbCursorEl.style.display = 'none';
   WB.drawing = false;
+  WB.panning = false;
   WB.penActive = false;
+  wbPinch.ids = [];
+  wbPinch.active = false;
 }
 
-// Resize whiteboard canvas when window resizes
 window.addEventListener('resize', ()=>{
-  if(drawMode) wbResize();
+  if(drawMode) requestAnimationFrame(()=>wbFitToView());
 });
 
-// ── Load whiteboard textures on room init ──────────────────
 function wbInitTextures(){
   ['east','west'].forEach(wall=>{
     const saved = localStorage.getItem(STORE_WB(wall));
-    if(saved){
-      wbApplyTextureToWall(wall, saved);
-    }
+    if(saved) wbApplyTextureToWall(wall, saved);
   });
 }
 
-// Register material references (called after room is built)
 function wbRegisterMaterials(eastMat, westMat){
   wbEastMaterial = eastMat;
   wbWestMaterial = westMat;
@@ -1897,7 +2367,7 @@ function pollGamepad(delta){
   // Button events (edge detect)
   const pressed=i=>btns[i]&&btns[i].pressed&&!GP_PREV_BTN[i];
   if(pressed(0)){triggerInteract();}        // A
-  if(pressed(1)){if(drawMode)wbClose();else if(document.getElementById('chronicleOverlay').classList.contains('open'))chrClose();else closeModal();}  // B
+  if(pressed(1)){if(drawMode)wbClose();else if(document.getElementById('playtestOverlay').classList.contains('open'))closePlatyest();else if(document.getElementById('chronicleOverlay').classList.contains('open'))chrClose();else closeModal();}  // B
   if(pressed(3)){if(drawMode)wbClose();else toggleDrawMode();}  // Y
   if(pressed(2)){jumpToWall('north');}       // X
   if(pressed(9)){openSettings();}            // Start
@@ -1924,6 +2394,7 @@ window.addEventListener('keydown',e=>{
   if(e.code==='KeyE')triggerInteract();
   if(e.code==='Escape'){
     if(drawMode) wbClose();
+    else if(document.getElementById('playtestOverlay').classList.contains('open')) closePlatyest();
     else if(document.getElementById('chronicleOverlay').classList.contains('open')) chrClose();
     else closeModal();
   }
@@ -2054,6 +2525,16 @@ function animate(){
   doJump(delta);
   applyCamera();
 
+  // Wall nav — show when near/facing north (card gallery) wall
+  const facingNorth = Math.abs(yaw % (Math.PI*2) - Math.PI) < 1.2 || Math.abs(yaw % (Math.PI*2) + Math.PI) < 1.2;
+  const nearNorth = camera.position.z < -ROOM_D/2 + 6;
+  const wallNavEl = document.getElementById('wallNav');
+  if((facingNorth && nearNorth) || jumpTarget?.ry === 0){
+    wallNavEl.classList.add('show');
+  } else if(!nearNorth){
+    wallNavEl.classList.remove('show');
+  }
+
   // Interaction check every 3 frames
   if(frameCount%3===0) checkInteraction();
 
@@ -2063,6 +2544,7 @@ function animate(){
 
   animateTorches(t);
   animateParticles(t);
+  animateTable(t);
 
   renderer.render(scene,camera);
   frameCount++;
@@ -2115,9 +2597,72 @@ window.addEventListener('storage',e=>{
   if(e.key===STORE_FORGE){
     loadForgeData();
     buildGallery(galleryPage);
+    buildTableCardSpread();  // refresh deck spread on table
   }
   if(e.key===STORE_CHRONICLE){
     refreshChroniclePanels();
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  PWA INSTALL
+// ═══════════════════════════════════════════════════════════════════
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+
+function doInstall(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(r=>{
+    document.getElementById('installBanner').classList.remove('show');
+    if(r.outcome==='accepted') toast('Forge Room installed!','good');
+    deferredInstallPrompt = null;
+  });
+}
+
+window.addEventListener('appinstalled', ()=>{
+  document.getElementById('installBanner').classList.remove('show');
+  deferredInstallPrompt = null;
+  toast('Forge Room installed!','good');
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  ANDROID BACK BUTTON — require double-back or confirm
+// ═══════════════════════════════════════════════════════════════════
+let backPressCount = 0;
+let backPressTimer = null;
+
+// Handle popstate (Android back button fires this)
+history.pushState({page:'forge-room'}, '');
+window.addEventListener('popstate', e=>{
+  // First, check if any overlay is open and close it
+  if(drawMode){ wbClose(); history.pushState({page:'forge-room'},''); return; }
+  if(document.getElementById('playtestOverlay').classList.contains('open')){
+    closePlatyest(); history.pushState({page:'forge-room'},''); return;
+  }
+  if(document.getElementById('chronicleOverlay').classList.contains('open')){
+    chrClose(); history.pushState({page:'forge-room'},''); return;
+  }
+  if(document.getElementById('modal').classList.contains('open')){
+    closeModal(); history.pushState({page:'forge-room'},''); return;
+  }
+  // Nothing open — double-back to exit
+  backPressCount++;
+  history.pushState({page:'forge-room'},'');
+  if(backPressCount === 1){
+    toast('Press back again to exit Forge Room');
+    backPressTimer = setTimeout(()=>{ backPressCount = 0; }, 2000);
+  } else if(backPressCount >= 2){
+    clearTimeout(backPressTimer);
+    backPressCount = 0;
+    // Actually navigate away
+    history.back();
+    history.back();
   }
 });
 
