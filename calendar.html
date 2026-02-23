@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;
+  --border:#2e2e42;--border2:#3d3d58;
+  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#f5e0a0;
+  --text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;
+  --red:#cc5555;--green:#55aa77;--amber:#cc8844;
+  --accent:#7b6cee;--accent2:#a99bff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;
+  min-height:100vh;padding-bottom:20px;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.4;}
+
+/* View toggle */
+.view-toggle{display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:4px;
+  overflow:hidden;margin:12px 14px 10px;}
+.view-toggle button{flex:1;background:none;border:none;color:var(--text2);padding:8px;
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;}
+.view-toggle button.active{background:var(--bg4);color:var(--gold);border-bottom:2px solid var(--gold);}
+
+/* Nav row */
+.nav-row{display:flex;align-items:center;justify-content:space-between;padding:0 14px;margin-bottom:10px;}
+.nav-row h2{font-family:'Cinzel',serif;font-size:12px;color:var(--gold);letter-spacing:0.08em;
+  text-align:center;flex:1;}
+.btn{padding:7px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);
+  border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.06em;cursor:pointer;
+  transition:all 0.15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,#8a6a20,var(--gold));border-color:var(--gold2);
+  color:#1a1200;font-weight:600;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+
+.add-btn{margin:0 14px 12px;width:calc(100% - 28px);}
+
+/* ═══ WEEK VIEW ═══ */
+.day-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;
+  margin:0 14px 8px;overflow:hidden;}
+.day-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
+  background:var(--bg3);cursor:pointer;user-select:none;}
+.day-header-left{display:flex;align-items:center;gap:10px;}
+.day-name{font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.1em;color:var(--gold2);}
+.day-date{font-size:12px;color:var(--text2);}
+.day-badge{background:var(--accent);color:white;border-radius:10px;padding:1px 7px;
+  font-size:10px;font-family:'Cinzel',serif;}
+.day-card.today .day-header{border-left:3px solid var(--gold);}
+.chevron{font-size:10px;color:var(--text3);transition:transform 0.2s;}
+.chevron.open{transform:rotate(90deg);color:var(--gold);}
+.day-body{padding:0;max-height:0;overflow:hidden;transition:max-height 0.3s ease,padding 0.3s ease;}
+.day-body.open{padding:10px 14px;max-height:600px;}
+.empty-state{text-align:center;padding:8px;color:var(--text3);font-style:italic;font-size:13px;}
+
+/* Entry items */
+.entry-item{display:flex;gap:8px;align-items:center;padding:8px 10px;
+  background:var(--bg3);border-radius:4px;margin-bottom:4px;}
+.entry-time{font-family:'Cinzel',serif;font-size:10px;color:var(--gold);min-width:50px;letter-spacing:0.04em;}
+.entry-text{flex:1;font-size:14px;color:var(--text);line-height:1.4;}
+.entry-badge{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.06em;padding:1px 6px;border-radius:10px;}
+.badge-routine{background:rgba(85,170,119,0.15);color:var(--green);border:1px solid rgba(85,170,119,0.3);}
+.badge-note{background:rgba(123,108,238,0.15);color:var(--accent2);border:1px solid rgba(123,108,238,0.3);}
+.entry-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 2px;
+  transition:color 0.2s;flex-shrink:0;}
+.entry-del:active{color:var(--red);}
+.entry-bell{background:none;border:none;cursor:pointer;font-size:13px;padding:0 2px;flex-shrink:0;}
+
+/* ═══ MONTH VIEW ═══ */
+.month-grid-header{display:grid;grid-template-columns:repeat(7,1fr);padding:0 14px;margin-bottom:4px;}
+.month-grid-header span{font-family:'Cinzel',serif;font-size:9px;color:var(--text3);text-align:center;
+  letter-spacing:0.08em;padding:4px 0;}
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 14px;margin-bottom:14px;}
+.month-cell{background:var(--bg2);border:1px solid var(--border);border-radius:4px;min-height:52px;
+  padding:4px;cursor:pointer;transition:all 0.15s;position:relative;}
+.month-cell:active{border-color:var(--gold);}
+.month-cell.today{border-color:var(--gold);background:rgba(201,168,76,0.06);}
+.month-cell.other-month{opacity:0.35;}
+.month-cell .cell-day{font-family:'Cinzel',serif;font-size:10px;color:var(--text2);margin-bottom:2px;}
+.month-cell.today .cell-day{color:var(--gold);}
+.month-cell .cell-dots{display:flex;gap:2px;flex-wrap:wrap;}
+.cell-dot{width:5px;height:5px;border-radius:50%;}
+.cell-dot.routine{background:var(--green);}
+.cell-dot.note{background:var(--accent2);}
+.month-cell .cell-count{font-family:'Cinzel',serif;font-size:8px;color:var(--text3);
+  position:absolute;bottom:2px;right:4px;}
+
+/* Day detail panel (month view) */
+#dayDetail{background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+  margin:0 14px 12px;padding:14px;display:none;}
+#dayDetail.open{display:block;}
+#dayDetail .detail-title{font-family:'Cinzel',serif;font-size:12px;color:var(--gold);
+  letter-spacing:0.08em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+
+/* ═══ MODAL ═══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;
+  display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:8px 8px 0 0;
+  width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:20px;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:0.1em;
+  margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+.field{margin-bottom:12px;}
+label{display:block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;
+  color:var(--text2);text-transform:uppercase;margin-bottom:4px;}
+input[type="text"],input[type="time"],textarea,select{
+  background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;
+  border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;
+  transition:border-color 0.2s;}
+input:focus,textarea:focus,select:focus{border-color:var(--gold);}
+select option{background:var(--bg3);}
+textarea{resize:vertical;min-height:80px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;}
+.toggle-label{font-family:'Cinzel',serif;font-size:10px;color:var(--text2);letter-spacing:0.06em;}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--bg4);border-radius:12px;cursor:pointer;
+  transition:0.2s;border:1px solid var(--border2);}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:2px;top:2px;
+  background:var(--text2);border-radius:50%;transition:0.2s;}
+.toggle input:checked+.toggle-slider{background:var(--gold);border-color:var(--gold2);}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px);background:#1a1200;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- View Toggle -->
+<div class="view-toggle">
+  <button class="active" id="vw-week" onclick="switchView('week')">Week</button>
+  <button id="vw-month" onclick="switchView('month')">Month</button>
+</div>
+
+<!-- Navigation -->
+<div class="nav-row">
+  <button class="btn" onclick="navigate(-1)">◀</button>
+  <h2 id="navLabel"></h2>
+  <button class="btn" onclick="navigate(1)">▶</button>
+</div>
+
+<button class="btn btn-gold add-btn" onclick="openAddEntry()">+ Add Entry</button>
+
+<!-- Week View -->
+<div id="weekView"></div>
+
+<!-- Month View -->
+<div id="monthView" style="display:none;">
+  <div class="month-grid-header">
+    <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+  </div>
+  <div class="month-grid" id="monthGrid"></div>
+  <div id="dayDetail">
+    <div class="detail-title">
+      <span id="detailDate"></span>
+      <button class="btn" style="font-size:9px;padding:4px 8px;" onclick="closeDayDetail()">✕</button>
+    </div>
+    <div id="detailEntries"></div>
+  </div>
+</div>
+
+<!-- Add Entry Modal -->
+<div class="modal-overlay" id="modal-entry">
+  <div class="modal">
+    <h2>Add Calendar Entry</h2>
+    <div class="field"><label>Day</label>
+      <select id="entryDay">
+        <option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>
+        <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option>
+        <option value="6">Saturday</option>
+      </select>
+    </div>
+    <div class="field"><label>Time (optional)</label><input type="text" id="entryTime" placeholder="e.g. 9:00 AM"></div>
+    <div class="field"><label>Entry</label><textarea id="entryText" placeholder="What are you recording?"></textarea></div>
+    <div class="field"><label>Type</label>
+      <select id="entryType">
+        <option value="routine">Routine (repeats weekly)</option>
+        <option value="note">Note (this week only)</option>
+      </select>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">🔔 Push notification</span>
+      <label class="toggle"><input type="checkbox" id="entryNotif" onchange="toggleNotifTime()"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="field" id="notifTimeField" style="display:none;">
+      <label>Remind me at</label><input type="time" id="entryNotifTime" value="09:00">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let currentView = 'week';
+let weekOffset = 0;
+let monthOffset = 0; // offset from current month
+let selectedMonthDay = null;
+
+// ════════════════════════════════════
+//  DATA
+// ════════════════════════════════════
+function getData() {
+  try { const s = localStorage.getItem('chronicle_data'); return s ? JSON.parse(s) : { entries:[] }; } catch(e) { return { entries:[] }; }
+}
+function saveData(d) { localStorage.setItem('chronicle_data', JSON.stringify(d)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ════════════════════════════════════
+//  VIEW SWITCHING
+// ════════════════════════════════════
+function switchView(v) {
+  currentView = v;
+  document.getElementById('vw-week').classList.toggle('active', v === 'week');
+  document.getElementById('vw-month').classList.toggle('active', v === 'month');
+  document.getElementById('weekView').style.display = v === 'week' ? 'block' : 'none';
+  document.getElementById('monthView').style.display = v === 'month' ? 'block' : 'none';
+  render();
+}
+
+function navigate(dir) {
+  if (currentView === 'week') { weekOffset += dir; }
+  else { monthOffset += dir; selectedMonthDay = null; closeDayDetail(); }
+  render();
+}
+
+function render() {
+  if (currentView === 'week') renderWeek();
+  else renderMonth();
+}
+
+// ════════════════════════════════════
+//  WEEK VIEW
+// ════════════════════════════════════
+function getWeekStart(off) {
+  const d = new Date(); d.setDate(d.getDate() - d.getDay() + off * 7); d.setHours(0,0,0,0); return d;
+}
+function weekKey(off) { return getWeekStart(off).toISOString().slice(0, 10); }
+
+function renderWeek() {
+  const ws = getWeekStart(weekOffset);
+  const we = new Date(ws); we.setDate(we.getDate() + 6);
+  document.getElementById('navLabel').textContent =
+    ws.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' – ' +
+    we.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const wk = weekKey(weekOffset);
+  const data = getData();
+  const cont = document.getElementById('weekView');
+  cont.innerHTML = '';
+
+  for (let i = 0; i < 7; i++) {
+    const dd = new Date(ws); dd.setDate(ws.getDate() + i);
+    const isToday = dd.getTime() === today.getTime();
+    const entries = (data.entries || []).filter(e =>
+      parseInt(e.dayOfWeek) === i &&
+      (e.type === 'routine' || (e.type === 'note' && e.weekKey === wk))
+    ).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+    const card = document.createElement('div');
+    card.className = 'day-card' + (isToday ? ' today' : '');
+    const dateStr = dd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    card.innerHTML = `
+      <div class="day-header" onclick="toggleDay(this)">
+        <div class="day-header-left">
+          <span class="day-name">${DAYS[i]}</span>
+          <span class="day-date">${dateStr}</span>
+          ${entries.length ? `<span class="day-badge">${entries.length}</span>` : ''}
+        </div>
+        <span class="chevron${isToday ? ' open' : ''}">▶</span>
+      </div>
+      <div class="day-body${isToday ? ' open' : ''}">
+        ${!entries.length ? '<div class="empty-state">No entries</div>' :
+          entries.map(e => entryHTML(e)).join('')}
+      </div>`;
+    cont.appendChild(card);
+  }
+}
+
+function entryHTML(e) {
+  return `<div class="entry-item">
+    <span class="entry-time">${esc(e.time || '—')}</span>
+    <span class="entry-text">${esc(e.text)}</span>
+    <button class="entry-bell" onclick="toggleNotif('${e.id}')" title="Toggle notification">${e.notif ? '🔔' : '🔕'}</button>
+    <span class="entry-badge ${e.type === 'routine' ? 'badge-routine' : 'badge-note'}">${e.type}</span>
+    <button class="entry-del" onclick="deleteEntry('${e.id}')">×</button>
+  </div>`;
+}
+
+function toggleDay(hdr) {
+  const body = hdr.nextElementSibling;
+  const chev = hdr.querySelector('.chevron');
+  body.classList.toggle('open');
+  chev.classList.toggle('open', body.classList.contains('open'));
+}
+
+// ════════════════════════════════════
+//  MONTH VIEW
+// ════════════════════════════════════
+function getMonthDate(off) {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + off);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function renderMonth() {
+  const first = getMonthDate(monthOffset);
+  const year = first.getFullYear();
+  const month = first.getMonth();
+  document.getElementById('navLabel').textContent =
+    first.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const data = getData();
+  const grid = document.getElementById('monthGrid');
+  grid.innerHTML = '';
+
+  // First day of month and how many days
+  const startDow = first.getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthDays = new Date(year, month, 0).getDate();
+
+  // Build 6 rows of 7
+  const totalCells = Math.ceil((startDow + daysInMonth) / 7) * 7;
+
+  for (let i = 0; i < totalCells; i++) {
+    let dayNum, dateObj, isOther = false;
+
+    if (i < startDow) {
+      // Previous month
+      dayNum = prevMonthDays - startDow + 1 + i;
+      dateObj = new Date(year, month - 1, dayNum);
+      isOther = true;
+    } else if (i >= startDow + daysInMonth) {
+      // Next month
+      dayNum = i - startDow - daysInMonth + 1;
+      dateObj = new Date(year, month + 1, dayNum);
+      isOther = true;
+    } else {
+      dayNum = i - startDow + 1;
+      dateObj = new Date(year, month, dayNum);
+    }
+    dateObj.setHours(0,0,0,0);
+
+    const isToday = dateObj.getTime() === today.getTime();
+    const dow = dateObj.getDay();
+
+    // Find entries for this day
+    const wkStart = new Date(dateObj);
+    wkStart.setDate(dateObj.getDate() - dow);
+    const wk = wkStart.toISOString().slice(0, 10);
+
+    const entries = (data.entries || []).filter(e =>
+      parseInt(e.dayOfWeek) === dow &&
+      (e.type === 'routine' || (e.type === 'note' && e.weekKey === wk))
+    );
+
+    const routines = entries.filter(e => e.type === 'routine').length;
+    const notes = entries.filter(e => e.type === 'note').length;
+
+    const cell = document.createElement('div');
+    cell.className = 'month-cell' + (isToday ? ' today' : '') + (isOther ? ' other-month' : '');
+    cell.onclick = () => openDayDetail(dateObj, dow, wk, isOther);
+
+    let dots = '';
+    for (let r = 0; r < Math.min(routines, 3); r++) dots += '<div class="cell-dot routine"></div>';
+    for (let n = 0; n < Math.min(notes, 3); n++) dots += '<div class="cell-dot note"></div>';
+
+    cell.innerHTML = `
+      <div class="cell-day">${dayNum}</div>
+      <div class="cell-dots">${dots}</div>
+      ${entries.length > 3 ? `<span class="cell-count">${entries.length}</span>` : ''}`;
+    grid.appendChild(cell);
+  }
+
+  // Re-render selected day detail if open
+  if (selectedMonthDay) {
+    const sd = selectedMonthDay;
+    openDayDetail(sd.date, sd.dow, sd.wk, false);
+  }
+}
+
+function openDayDetail(dateObj, dow, wk, isOther) {
+  selectedMonthDay = { date: dateObj, dow, wk };
+  const data = getData();
+  const entries = (data.entries || []).filter(e =>
+    parseInt(e.dayOfWeek) === dow &&
+    (e.type === 'routine' || (e.type === 'note' && e.weekKey === wk))
+  ).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+  const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  document.getElementById('detailDate').textContent = dateStr;
+
+  const el = document.getElementById('detailEntries');
+  if (!entries.length) {
+    el.innerHTML = '<div class="empty-state">No entries for this day.</div>';
+  } else {
+    el.innerHTML = entries.map(e => entryHTML(e)).join('');
+  }
+  document.getElementById('dayDetail').classList.add('open');
+}
+
+function closeDayDetail() {
+  document.getElementById('dayDetail').classList.remove('open');
+  selectedMonthDay = null;
+}
+
+// ════════════════════════════════════
+//  ENTRY CRUD
+// ════════════════════════════════════
+function openAddEntry() {
+  document.getElementById('entryDay').value = new Date().getDay();
+  document.getElementById('entryTime').value = '';
+  document.getElementById('entryText').value = '';
+  document.getElementById('entryType').value = 'routine';
+  document.getElementById('entryNotif').checked = false;
+  document.getElementById('notifTimeField').style.display = 'none';
+  document.getElementById('entryNotifTime').value = '09:00';
+  openModal();
+}
+
+function toggleNotifTime() {
+  document.getElementById('notifTimeField').style.display =
+    document.getElementById('entryNotif').checked ? 'block' : 'none';
+}
+
+async function saveEntry() {
+  const text = document.getElementById('entryText').value.trim();
+  if (!text) return;
+  const notif = document.getElementById('entryNotif').checked;
+  if (notif) {
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      await Notification.requestPermission();
+    }
+  }
+  const data = getData();
+  if (!data.entries) data.entries = [];
+  const wk = currentView === 'week' ? weekKey(weekOffset) :
+    (selectedMonthDay ? selectedMonthDay.wk : weekKey(0));
+
+  const e = {
+    id: uid(),
+    dayOfWeek: parseInt(document.getElementById('entryDay').value),
+    time: document.getElementById('entryTime').value.trim(),
+    text,
+    type: document.getElementById('entryType').value,
+    weekKey: wk,
+    notif,
+    notifTime: notif ? document.getElementById('entryNotifTime').value : null
+  };
+  data.entries.push(e);
+  if (e.notif) scheduleNotif(e);
+  saveData(data);
+  closeModal();
+  render();
+  sendToast('Entry saved ✦');
+}
+
+function deleteEntry(id) {
+  const data = getData();
+  data.entries = (data.entries || []).filter(e => e.id !== id);
+  saveData(data);
+  render();
+}
+
+async function toggleNotif(id) {
+  const data = getData();
+  const e = (data.entries || []).find(x => x.id === id);
+  if (!e) return;
+  if (!e.notif) {
+    if ('Notification' in window) {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') return;
+    }
+    const t = prompt('Remind me at (HH:MM):', '09:00');
+    if (!t) return;
+    e.notif = true; e.notifTime = t; scheduleNotif(e);
+  } else {
+    e.notif = false; e.notifTime = null;
+  }
+  saveData(data);
+  render();
+}
+
+function scheduleNotif(e) {
+  if (!e.notif || !e.notifTime) return;
+  const [h, m] = e.notifTime.split(':').map(Number);
+  const now = new Date(), day = now.getDay();
+  let daysUntil = ((parseInt(e.dayOfWeek) - day + 7) % 7) || 7;
+  const next = new Date(now); next.setDate(now.getDate() + daysUntil); next.setHours(h, m, 0, 0);
+  const ms = next.getTime() - now.getTime();
+  if (ms > 0 && ms < 7 * 24 * 60 * 60 * 1000) {
+    setTimeout(() => {
+      if (Notification.permission === 'granted') {
+        new Notification('Chronicle', { body: e.text, icon: '../icon-192.png' });
+      }
+    }, ms);
+  }
+}
+
+// ════════════════════════════════════
+//  MODAL
+// ════════════════════════════════════
+function openModal() { document.getElementById('modal-entry').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeModal() { document.getElementById('modal-entry').classList.remove('open'); document.body.style.overflow = ''; }
+document.getElementById('modal-entry').addEventListener('click', e => { if (e.target.id === 'modal-entry') closeModal(); });
+
+// ════════════════════════════════════
+//  COMMUNICATION
+// ════════════════════════════════════
+function sendToast(msg, cls) {
+  if (window.parent !== window) window.parent.postMessage({ type: 'toast', msg, cls }, '*');
+}
+
+// ════════════════════════════════════
+//  INIT
+// ════════════════════════════════════
+render();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+</script>
+</body>
+</html>

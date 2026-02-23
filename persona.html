@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;
+  --border:#2e2e42;--border2:#3d3d58;
+  --gold:#c9a84c;--gold2:#e8c97a;
+  --text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;
+  --red:#cc5555;--green:#55aa77;--amber:#cc8844;
+  --accent:#7b6cee;--accent2:#a99bff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;
+  padding:14px;min-height:100vh;padding-bottom:40px;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.4;}
+
+.btn{padding:7px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);
+  border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.06em;cursor:pointer;
+  transition:all 0.15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,#8a6a20,var(--gold));border-color:var(--gold2);
+  color:#1a1200;font-weight:600;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+
+/* Active persona card */
+.persona-active{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);
+  border-radius:8px;padding:16px;margin-bottom:16px;position:relative;overflow:hidden;}
+.persona-active::after{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;
+  background:radial-gradient(circle,rgba(123,108,238,0.12) 0%,transparent 70%);pointer-events:none;}
+.persona-name{font-family:'Cinzel',serif;font-size:18px;font-weight:600;color:var(--accent2);
+  letter-spacing:0.1em;margin-bottom:2px;}
+.persona-role{font-size:13px;color:var(--text2);font-style:italic;margin-bottom:14px;}
+.stat-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.stat-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.06em;color:var(--text2);
+  min-width:86px;text-transform:uppercase;}
+.stat-bar-bg{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;}
+.stat-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease;}
+.stat-val{font-family:'Cinzel',serif;font-size:10px;color:var(--text);min-width:24px;text-align:right;}
+
+/* Mood check */
+.mood-box{background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+  padding:14px;margin-bottom:16px;}
+.section-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;color:var(--gold);
+  text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+#moodResult{margin-top:10px;}
+
+/* Persona list */
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text2);
+  font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.15em;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.persona-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;}
+.pill-active{background:rgba(123,108,238,0.2);color:var(--accent2);border:1px solid rgba(123,108,238,0.4);
+  padding:2px 8px;border-radius:10px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.08em;}
+.empty-state{text-align:center;padding:24px 16px;color:var(--text3);font-style:italic;font-size:14px;}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;
+  display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:8px 8px 0 0;
+  width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:20px;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:0.1em;
+  margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+.field{margin-bottom:12px;}
+label{display:block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;
+  color:var(--text2);text-transform:uppercase;margin-bottom:4px;}
+input[type="text"],textarea{background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;
+  outline:none;transition:border-color 0.2s;}
+input:focus,textarea:focus{border-color:var(--gold);}
+input[type="range"]{-webkit-appearance:none;width:100%;height:4px;background:var(--bg4);
+  border-radius:2px;outline:none;cursor:pointer;}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;
+  background:var(--accent2);border-radius:50%;box-shadow:0 0 8px rgba(123,108,238,0.5);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div id="activePersonaArea"></div>
+
+<!-- Mood Check -->
+<div class="mood-box">
+  <div class="section-label">Mood Check</div>
+  <p style="font-size:12px;color:var(--text2);margin-bottom:10px;font-style:italic;">Rate how you feel right now — Chronicle finds your closest persona and shows the gap.</p>
+  <div id="moodSliders"></div>
+  <button class="btn btn-gold" style="width:100%;margin-top:8px;" onclick="runMoodCheck()">Compare to Personas</button>
+  <div id="moodResult"></div>
+</div>
+
+<div class="divider">All Personas</div>
+<div id="personaList"></div>
+<button class="btn btn-gold" style="width:100%;margin-top:8px;" onclick="openAddPersona()">+ New Persona</button>
+
+<!-- Add Persona Modal -->
+<div class="modal-overlay" id="modal-persona">
+  <div class="modal">
+    <h2>New Persona</h2>
+    <div class="field"><label>Name</label><input type="text" id="pName" placeholder="Persona name"></div>
+    <div class="field"><label>Role / Archetype</label><input type="text" id="pRole" placeholder="e.g. The Strategist, Work Mode..."></div>
+    <div class="divider">Attributes</div>
+    <div id="statFields"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-persona')">Cancel</button>
+      <button class="btn btn-gold" onclick="savePersona()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Persona Modal -->
+<div class="modal-overlay" id="modal-edit-persona">
+  <div class="modal">
+    <h2 id="editPersonaTitle">Edit Persona</h2>
+    <div id="editStatFields"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="deletePersona()">Delete</button>
+      <button class="btn" onclick="closeModal('modal-edit-persona')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveEditPersona()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const STATS = ['Happiness','Sadness','Anger','Anxiety','Fear','Disgust','Surprise','Confidence',
+  'Energy','Focus','Creativity','Motivation','Calm','Loneliness','Excitement','Gratitude',
+  'Overwhelm','Pride','Shame','Curiosity','Contentment','Guilt','Jealousy','Awe'];
+const STAT_COLORS = {
+  Happiness:'#55aa77',Sadness:'#5566aa',Anger:'#cc4444',Anxiety:'#cc8844',Fear:'#9944cc',
+  Disgust:'#668844',Surprise:'#ee8833',Confidence:'#c9a84c',Energy:'#e8c97a',Focus:'#5588cc',
+  Creativity:'#9955cc',Motivation:'#55aacc',Calm:'#66bbcc',Loneliness:'#7766aa',
+  Excitement:'#ff9944',Gratitude:'#77bb55',Overwhelm:'#bb5544',Pride:'#ccaa33',Shame:'#996677',
+  Curiosity:'#44aaaa',Contentment:'#448866',Guilt:'#887755',Jealousy:'#669944',Awe:'#8888cc'
+};
+const MOOD_QUICK = ['Happiness','Sadness','Anger','Anxiety','Calm','Energy','Excitement',
+  'Loneliness','Overwhelm','Contentment','Gratitude','Focus'];
+
+let editingPersonaId = null;
+
+// ════════════════════════════════════
+//  DATA
+// ════════════════════════════════════
+function getData() {
+  try { const s = localStorage.getItem('chronicle_data'); return s ? JSON.parse(s) : { personas:[] }; } catch(e) { return { personas:[] }; }
+}
+function saveAllData(d) { localStorage.setItem('chronicle_data', JSON.stringify(d)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════
+function renderAll() {
+  const data = getData();
+  renderActivePersona(data);
+  renderPersonaList(data);
+  initMoodSliders();
+}
+
+function renderActivePersona(data) {
+  const el = document.getElementById('activePersonaArea');
+  const active = (data.personas || []).find(p => p.active);
+  if (!active) {
+    el.innerHTML = '<div class="empty-state">No active persona. Create one below.</div>';
+    return;
+  }
+  el.innerHTML = `<div class="persona-active">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div class="persona-name">${esc(active.name)}</div>
+        <div class="persona-role">${esc(active.role || '')}</div>
+      </div>
+      <button class="btn" style="font-size:10px;padding:3px 8px;" onclick="editPersona('${active.id}')">Edit</button>
+    </div>
+    ${STATS.map(s => {
+      const v = active.stats?.[s] ?? 50;
+      return `<div class="stat-row">
+        <span class="stat-label">${s}</span>
+        <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${v}%;background:${STAT_COLORS[s]};"></div></div>
+        <span class="stat-val">${v}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderPersonaList(data) {
+  const el = document.getElementById('personaList');
+  if (!data.personas || !data.personas.length) {
+    el.innerHTML = '<div class="empty-state">No personas yet.</div>';
+    return;
+  }
+  el.innerHTML = data.personas.map(p => `
+    <div class="persona-item">
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:13px;">${esc(p.name)}</div>
+        <div style="font-size:12px;color:var(--text2);font-style:italic;">${esc(p.role || '')}</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        ${p.active ? '<span class="pill-active">ACTIVE</span>' :
+          `<button class="btn" style="font-size:9px;padding:3px 8px;" onclick="setActive('${p.id}')">Activate</button>`}
+        <button class="btn" style="font-size:9px;padding:3px 8px;" onclick="editPersona('${p.id}')">Edit</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════
+//  MOOD CHECK
+// ════════════════════════════════════
+function initMoodSliders() {
+  const el = document.getElementById('moodSliders');
+  if (!el) return;
+  el.innerHTML = MOOD_QUICK.map(s => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+      <span style="font-size:11px;color:${STAT_COLORS[s]};min-width:84px;">${s}</span>
+      <input type="range" min="0" max="100" value="50" id="msr-${s}" style="flex:1;accent-color:${STAT_COLORS[s]};"
+        oninput="document.getElementById('msv-${s}').textContent=this.value">
+      <span id="msv-${s}" style="font-size:11px;color:var(--gold);min-width:24px;text-align:right;">50</span>
+    </div>
+  `).join('');
+}
+
+function runMoodCheck() {
+  const data = getData();
+  if (!data.personas || !data.personas.length) {
+    document.getElementById('moodResult').innerHTML =
+      '<p style="font-size:12px;color:var(--text2);font-style:italic;">No personas yet to compare against.</p>';
+    return;
+  }
+  const mood = {};
+  MOOD_QUICK.forEach(s => {
+    const el = document.getElementById('msr-' + s);
+    mood[s] = el ? +el.value : 50;
+  });
+  const scored = data.personas.map(p => {
+    let total = 0, n = 0;
+    MOOD_QUICK.forEach(s => { total += Math.abs((mood[s] ?? 50) - (p.stats?.[s] ?? 50)); n++; });
+    return { p, dist: n ? total / n : 100 };
+  }).sort((a, b) => a.dist - b.dist);
+
+  const { p: best, dist } = scored[0];
+  const matchPct = Math.max(0, 100 - Math.round(dist));
+  const col = dist < 15 ? 'var(--green)' : dist < 30 ? 'var(--gold)' : 'var(--red)';
+
+  const diffs = MOOD_QUICK.map(s => {
+    const mv = mood[s] ?? 50, pv = best.stats?.[s] ?? 50;
+    return { s, d: mv - pv };
+  }).filter(x => Math.abs(x.d) > 8).sort((a, b) => Math.abs(b.d) - Math.abs(a.d)).slice(0, 5);
+
+  document.getElementById('moodResult').innerHTML = `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);">${esc(best.name)}</div>
+          <div style="font-size:11px;color:var(--text2);font-style:italic;">${esc(best.role || '')}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:'Cinzel',serif;font-size:26px;color:${col};line-height:1;">${matchPct}%</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:.06em;">MATCH</div>
+        </div>
+      </div>
+      ${diffs.length
+        ? '<div style="font-family:Cinzel,serif;font-size:9px;color:var(--text3);letter-spacing:.08em;margin-bottom:6px;">KEY DIFFERENCES</div>'
+          + diffs.map(({ s, d }) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="font-size:11px;color:${STAT_COLORS[s]};min-width:84px;">${s}</span>
+            <div style="flex:1;height:5px;background:var(--bg2);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:${Math.min(100, Math.abs(d))}%;background:${STAT_COLORS[s]};opacity:.6;border-radius:3px;"></div>
+            </div>
+            <span style="font-size:11px;min-width:30px;text-align:right;color:${d > 0 ? 'var(--green)' : 'var(--red)'};">${d > 0 ? '+' : ''}${Math.round(d)}</span>
+          </div>`).join('')
+        : '<div style="font-size:12px;color:var(--green);font-style:italic;">Very close match — you\'re aligned with this persona.</div>'}
+      ${scored.length > 1 ? `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);">
+        ${scored.slice(1).map(x => esc(x.p.name) + ' ' + Math.max(0, 100 - Math.round(x.dist)) + '%').join(' · ')}
+      </div>` : ''}
+    </div>`;
+}
+
+// ════════════════════════════════════
+//  PERSONA CRUD
+// ════════════════════════════════════
+function openAddPersona() {
+  editingPersonaId = null;
+  document.getElementById('pName').value = '';
+  document.getElementById('pRole').value = '';
+  document.getElementById('statFields').innerHTML = STATS.map(s =>
+    `<div class="field"><label>${s} <span id="sv-${s}" style="color:var(--gold);float:right;">50</span></label>
+    <input type="range" min="0" max="100" value="50" id="sr-${s}"
+      oninput="document.getElementById('sv-${s}').textContent=this.value"></div>`
+  ).join('');
+  openModal('modal-persona');
+}
+
+function savePersona() {
+  const name = document.getElementById('pName').value.trim();
+  if (!name) return;
+  const stats = {};
+  STATS.forEach(s => stats[s] = parseInt(document.getElementById('sr-' + s).value));
+  const data = getData();
+  if (!data.personas) data.personas = [];
+  data.personas.push({
+    id: uid(), name,
+    role: document.getElementById('pRole').value.trim(),
+    stats,
+    active: !data.personas.length
+  });
+  saveAllData(data);
+  closeModal('modal-persona');
+  renderAll();
+  sendToast('Persona created ✦');
+}
+
+function editPersona(id) {
+  editingPersonaId = id;
+  const data = getData();
+  const p = (data.personas || []).find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('editPersonaTitle').textContent = p.name;
+  document.getElementById('editStatFields').innerHTML = STATS.map(s => {
+    const v = p.stats?.[s] ?? 50;
+    return `<div class="field"><label>${s} <span id="esv-${s}" style="color:var(--gold);float:right;">${v}</span></label>
+    <input type="range" min="0" max="100" value="${v}" id="esr-${s}"
+      oninput="document.getElementById('esv-${s}').textContent=this.value"></div>`;
+  }).join('');
+  openModal('modal-edit-persona');
+}
+
+function saveEditPersona() {
+  const data = getData();
+  const p = (data.personas || []).find(x => x.id === editingPersonaId);
+  if (!p) return;
+  STATS.forEach(s => p.stats[s] = parseInt(document.getElementById('esr-' + s).value));
+  saveAllData(data);
+  closeModal('modal-edit-persona');
+  renderAll();
+  sendToast('Persona updated ✦');
+}
+
+function deletePersona() {
+  if (!confirm('Delete this persona?')) return;
+  const data = getData();
+  data.personas = (data.personas || []).filter(x => x.id !== editingPersonaId);
+  if (data.personas.length && !data.personas.find(p => p.active)) data.personas[0].active = true;
+  saveAllData(data);
+  closeModal('modal-edit-persona');
+  renderAll();
+}
+
+function setActive(id) {
+  const data = getData();
+  (data.personas || []).forEach(p => p.active = (p.id === id));
+  saveAllData(data);
+  renderAll();
+  sendToast('Persona activated ✦');
+}
+
+// ════════════════════════════════════
+//  MODAL
+// ════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+document.querySelectorAll('.modal-overlay').forEach(o =>
+  o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); })
+);
+
+function sendToast(msg, cls) {
+  if (window.parent !== window) window.parent.postMessage({ type: 'toast', msg, cls }, '*');
+}
+
+// ════════════════════════════════════
+//  INIT
+// ════════════════════════════════════
+renderAll();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) renderAll(); });
+</script>
+</body>
+</html>

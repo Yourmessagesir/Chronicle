@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;
+  --border:#2e2e42;--border2:#3d3d58;
+  --gold:#c9a84c;--gold2:#e8c97a;
+  --text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;
+  --red:#cc5555;--green:#55aa77;--amber:#cc8844;
+  --accent:#7b6cee;--accent2:#a99bff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;
+  padding:14px;min-height:100vh;padding-bottom:40px;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.4;}
+
+.btn{padding:7px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);
+  border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.06em;cursor:pointer;
+  transition:all 0.15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,#8a6a20,var(--gold));border-color:var(--gold2);
+  color:#1a1200;font-weight:600;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+
+/* Search */
+.search-wrap{position:relative;margin-bottom:12px;}
+.search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  font-size:13px;pointer-events:none;opacity:0.5;}
+.search-wrap input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  padding:8px 12px 8px 32px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:14px;
+  outline:none;transition:border-color 0.2s;}
+.search-wrap input:focus{border-color:var(--gold);}
+
+/* Person card */
+.person-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;
+  margin-bottom:10px;overflow:hidden;}
+.person-header{display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;}
+.person-avatar{width:42px;height:42px;border-radius:50%;
+  background:linear-gradient(135deg,var(--bg4),var(--bg3));border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:15px;
+  color:var(--gold);flex-shrink:0;}
+.person-body{padding:0 14px 0;max-height:0;overflow:hidden;transition:max-height 0.3s ease,padding 0.3s ease;}
+.person-body.open{max-height:800px;padding:0 14px 14px;}
+.chevron{font-size:10px;color:var(--text3);transition:transform 0.2s;flex-shrink:0;}
+.chevron.open{transform:rotate(90deg);color:var(--gold);}
+.section-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;color:var(--gold);
+  text-transform:uppercase;margin:12px 0 6px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.tag-list{display:flex;flex-wrap:wrap;gap:4px;}
+.info-tag{display:inline-block;background:var(--bg3);border:1px solid var(--border);border-radius:3px;
+  padding:2px 8px;font-size:12px;color:var(--text);margin:2px;}
+.empty-state{text-align:center;padding:32px 16px;color:var(--text3);font-style:italic;font-size:14px;}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;
+  display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:8px 8px 0 0;
+  width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:20px;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:0.1em;
+  margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+.field{margin-bottom:12px;}
+.row{display:flex;gap:8px;}.row>*{flex:1;}
+label{display:block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;
+  color:var(--text2);text-transform:uppercase;margin-bottom:4px;}
+input[type="text"],textarea{background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;
+  outline:none;transition:border-color 0.2s;}
+input:focus,textarea:focus{border-color:var(--gold);}
+textarea{resize:vertical;min-height:80px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<button class="btn btn-gold" style="width:100%;margin-bottom:12px;" onclick="openAddPerson()">+ Add Person</button>
+
+<div class="search-wrap">
+  <input type="text" id="searchInput" placeholder="Search people…" oninput="renderPeople()">
+</div>
+
+<div id="peopleList"></div>
+
+<!-- Person Modal -->
+<div class="modal-overlay" id="modal-person">
+  <div class="modal">
+    <h2 id="personModalTitle">Add Person</h2>
+    <div class="row">
+      <div class="field"><label>Name</label><input type="text" id="personName" placeholder="Full name"></div>
+      <div class="field"><label>Relationship</label><input type="text" id="personRel" placeholder="Friend, colleague..."></div>
+    </div>
+    <div class="field"><label>Likes (comma separated)</label><input type="text" id="personLikes" placeholder="coffee, hiking, jazz"></div>
+    <div class="field"><label>Dislikes (comma separated)</label><input type="text" id="personDislikes" placeholder="crowds, deadlines"></div>
+    <div class="field"><label>Personality (comma separated)</label><input type="text" id="personTraits" placeholder="introverted, analytical"></div>
+    <div class="field"><label>Important Dates (one per line)</label><textarea id="personDates" placeholder="Birthday: Jan 5&#10;Anniversary: March 12"></textarea></div>
+    <div class="field"><label>Notes</label><textarea id="personNotes" placeholder="Anything else worth remembering..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deletePersonBtn" onclick="deletePerson()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="savePerson()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+let editingPersonId = null;
+
+// ════════════════════════════════════
+//  DATA
+// ════════════════════════════════════
+function getData() {
+  try { const s = localStorage.getItem('chronicle_data'); return s ? JSON.parse(s) : { people:[] }; } catch(e) { return { people:[] }; }
+}
+function saveAllData(d) { localStorage.setItem('chronicle_data', JSON.stringify(d)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════
+function renderPeople() {
+  const data = getData();
+  const list = document.getElementById('peopleList');
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+
+  let people = data.people || [];
+  if (query) {
+    people = people.filter(p =>
+      (p.name || '').toLowerCase().includes(query) ||
+      (p.rel || '').toLowerCase().includes(query) ||
+      (p.traits || '').toLowerCase().includes(query) ||
+      (p.notes || '').toLowerCase().includes(query)
+    );
+  }
+
+  if (!people.length) {
+    list.innerHTML = `<div class="empty-state">${query ? 'No people match your search.' : 'No people added yet.'}</div>`;
+    return;
+  }
+
+  list.innerHTML = people.map(p => {
+    const init = p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const likes = p.likes ? p.likes.split(',').map(x => x.trim()).filter(Boolean) : [];
+    const dislikes = p.dislikes ? p.dislikes.split(',').map(x => x.trim()).filter(Boolean) : [];
+    const traits = p.traits ? p.traits.split(',').map(x => x.trim()).filter(Boolean) : [];
+
+    return `<div class="person-card">
+      <div class="person-header" onclick="togglePerson('pb-${p.id}','ch-${p.id}')">
+        <div class="person-avatar">${init}</div>
+        <div style="flex:1;">
+          <div style="font-family:'Cinzel',serif;font-size:14px;">${esc(p.name)}</div>
+          <div style="font-size:12px;color:var(--text2);font-style:italic;">${esc(p.rel || '')}</div>
+        </div>
+        <span class="chevron" id="ch-${p.id}">▶</span>
+      </div>
+      <div class="person-body" id="pb-${p.id}">
+        ${traits.length ? `<div class="section-label">Traits</div>
+          <div class="tag-list">${traits.map(t => `<span class="info-tag">${esc(t)}</span>`).join('')}</div>` : ''}
+        ${likes.length ? `<div class="section-label">Likes</div>
+          <div class="tag-list">${likes.map(t =>
+            `<span class="info-tag" style="border-color:rgba(85,170,119,0.4);color:var(--green);">${esc(t)}</span>`
+          ).join('')}</div>` : ''}
+        ${dislikes.length ? `<div class="section-label">Dislikes</div>
+          <div class="tag-list">${dislikes.map(t =>
+            `<span class="info-tag" style="border-color:rgba(204,85,85,0.4);color:var(--red);">${esc(t)}</span>`
+          ).join('')}</div>` : ''}
+        ${p.dates ? `<div class="section-label">Dates</div>
+          <div style="font-size:14px;white-space:pre-wrap;">${esc(p.dates)}</div>` : ''}
+        ${p.notes ? `<div class="section-label">Notes</div>
+          <div style="font-size:15px;font-style:italic;white-space:pre-wrap;">${esc(p.notes)}</div>` : ''}
+        <div style="margin-top:12px;">
+          <button class="btn" style="font-size:10px;padding:3px 8px;" onclick="openEditPerson('${p.id}')">Edit</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togglePerson(bodyId, chevId) {
+  const b = document.getElementById(bodyId);
+  const ch = document.getElementById(chevId);
+  b.classList.toggle('open');
+  ch.classList.toggle('open', b.classList.contains('open'));
+}
+
+// ════════════════════════════════════
+//  CRUD
+// ════════════════════════════════════
+function openAddPerson() {
+  editingPersonId = null;
+  document.getElementById('personModalTitle').textContent = 'Add Person';
+  document.getElementById('deletePersonBtn').style.display = 'none';
+  ['personName','personRel','personLikes','personDislikes','personTraits','personDates','personNotes']
+    .forEach(id => document.getElementById(id).value = '');
+  openModal();
+}
+
+function openEditPerson(id) {
+  editingPersonId = id;
+  const data = getData();
+  const p = (data.people || []).find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('personModalTitle').textContent = 'Edit ' + p.name;
+  document.getElementById('deletePersonBtn').style.display = 'inline-block';
+  document.getElementById('personName').value = p.name || '';
+  document.getElementById('personRel').value = p.rel || '';
+  document.getElementById('personLikes').value = p.likes || '';
+  document.getElementById('personDislikes').value = p.dislikes || '';
+  document.getElementById('personTraits').value = p.traits || '';
+  document.getElementById('personDates').value = p.dates || '';
+  document.getElementById('personNotes').value = p.notes || '';
+  openModal();
+}
+
+function savePerson() {
+  const name = document.getElementById('personName').value.trim();
+  if (!name) return;
+  const obj = {
+    id: editingPersonId || uid(),
+    name,
+    rel: document.getElementById('personRel').value.trim(),
+    likes: document.getElementById('personLikes').value.trim(),
+    dislikes: document.getElementById('personDislikes').value.trim(),
+    traits: document.getElementById('personTraits').value.trim(),
+    dates: document.getElementById('personDates').value.trim(),
+    notes: document.getElementById('personNotes').value.trim()
+  };
+  const data = getData();
+  if (!data.people) data.people = [];
+  if (editingPersonId) {
+    const i = data.people.findIndex(x => x.id === editingPersonId);
+    if (i >= 0) data.people[i] = obj;
+  } else {
+    data.people.push(obj);
+  }
+  saveAllData(data);
+  closeModal();
+  renderPeople();
+  sendToast(editingPersonId ? 'Person updated ✦' : 'Person added ✦');
+}
+
+function deletePerson() {
+  if (!confirm('Delete this person?')) return;
+  const data = getData();
+  data.people = (data.people || []).filter(x => x.id !== editingPersonId);
+  saveAllData(data);
+  closeModal();
+  renderPeople();
+}
+
+// ════════════════════════════════════
+//  MODAL
+// ════════════════════════════════════
+function openModal() { document.getElementById('modal-person').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeModal() { document.getElementById('modal-person').classList.remove('open'); document.body.style.overflow = ''; }
+document.getElementById('modal-person').addEventListener('click', e => {
+  if (e.target.id === 'modal-person') closeModal();
+});
+
+function sendToast(msg, cls) {
+  if (window.parent !== window) window.parent.postMessage({ type: 'toast', msg, cls }, '*');
+}
+
+// ════════════════════════════════════
+//  INIT
+// ════════════════════════════════════
+renderPeople();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) renderPeople(); });
+</script>
+</body>
+</html>

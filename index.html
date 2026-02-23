@@ -153,6 +153,10 @@ nav button.active::after{content:'';position:absolute;top:0;left:25%;right:25%;h
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       Persona
     </button>
+    <button onclick="loadModule('people')" id="nav-people">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M2 19c0-3.3 3.1-6 7-6s7 2.7 7 6"/><circle cx="17" cy="7" r="2"/><path d="M22 19c0-2.2-2.1-4-5-4"/></svg>
+      People
+    </button>
     <button onclick="loadModule('notes')" id="nav-notes">
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       Notes
@@ -199,7 +203,7 @@ nav button.active::after{content:'';position:absolute;top:0;left:25%;right:25%;h
 let currentModule = null;
 const SUBS = {
   dashboard:'Your personal tome', calendar:'Weekly scroll of time',
-  persona:'Who you are today', people:'Those who walk beside you',
+  persona:'Who you are today', people:'Those who walk beside you', people:'Those who walk beside you',
   notes:'Quick thoughts & ideas', books:'Your written world',
   boards:'Projects & tasks', comic:'Comics & story panels',
   rpg:'RPG world & playtest', cards:'Card Forge', vault:'The sealed vault',
