@@ -182,6 +182,48 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
 #chronicleLoading p{font-family:'Cinzel',serif;font-size:11px;color:var(--text2);
   letter-spacing:.1em;}
 
+/* ── PHASE 5: FPS COUNTER ── */
+#fpsCounter{position:fixed;top:52px;left:12px;font-family:'Cinzel',serif;
+  font-size:9px;letter-spacing:.1em;color:rgba(201,168,76,0.6);
+  pointer-events:none;z-index:15;display:none;}
+#fpsCounter.show{display:block;}
+
+/* ── PHASE 5: ROOM TRANSITION FLASH ── */
+#room2Flash{position:fixed;inset:0;z-index:500;background:#000;
+  opacity:0;pointer-events:none;transition:opacity 0.4s;}
+#room2Flash.flash{opacity:1;}
+
+/* ── PHASE 5: STICKY NOTE OVERLAY ── */
+#stickyOverlay{position:fixed;inset:0;z-index:90;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(3px);}
+#stickyOverlay.open{display:flex;}
+#stickyPanel{background:#f5f0dc;border:2px solid rgba(180,155,90,0.6);
+  border-radius:6px;width:min(420px,92vw);max-height:82vh;
+  overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+#stickyPanelHead{display:flex;align-items:center;gap:8px;padding:10px 14px;
+  background:#ede8cc;border-bottom:1px solid rgba(180,155,90,0.4);flex-shrink:0;}
+#stickyPanelHead h3{font-family:'Cinzel',serif;font-size:11px;color:#5a3e10;
+  letter-spacing:.15em;flex:1;margin:0;}
+#stickyList{flex:1;overflow-y:auto;padding:10px;min-height:60px;}
+.sticky-note{background:#fdfbe8;border:1px solid rgba(180,155,90,0.4);
+  border-radius:4px;padding:9px 30px 9px 11px;margin-bottom:8px;position:relative;
+  box-shadow:2px 2px 6px rgba(0,0,0,0.08);}
+.sticky-note p{font-size:13px;color:#3a2e10;line-height:1.5;
+  white-space:pre-wrap;word-break:break-word;margin:0;}
+.sticky-note .sdel{position:absolute;top:5px;right:8px;background:transparent;
+  border:none;color:rgba(180,100,80,0.45);font-size:14px;cursor:pointer;padding:0;line-height:1;}
+.sticky-note .sdel:hover{color:#c04040;}
+.sticky-note .sts{font-size:9px;color:#9a8a60;margin-top:3px;
+  font-family:'Cinzel',serif;letter-spacing:.05em;}
+#stickyAdd{padding:10px;border-top:1px solid rgba(180,155,90,0.3);
+  background:#ede8cc;display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
+#stickyInput{flex:1;background:#fdfbe8;border:1px solid rgba(180,155,90,0.5);
+  border-radius:4px;padding:8px;font-size:13px;color:#3a2e10;
+  resize:none;font-family:inherit;min-height:44px;max-height:90px;}
+#stickyInput:focus{outline:none;border-color:#c9a84c;}
+
 /* ── INSTALL BANNER ── */
 #installBanner{position:fixed;bottom:0;left:0;right:0;z-index:300;
   background:rgba(250,248,240,0.97);border-top:1px solid rgba(180,155,90,0.5);
@@ -501,6 +543,27 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
   </div>
 </div>
 
+<!-- Phase 5: FPS Counter -->
+<div id="fpsCounter">FPS: --</div>
+
+<!-- Phase 5: Room transition flash -->
+<div id="room2Flash"></div>
+
+<!-- Phase 5: Sticky Note Overlay -->
+<div id="stickyOverlay">
+  <div id="stickyPanel">
+    <div id="stickyPanelHead">
+      <h3>📌 NOTICE BOARD</h3>
+      <button style="background:transparent;border:1px solid rgba(180,155,90,0.4);color:#5a3e10;padding:4px 10px;border-radius:4px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:.08em;cursor:pointer;" onclick="closeStickyBoard()">✕ CLOSE</button>
+    </div>
+    <div id="stickyList"></div>
+    <div id="stickyAdd">
+      <textarea id="stickyInput" placeholder="Write a note… (Enter to pin)" maxlength="300" rows="2"></textarea>
+      <button style="background:#c9a84c;border:none;color:#2a1800;padding:9px 14px;border-radius:4px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;cursor:pointer;font-weight:700;white-space:nowrap;" onclick="addStickyNote()">PIN ✦</button>
+    </div>
+  </div>
+</div>
+
 <!-- Install Banner -->
 <div id="installBanner">
   <span style="font-size:20px;">✦</span>
@@ -540,11 +603,16 @@ let settings = {
   showJoystick: true,
   perfMode: false,
   ambientSound: false,
+  showFPS: false,
   cardSort: 'name',
-  lighting: 'torch',
+  lighting: 'gallery',
   cardsPerPage: 5,
   cardRows: 1,
+  currentRoom: 'main',
 };
+
+// Light refs for runtime preset switching
+const sceneLights = { ambient:null, overhead:[], wallWash:null, tableLight:null };
 
 function loadSettings(){
   try{const s=localStorage.getItem(STORE_ROOM_SETTINGS);if(s)settings=Object.assign(settings,JSON.parse(s));}catch(e){}
@@ -720,11 +788,10 @@ function buildRoom(){
 // ═══════════════════════════════════════════════════════════════════
 const torchLights = [];
 function buildLighting(){
-  // Bright ambient — gallery feel
   const ambient = new THREE.AmbientLight(0xfff8f0, 1.2);
   scene.add(ambient);
+  sceneLights.ambient = ambient;
 
-  // Main overhead fill lights (gallery track lighting style)
   const overheadPositions = [
     [0, ROOM_H-0.3, -8], [0, ROOM_H-0.3, 0], [0, ROOM_H-0.3, 8],
     [-4, ROOM_H-0.3, -4], [4, ROOM_H-0.3, -4],
@@ -735,8 +802,7 @@ function buildLighting(){
     light.position.set(x,y,z);
     light.castShadow = !settings.perfMode;
     scene.add(light);
-
-    // Light fixture mesh (small cylinder)
+    sceneLights.overhead.push(light);
     const fixture = new THREE.Mesh(
       new THREE.CylinderGeometry(0.08,0.06,0.15,8),
       new THREE.MeshLambertMaterial({color:0xcccccc})
@@ -745,19 +811,16 @@ function buildLighting(){
     scene.add(fixture);
   });
 
-  // Accent warm wall-wash lights (illuminate the card gallery wall)
   const wallWash = new THREE.DirectionalLight(0xfff0d8, 0.5);
   wallWash.position.set(0, ROOM_H, -ROOM_D/2 + 3);
   wallWash.target.position.set(0, ROOM_H/2, -ROOM_D/2);
   scene.add(wallWash); scene.add(wallWash.target);
+  sceneLights.wallWash = wallWash;
 
-  // Table accent
   const tableLight = new THREE.PointLight(0xfff8ee, 0.6, 7);
   tableLight.position.set(0, 3, 2);
   scene.add(tableLight);
-
-  // Keep torchLights array populated (empty — no flicker needed in gallery mode)
-  // torchLights stays empty, animateTorches() will just do nothing
+  sceneLights.tableLight = tableLight;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1520,8 +1583,8 @@ const hintEl = document.getElementById('hint');
 const roomLabelEl = document.getElementById('roomlabel');
 
 function getRoomLabel(){
-  const p = camera.position;
-  const angle = Math.atan2(p.x, p.z) * 180/Math.PI;
+  if(inRoom2) return 'THE STUDY — QUIET ROOM';
+  const p=camera.position;
   if(p.z < -ROOM_D/2+3) return 'CARD GALLERY — NORTH';
   if(p.z > ROOM_D/2-3) return 'CHRONICLE PANELS — SOUTH';
   if(p.x > ROOM_W/2-3) return 'WHITEBOARD — EAST';
@@ -1557,12 +1620,16 @@ function triggerInteract(){
 
 function doInteract(obj){
   if(!obj?.userData) return;
-  const {type, card, tab} = obj.userData;
+  const {type,card} = obj.userData;
   if(type==='card') openCardModal(card||obj.userData);
   else if(type==='tableCard') openCardModal(obj.userData.card||obj.userData);
   else if(type==='table') openPlaytest();
   else if(type==='dice') rollDice(6);
   else if(type==='chronicle') openChronicle(obj.userData.sec||obj.userData.tab||'book');
+  else if(type==='noticeBoard') openStickyBoard();
+  else if(type==='book') openChronicle('book');
+  else if(type==='door') enterRoom2();
+  else if(type==='exitDoor') exitRoom2();
 }
 
 // Tap on canvas
@@ -1645,6 +1712,7 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 // ═══════════════════════════════════════════════════════════════════
 function openSettings(){
   const el=document.getElementById('modalBody');
+  const cur=settings.lighting||'gallery';
   el.innerHTML=`
     <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);letter-spacing:.12em;margin-bottom:16px;">⚙ ROOM SETTINGS</div>
     <div class="settings-row">
@@ -1668,8 +1736,25 @@ function openSettings(){
       <div class="toggle-sw ${settings.showJoystick?'on':''}" onclick="this.classList.toggle('on');settings.showJoystick=this.classList.contains('on');updateJoystickVisibility()"></div>
     </div>
     <div class="settings-row">
-      <div><div class="settings-label">PERFORMANCE MODE</div><div class="settings-sub">Lower quality, better FPS</div></div>
+      <div><div class="settings-label">PERFORMANCE MODE</div><div class="settings-sub">Lower quality, higher FPS</div></div>
       <div class="toggle-sw ${settings.perfMode?'on':''}" onclick="this.classList.toggle('on');settings.perfMode=this.classList.contains('on')"></div>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-label">FPS COUNTER</div></div>
+      <div class="toggle-sw ${settings.showFPS?'on':''}" onclick="this.classList.toggle('on');settings.showFPS=this.classList.contains('on');setFPSVisible()"></div>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-label">AMBIENT AUDIO</div><div class="settings-sub">Soft room tone</div></div>
+      <div class="toggle-sw ${settings.ambientSound?'on':''}" onclick="this.classList.toggle('on');settings.ambientSound=this.classList.contains('on');toggleAmbientAudio()"></div>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-label">LIGHTING PRESET</div></div>
+      <select onchange="applyLightingPreset(this.value)">
+        <option value="gallery"   ${cur==='gallery'  ?'selected':''}>☀ Gallery</option>
+        <option value="torch"     ${cur==='torch'    ?'selected':''}>🔥 Torch</option>
+        <option value="moonlight" ${cur==='moonlight'?'selected':''}>🌙 Moonlight</option>
+        <option value="arcane"    ${cur==='arcane'   ?'selected':''}>✦ Arcane</option>
+      </select>
     </div>
     <div class="settings-row">
       <div><div class="settings-label">CARD SORT</div></div>
@@ -1692,17 +1777,17 @@ function openSettings(){
       <div><div class="settings-label">GAMEPAD DEADZONE</div><div class="settings-sub">${settings.deadzone}</div></div>
       <input type="range" min="0.05" max="0.35" step="0.01" value="${settings.deadzone}" oninput="settings.deadzone=+this.value;this.previousElementSibling.children[1].textContent=this.value">
     </div>
-    <div style="margin-top:16px;display:flex;gap:8px;">
-      <button class="hbtn" style="flex:1;padding:10px;" onclick="saveSettings();closeModal();toast('Settings saved','good')">✓ Save Settings</button>
-      <button class="hbtn" style="flex:1;padding:10px;" onclick="if(deferredInstallPrompt){closeModal();doInstall();}else{toast('Already installed or use browser Add to Home Screen','good');}">📲 Install</button>
-      <button class="hbtn" style="flex:1;padding:10px;" onclick="closeModal()">Cancel</button>
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="hbtn" style="flex:1;padding:10px;min-width:100px;" onclick="saveSettings();closeModal();toast('Settings saved','good')">✓ Save</button>
+      <button class="hbtn" style="flex:1;padding:10px;min-width:100px;" onclick="if(deferredInstallPrompt){closeModal();doInstall();}else{toast('Use browser Add to Home Screen','good');}">📲 Install</button>
+      <button class="hbtn" style="flex:1;padding:10px;min-width:100px;" onclick="closeModal()">Cancel</button>
     </div>
     <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
-      <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--text2);letter-spacing:.1em;margin-bottom:8px;">GAMEPAD BUTTONS (GameSir G8+)</div>
+      <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--text2);letter-spacing:.1em;margin-bottom:8px;">GAMEPAD (GameSir G8+)</div>
       <div style="font-size:11px;color:var(--text2);line-height:1.9;">
         Left Stick — Move &nbsp;|&nbsp; Right Stick — Look<br>
-        A — Interact &nbsp;|&nbsp; B — Back/Close<br>
-        Y — Toggle Draw Mode &nbsp;|&nbsp; X — Jump to Gallery<br>
+        A — Interact &nbsp;|&nbsp; B — Back/Close/Exit Study<br>
+        Y — Draw Mode &nbsp;|&nbsp; X — Jump to Gallery<br>
         LT — Sprint &nbsp;|&nbsp; Start — Settings
       </div>
     </div>`;
@@ -2367,7 +2452,7 @@ function pollGamepad(delta){
   // Button events (edge detect)
   const pressed=i=>btns[i]&&btns[i].pressed&&!GP_PREV_BTN[i];
   if(pressed(0)){triggerInteract();}        // A
-  if(pressed(1)){if(drawMode)wbClose();else if(document.getElementById('playtestOverlay').classList.contains('open'))closePlatyest();else if(document.getElementById('chronicleOverlay').classList.contains('open'))chrClose();else closeModal();}  // B
+  if(pressed(1)){if(drawMode)wbClose();else if(document.getElementById('stickyOverlay').classList.contains('open'))closeStickyBoard();else if(document.getElementById('playtestOverlay').classList.contains('open'))closePlatyest();else if(document.getElementById('chronicleOverlay').classList.contains('open'))chrClose();else if(inRoom2)exitRoom2();else closeModal();}  // B
   if(pressed(3)){if(drawMode)wbClose();else toggleDrawMode();}  // Y
   if(pressed(2)){jumpToWall('north');}       // X
   if(pressed(9)){openSettings();}            // Start
@@ -2394,8 +2479,10 @@ window.addEventListener('keydown',e=>{
   if(e.code==='KeyE')triggerInteract();
   if(e.code==='Escape'){
     if(drawMode) wbClose();
+    else if(document.getElementById('stickyOverlay').classList.contains('open')) closeStickyBoard();
     else if(document.getElementById('playtestOverlay').classList.contains('open')) closePlatyest();
     else if(document.getElementById('chronicleOverlay').classList.contains('open')) chrClose();
+    else if(inRoom2) exitRoom2();
     else closeModal();
   }
   if(e.code==='KeyF')document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
@@ -2545,7 +2632,13 @@ function animate(){
   animateTorches(t);
   animateParticles(t);
   animateTable(t);
-
+  // Room 2 candle flicker
+  if(inRoom2&&scene.userData.r2Candle){
+    scene.userData.r2Candle.intensity=1.4+Math.sin(t*4.7)*0.28+Math.sin(t*9.3)*0.12;
+    if(scene.userData.r2Flame) scene.userData.r2Flame.scale.setScalar(1+Math.sin(t*11)*0.08);
+  }
+  if(settings.showFPS) updateFPS();
+  debouncedSaveCam();
   renderer.render(scene,camera);
   frameCount++;
 }
@@ -2553,6 +2646,465 @@ function animate(){
 // ═══════════════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+//  PHASE 5 — FPS COUNTER
+// ═══════════════════════════════════════════════════════════════════
+let _fpsFrames=0, _fpsLast=performance.now();
+const fpsEl=document.getElementById('fpsCounter');
+function updateFPS(){
+  _fpsFrames++;
+  const now=performance.now();
+  if(now-_fpsLast>=700){
+    fpsEl.textContent='FPS: '+Math.round(_fpsFrames*1000/(now-_fpsLast));
+    _fpsFrames=0;_fpsLast=now;
+  }
+}
+function setFPSVisible(){ fpsEl.classList.toggle('show',!!settings.showFPS); }
+
+// ═══════════════════════════════════════════════════════════════════
+//  PHASE 5 — CAMERA POSITION SAVE / RESTORE
+// ═══════════════════════════════════════════════════════════════════
+let _camSaveTimer=null;
+function debouncedSaveCam(){
+  clearTimeout(_camSaveTimer);
+  _camSaveTimer=setTimeout(()=>{
+    try{localStorage.setItem(STORE_CAMERA,JSON.stringify({
+      x:+camera.position.x.toFixed(3),
+      z:+camera.position.z.toFixed(3),
+      yaw:+yaw.toFixed(4), pitch:+pitch.toFixed(4),
+      room:settings.currentRoom||'main'
+    }));}catch(e){}
+  },1500);
+}
+function restoreCameraPos(){
+  try{
+    const d=JSON.parse(localStorage.getItem(STORE_CAMERA)||'null');
+    if(!d)return false;
+    camera.position.set(d.x,1.7,d.z);
+    yaw=d.yaw||Math.PI; pitch=d.pitch||0;
+    if(d.room==='room2') enterRoom2(true);
+    return true;
+  }catch(e){return false;}
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PHASE 5 — LIGHTING PRESETS
+// ═══════════════════════════════════════════════════════════════════
+const LIGHTING_PRESETS={
+  gallery:{ bg:0xf0ede6,fog:[0xf0ede6,14,30],
+    aCol:0xfff8f0,aInt:1.2, oCol:0xfff5e8,oInt:0.9,
+    wCol:0xfff0d8,wInt:0.5, tCol:0xfff8ee,tInt:0.6,
+    flicker:false, hud:'linear-gradient(to bottom,rgba(240,237,230,0.96),rgba(240,237,230,0))' },
+  torch:{ bg:0x1a1208,fog:[0x1a1208,8,22],
+    aCol:0xff9820,aInt:0.3, oCol:0xff7820,oInt:0.65,
+    wCol:0xff8820,wInt:0.25, tCol:0xff9030,tInt:1.0,
+    flicker:true, hud:'linear-gradient(to bottom,rgba(26,18,8,0.94),rgba(26,18,8,0))' },
+  moonlight:{ bg:0x080c18,fog:[0x080c18,10,28],
+    aCol:0x7080c0,aInt:0.38, oCol:0x8898d8,oInt:0.45,
+    wCol:0x6078b8,wInt:0.28, tCol:0x8090c8,tInt:0.45,
+    flicker:false, hud:'linear-gradient(to bottom,rgba(8,12,24,0.94),rgba(8,12,24,0))' },
+  arcane:{ bg:0x0c0820,fog:[0x0c0820,10,26],
+    aCol:0x6030c0,aInt:0.42, oCol:0x9040e0,oInt:0.7,
+    wCol:0x7020b0,wInt:0.38, tCol:0x40e0a0,tInt:0.85,
+    flicker:false, hud:'linear-gradient(to bottom,rgba(12,8,32,0.94),rgba(12,8,32,0))' },
+};
+function applyLightingPreset(name){
+  const p=LIGHTING_PRESETS[name]||LIGHTING_PRESETS.gallery;
+  settings.lighting=name;
+  scene.background=new THREE.Color(p.bg);
+  scene.fog=new THREE.Fog(p.fog[0],p.fog[1],p.fog[2]);
+  if(sceneLights.ambient){ sceneLights.ambient.color.set(p.aCol); sceneLights.ambient.intensity=p.aInt; }
+  torchLights.length=0;
+  sceneLights.overhead.forEach(l=>{
+    l.color.set(p.oCol); l.intensity=p.oInt;
+    if(p.flicker) torchLights.push({light:l,baseInt:p.oInt,phase:Math.random()*Math.PI*2});
+  });
+  if(sceneLights.wallWash){ sceneLights.wallWash.color.set(p.wCol); sceneLights.wallWash.intensity=p.wInt; }
+  if(sceneLights.tableLight){ sceneLights.tableLight.color.set(p.tCol); sceneLights.tableLight.intensity=p.tInt; }
+  const tb=document.getElementById('topbar');
+  if(tb) tb.style.background=p.hud;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PHASE 5 — AMBIENT AUDIO (Web Audio API, procedural)
+// ═══════════════════════════════════════════════════════════════════
+let _audioCtx=null, _audioNodes=[];
+function startAmbientAudio(){
+  if(_audioCtx)return;
+  try{
+    _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const master=_audioCtx.createGain();
+    master.gain.setValueAtTime(0,_audioCtx.currentTime);
+    master.gain.linearRampToValueAtTime(0.04,_audioCtx.currentTime+3.5);
+    master.connect(_audioCtx.destination);
+    _audioNodes.push(master);
+    // Layered drone: 4 sine oscillators
+    [55,82.4,110,164.8].forEach((f,i)=>{
+      const osc=_audioCtx.createOscillator();
+      const g=_audioCtx.createGain();
+      const filt=_audioCtx.createBiquadFilter();
+      osc.type='sine'; osc.frequency.value=f;
+      osc.frequency.linearRampToValueAtTime(f*1.002,_audioCtx.currentTime+10);
+      g.gain.value=0.14/(i+1);
+      filt.type='lowpass'; filt.frequency.value=380;
+      osc.connect(filt);filt.connect(g);g.connect(master);
+      osc.start(); _audioNodes.push(osc,g,filt);
+    });
+    // Filtered noise (room tone)
+    const buf=_audioCtx.createBuffer(1,_audioCtx.sampleRate*2,_audioCtx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*0.025;
+    const noise=_audioCtx.createBufferSource(); noise.buffer=buf; noise.loop=true;
+    const ng=_audioCtx.createGain(); ng.gain.value=0.006;
+    const nf=_audioCtx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=180; nf.Q.value=0.4;
+    noise.connect(nf);nf.connect(ng);ng.connect(master);
+    noise.start(); _audioNodes.push(noise,ng,nf);
+  }catch(e){ _audioCtx=null; toast('Audio unavailable'); }
+}
+function stopAmbientAudio(){
+  if(!_audioCtx)return;
+  _audioNodes.forEach(n=>{try{n.stop&&n.stop();n.disconnect&&n.disconnect();}catch(e){}});
+  _audioNodes=[];
+  try{_audioCtx.close();}catch(e){}
+  _audioCtx=null;
+}
+function toggleAmbientAudio(){
+  settings.ambientSound=!settings.ambientSound;
+  settings.ambientSound?startAmbientAudio():stopAmbientAudio();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PHASE 5 — NOTICE BOARD (west wall, sticky notes)
+// ═══════════════════════════════════════════════════════════════════
+const STORE_STICKIES='forge_room_sticky_notes';
+let noticeMesh=null;
+function loadStickies(){ try{const s=localStorage.getItem(STORE_STICKIES);return s?JSON.parse(s):[];}catch(e){return[];} }
+function saveStickies(a){ try{localStorage.setItem(STORE_STICKIES,JSON.stringify(a));}catch(e){} }
+
+function buildNoticeBoard(){
+  const bx=-ROOM_W/2+0.12, bz=7, by=ROOM_H/2;
+  const bw=3.6, bh=2.2;
+  // Cork frame
+  const fMat=new THREE.MeshLambertMaterial({color:0x6b3e18});
+  const cMat=new THREE.MeshLambertMaterial({color:0xb88848});
+  const cork=new THREE.Mesh(new THREE.BoxGeometry(0.06,bh+0.14,bw+0.14),cMat);
+  cork.position.set(bx,by,bz); scene.add(cork);
+  [[bh+0.22,bw+0.22,0,0],[0.12,0.12,-bh/2-0.06,0],[0.12,0.12,bh/2+0.06,0]].forEach(([h,w,fy,fz])=>{
+    const f=new THREE.Mesh(new THREE.BoxGeometry(0.08,h,w),fMat);
+    f.position.set(bx,by+fy,bz+fz); scene.add(f);
+  });
+  // Board surface (canvas texture, updated with notes)
+  noticeMesh=new THREE.Mesh(
+    new THREE.PlaneGeometry(bw,bh),
+    new THREE.MeshLambertMaterial({side:THREE.FrontSide})
+  );
+  noticeMesh.rotation.y=Math.PI/2;
+  noticeMesh.position.set(bx+0.07,by,bz);
+  noticeMesh.userData={interactable:true,type:'noticeBoard',label:'Notice Board [TAP to view notes]'};
+  scene.add(noticeMesh);
+  refreshNoticeTex();
+  // Label
+  const lbl=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.38),
+    new THREE.MeshBasicMaterial({map:makeLabelTexture('📌 NOTICE BOARD','TAP TO READ & ADD NOTES'),transparent:true}));
+  lbl.rotation.y=Math.PI/2;
+  lbl.position.set(bx+0.08,by+bh/2+0.28,bz);
+  scene.add(lbl);
+}
+
+function refreshNoticeTex(){
+  if(!noticeMesh)return;
+  const notes=loadStickies();
+  const W=480,H=288;
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  // Cork background
+  ctx.fillStyle='#c89050';ctx.fillRect(0,0,W,H);
+  for(let i=0;i<160;i++){ctx.fillStyle=`rgba(${60+Math.random()*50},${30+Math.random()*30},0,0.1)`;ctx.fillRect(Math.random()*W,Math.random()*H,Math.random()*28+3,Math.random()*4+1);}
+  if(!notes.length){
+    ctx.fillStyle='rgba(80,50,20,0.45)';ctx.font='bold 16px Cinzel,serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('[ NO NOTES YET ]',W/2,H/2-10);
+    ctx.font='11px Cinzel,serif';ctx.fillText('TAP TO ADD',W/2,H/2+16);
+  } else {
+    const cols=3,rows=2,nw=(W-16)/cols,nh=(H-16)/rows;
+    const noteColors=['#fdfbe8','#e8f5e6','#e8eef8','#fce8f6','#f8f2e0'];
+    notes.slice(0,cols*rows).forEach((n,i)=>{
+      const cx=8+(i%cols)*nw+3,cy=8+Math.floor(i/cols)*nh+3;
+      ctx.fillStyle=noteColors[i%5];ctx.fillRect(cx,cy,nw-6,nh-6);
+      ctx.strokeStyle='rgba(150,120,60,0.3)';ctx.lineWidth=1;ctx.strokeRect(cx,cy,nw-6,nh-6);
+      // Pin
+      ctx.fillStyle='#cc4444';ctx.beginPath();ctx.arc(cx+(nw-6)/2,cy+6,4,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(0,0,0,0.6)';ctx.beginPath();ctx.arc(cx+(nw-6)/2+0.5,cy+6.5,4,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#cc4444';ctx.beginPath();ctx.arc(cx+(nw-6)/2,cy+6,4,0,Math.PI*2);ctx.fill();
+      // Text
+      ctx.fillStyle='#3a2810';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.textBaseline='top';
+      const words=n.text.split(' ');let line='',ty=cy+14;
+      for(const w of words){
+        const test=line+w+' ';
+        if(ctx.measureText(test).width>nw-14&&line){ctx.fillText(line.trim(),cx+4,ty);line=w+' ';ty+=12;if(ty>cy+nh-18)break;}
+        else line=test;
+      }
+      if(ty<=cy+nh-18)ctx.fillText(line.trim(),cx+4,ty);
+    });
+    if(notes.length>cols*rows){ctx.fillStyle='rgba(80,50,20,0.55)';ctx.font='10px Cinzel,serif';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText(`+${notes.length-cols*rows} more`,W-6,H-4);}
+  }
+  const tex=new THREE.CanvasTexture(cv);
+  noticeMesh.material.map=tex;noticeMesh.material.needsUpdate=true;
+}
+
+function openStickyBoard(){
+  const notes=loadStickies();
+  const list=document.getElementById('stickyList');
+  list.innerHTML='';
+  if(!notes.length){
+    list.innerHTML='<div style="text-align:center;padding:18px 0;color:#9a8a60;font-family:Cinzel,serif;font-size:11px;">No notes yet — add one below!</div>';
+  } else {
+    notes.forEach((n,i)=>{
+      const d=document.createElement('div');d.className='sticky-note';
+      d.innerHTML=`<p>${(n.text||'').replace(/</g,'&lt;')}</p><div class="sts">${n.date||''}</div><button class="sdel" onclick="delSticky(${i})">✕</button>`;
+      list.appendChild(d);
+    });
+  }
+  document.getElementById('stickyInput').value='';
+  document.getElementById('stickyOverlay').classList.add('open');
+}
+function closeStickyBoard(){
+  document.getElementById('stickyOverlay').classList.remove('open');
+  refreshNoticeTex();
+}
+function addStickyNote(){
+  const inp=document.getElementById('stickyInput');
+  const text=(inp.value||'').trim();if(!text)return;
+  const notes=loadStickies();
+  notes.unshift({text,date:new Date().toLocaleDateString('en-NZ',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})});
+  saveStickies(notes);inp.value='';
+  openStickyBoard();toast('Note pinned! ✦','good');
+}
+function delSticky(i){
+  const n=loadStickies();n.splice(i,1);saveStickies(n);openStickyBoard();
+}
+document.getElementById('stickyInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();addStickyNote();}
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  PHASE 5 — BOOKSHELF (south wall, left side — Chronicle books)
+// ═══════════════════════════════════════════════════════════════════
+function buildBookshelf(){
+  const sx=-5.5, sz=ROOM_D/2-0.22, sy=1.55;
+  const sw=4.2, sh=3.0, shelves=3;
+  const fMat=new THREE.MeshLambertMaterial({color:0x5c3418});
+  // Back panel
+  const back=new THREE.Mesh(new THREE.BoxGeometry(0.05,sh,sw),fMat);
+  back.rotation.y=Math.PI;back.position.set(sx,sy,sz);scene.add(back);
+  // Shelf planks
+  for(let i=0;i<=shelves;i++){
+    const py=sy-sh/2+i*(sh/shelves);
+    const plank=new THREE.Mesh(new THREE.BoxGeometry(0.05,sw,0.32),fMat);
+    plank.rotation.y=Math.PI;plank.position.set(sx,py,sz-0.16);scene.add(plank);
+  }
+  // Side walls
+  [-sw/2,sw/2].forEach(xo=>{
+    const s=new THREE.Mesh(new THREE.BoxGeometry(0.05,sh+0.05,0.32),fMat);
+    s.rotation.y=Math.PI;s.position.set(sx,sy,sz-0.16);
+    // skip for now — back panel is enough visually
+  });
+  // Books
+  _buildBooks(sx,sz,sy,sw,sh,shelves);
+  // Label
+  const lbl=new THREE.Mesh(new THREE.PlaneGeometry(3.2,0.38),
+    new THREE.MeshBasicMaterial({map:makeLabelTexture('📚 CHRONICLES','TAP A BOOK TO READ'),transparent:true}));
+  lbl.rotation.y=Math.PI;
+  lbl.position.set(sx,sy+sh/2+0.28,sz+0.06);scene.add(lbl);
+}
+
+function _buildBooks(sx,sz,sy,sw,sh,shelves){
+  let titles=[];
+  try{
+    const cd=JSON.parse(localStorage.getItem('chronicle_data')||'{}');
+    titles=(cd.books||[]).map(b=>b.title||'Untitled');
+    // Also grab writing entries if present
+    if(cd.writing) titles=[...titles,...(cd.writing||[]).map(w=>w.title||'Chapter')];
+  }catch(e){}
+  if(!titles.length) titles=['The Wanderer\'s Tale','World Atlas','Spell Codex','Campaign Log','NPC Roster','Quest Journal','Battle Records','Lore Compendium','Character Sheets'];
+  const BOOK_COLS=['#8b2020','#204080','#206040','#806020','#602080','#402020','#1c5060','#604040','#204060','#806040','#402060','#208040'];
+  const sHeight=sh/shelves;
+  let bi=0;
+  for(let s=0;s<shelves&&bi<titles.length;s++){
+    const sy2=sy-sh/2+s*sHeight+sHeight*0.5+0.06;
+    const maxBooks=Math.floor(sw/0.26);
+    const count=Math.min(titles.length-bi,maxBooks);
+    const totalW=count*0.26;
+    const startX=sx-totalW/2+0.13;
+    for(let b=0;b<count&&bi<titles.length;b++,bi++){
+      const bx2=startX+b*0.26;
+      const bh2=sHeight*0.78+Math.random()*0.12;
+      const bw2=0.20+Math.random()*0.06;
+      const col=BOOK_COLS[bi%BOOK_COLS.length];
+      // Spine canvas texture
+      const sc=document.createElement('canvas');sc.width=32;sc.height=128;
+      const sctx=sc.getContext('2d');
+      sctx.fillStyle=col;sctx.fillRect(0,0,32,128);
+      sctx.fillStyle='rgba(255,255,255,0.12)';sctx.fillRect(0,0,2,128);
+      sctx.fillStyle='rgba(0,0,0,0.25)';sctx.fillRect(30,0,2,128);
+      sctx.save();sctx.translate(16,64);sctx.rotate(-Math.PI/2);
+      sctx.fillStyle='rgba(255,255,255,0.82)';sctx.font='bold 8px sans-serif';
+      sctx.textAlign='center';sctx.textBaseline='middle';
+      sctx.fillText((titles[bi]||'').slice(0,16),0,0);
+      sctx.restore();
+      const stex=new THREE.CanvasTexture(sc);
+      const bookMats=[
+        new THREE.MeshLambertMaterial({color:new THREE.Color(col).multiplyScalar(0.75)}),
+        new THREE.MeshLambertMaterial({color:new THREE.Color(col).multiplyScalar(0.75)}),
+        new THREE.MeshLambertMaterial({color:0xf0e8d0}),
+        new THREE.MeshLambertMaterial({color:0xf0e8d0}),
+        new THREE.MeshLambertMaterial({map:stex}),
+        new THREE.MeshLambertMaterial({color:new THREE.Color(col).multiplyScalar(0.65)}),
+      ];
+      const bMesh=new THREE.Mesh(new THREE.BoxGeometry(0.28,bh2,bw2),bookMats);
+      bMesh.rotation.y=Math.PI;
+      bMesh.position.set(bx2,sy2,sz-0.14);
+      bMesh.userData={interactable:true,type:'book',title:titles[bi],
+        label:`"${(titles[bi]||'').slice(0,22)}" — Open Chronicles`};
+      scene.add(bMesh);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PHASE 5 — SECOND ROOM ("The Study") + DOOR
+// ═══════════════════════════════════════════════════════════════════
+const ROOM2_Z=-60; // offset in scene space (well away from main room)
+let inRoom2=false;
+let _room2Lights=[];
+
+function buildDoor(){
+  const dx=ROOM_W/2-2.2, dz=-ROOM_D/2, dh=3.0, dw=1.5;
+  // Wood frame
+  const fMat=new THREE.MeshLambertMaterial({color:0x5c3418});
+  // Top lintel
+  const lintel=new THREE.Mesh(new THREE.BoxGeometry(dw+0.28,0.18,0.14),fMat);
+  lintel.position.set(dx,dh+0.09,dz+0.05);scene.add(lintel);
+  // Side jambs
+  [-dw/2-0.1,dw/2+0.1].forEach(xo=>{
+    const j=new THREE.Mesh(new THREE.BoxGeometry(0.14,dh,0.14),fMat);
+    j.position.set(dx+xo,dh/2,dz+0.05);scene.add(j);
+  });
+  // Door surface
+  const dc=document.createElement('canvas');dc.width=128;dc.height=256;
+  const dctx=dc.getContext('2d');
+  dctx.fillStyle='#4e2c0e';dctx.fillRect(0,0,128,256);
+  // Panels
+  dctx.strokeStyle='rgba(180,140,60,0.45)';dctx.lineWidth=3;dctx.strokeRect(8,8,112,240);
+  [[12,12,104,108],[12,134,104,108]].forEach(([x,y,w,h])=>{
+    dctx.fillStyle='rgba(0,0,0,0.18)';dctx.fillRect(x,y,w,h);
+    dctx.strokeStyle='rgba(180,140,60,0.35)';dctx.lineWidth=1;dctx.strokeRect(x,y,w,h);
+  });
+  // Handle
+  dctx.fillStyle='#c9a84c';dctx.beginPath();dctx.arc(100,128,7,0,Math.PI*2);dctx.fill();
+  dctx.strokeStyle='#e8d06a';dctx.lineWidth=1.5;dctx.beginPath();dctx.arc(100,128,7,0,Math.PI*2);dctx.stroke();
+  // Label
+  dctx.fillStyle='rgba(201,168,76,0.55)';dctx.font='bold 10px Cinzel,serif';dctx.textAlign='center';dctx.textBaseline='bottom';
+  dctx.fillText('THE STUDY',64,252);
+  const doorMesh=new THREE.Mesh(new THREE.PlaneGeometry(dw,dh),
+    new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(dc),side:THREE.DoubleSide}));
+  doorMesh.position.set(dx,dh/2,dz+0.06);
+  doorMesh.userData={interactable:true,type:'door',label:'Enter The Study [TAP ⬡]'};
+  scene.add(doorMesh);
+  // Sign above door
+  const sign=new THREE.Mesh(new THREE.PlaneGeometry(2.2,0.36),
+    new THREE.MeshBasicMaterial({map:makeLabelTexture('✦ THE STUDY','PRIVATE WRITING ROOM'),transparent:true}));
+  sign.position.set(dx,dh+0.42,dz+0.08);scene.add(sign);
+}
+
+function buildRoom2(){
+  const R2W=12,R2H=4.5,R2D=14;
+  const OZ=ROOM2_Z;
+  const wallMat=new THREE.MeshLambertMaterial({color:0x241c10});
+  const floorMat=new THREE.MeshLambertMaterial({color:0x1a1408});
+  const ceilMat=new THREE.MeshLambertMaterial({color:0x1e1a0e});
+  // Room geometry
+  [
+    [new THREE.PlaneGeometry(R2W,R2D),[0,0,OZ],[-Math.PI/2,0,0],floorMat],
+    [new THREE.PlaneGeometry(R2W,R2D),[0,R2H,OZ],[Math.PI/2,0,0],ceilMat],
+    [new THREE.PlaneGeometry(R2W,R2H),[0,R2H/2,OZ-R2D/2],[0,0,0],wallMat],
+    [new THREE.PlaneGeometry(R2W,R2H),[0,R2H/2,OZ+R2D/2],[0,Math.PI,0],wallMat],
+    [new THREE.PlaneGeometry(R2D,R2H),[R2W/2,R2H/2,OZ],[0,-Math.PI/2,0],wallMat],
+    [new THREE.PlaneGeometry(R2D,R2H),[-R2W/2,R2H/2,OZ],[0,Math.PI/2,0],wallMat],
+  ].forEach(([geo,pos,rot,mat])=>{
+    const m=new THREE.Mesh(geo,mat);
+    m.position.set(...pos);m.rotation.set(...rot);scene.add(m);
+  });
+  // Ambient + candle light (hidden until entered)
+  const r2amb=new THREE.AmbientLight(0x604820,0.45);r2amb.visible=false;scene.add(r2amb);
+  const r2candle=new THREE.PointLight(0xff8020,1.4,7);r2candle.position.set(0,1.8,OZ+2);r2candle.visible=false;scene.add(r2candle);
+  _room2Lights=[r2amb,r2candle];
+  // Candle ref stored for flicker
+  scene.userData.r2Candle=r2candle;
+  // Desk
+  const deskMat=new THREE.MeshLambertMaterial({color:0x3c2010});
+  const desk=new THREE.Mesh(new THREE.BoxGeometry(2.8,0.1,1.4),deskMat);
+  desk.position.set(0,0.82,OZ+2);scene.add(desk);
+  [[-1.3,0,-0.6],[-1.3,0,0.6],[1.3,0,-0.6],[1.3,0,0.6]].forEach(([x,_,z])=>{
+    const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.07,0.82,6),deskMat);
+    leg.position.set(x,0.41,OZ+2+z);scene.add(leg);
+  });
+  // Candle on desk
+  const wax=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.045,0.22,8),
+    new THREE.MeshLambertMaterial({color:0xf0e0a0}));
+  wax.position.set(1.1,0.98,OZ+1.5);scene.add(wax);
+  const flame=new THREE.Mesh(new THREE.SphereGeometry(0.04,6,4),
+    new THREE.MeshBasicMaterial({color:0xff9020}));
+  flame.position.set(1.1,1.1,OZ+1.5);scene.add(flame);
+  scene.userData.r2Flame=flame;
+  // Exit door on south wall of room 2
+  const exdc=document.createElement('canvas');exdc.width=128;exdc.height=256;
+  const ectx=exdc.getContext('2d');
+  ectx.fillStyle='#4e2c0e';ectx.fillRect(0,0,128,256);
+  ectx.strokeStyle='rgba(180,140,60,0.4)';ectx.lineWidth=2;ectx.strokeRect(8,8,112,240);
+  ectx.fillStyle='#c9a84c';ectx.beginPath();ectx.arc(28,128,7,0,Math.PI*2);ectx.fill();
+  ectx.fillStyle='rgba(201,168,76,0.6)';ectx.font='bold 10px Cinzel,serif';ectx.textAlign='center';ectx.textBaseline='bottom';
+  ectx.fillText('← WORKSHOP',64,252);
+  const exitMesh=new THREE.Mesh(new THREE.PlaneGeometry(1.5,3.0),
+    new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(exdc),side:THREE.DoubleSide}));
+  exitMesh.position.set(R2W/2-2.2,1.5,OZ+R2D/2-0.06);
+  exitMesh.rotation.y=Math.PI;
+  exitMesh.userData={interactable:true,type:'exitDoor',label:'Return to Workshop [TAP ⬡]'};
+  scene.add(exitMesh);
+  // Room label
+  const rlbl=new THREE.Mesh(new THREE.PlaneGeometry(3.8,0.46),
+    new THREE.MeshBasicMaterial({map:makeLabelTexture('✦ THE STUDY','QUIET ROOM FOR WRITING & REFLECTION'),transparent:true}));
+  rlbl.position.set(0,R2H-0.3,OZ-R2D/2+0.14);scene.add(rlbl);
+}
+
+function enterRoom2(skipAnim=false){
+  inRoom2=true; settings.currentRoom='room2';
+  camera.position.set(ROOM_W/2-2.2,1.7,ROOM2_Z+5);
+  yaw=Math.PI; pitch=0;
+  _room2Lights.forEach(l=>l.visible=true);
+  const fl=document.getElementById('room2Flash');
+  if(skipAnim){ scene.background=new THREE.Color(0x1a1208); scene.fog=new THREE.Fog(0x1a1208,5,16); return; }
+  fl.classList.add('flash');
+  setTimeout(()=>{
+    scene.background=new THREE.Color(0x1a1208);
+    scene.fog=new THREE.Fog(0x1a1208,5,16);
+    fl.classList.remove('flash');
+    toast('You entered The Study ✦');
+  },420);
+}
+function exitRoom2(){
+  inRoom2=false; settings.currentRoom='main';
+  _room2Lights.forEach(l=>l.visible=false);
+  camera.position.set(ROOM_W/2-2.6,1.7,-ROOM_D/2+2.5);
+  yaw=Math.PI/2; pitch=0;
+  const fl=document.getElementById('room2Flash');
+  fl.classList.add('flash');
+  setTimeout(()=>{
+    applyLightingPreset(settings.lighting||'gallery');
+    fl.classList.remove('flash');
+    toast('Back in the Workshop ✦');
+  },420);
+}
+
 function setLoad(pct,msg){
   document.getElementById('loadBar').style.width=pct+'%';
   document.getElementById('loadMsg').textContent=msg;
@@ -2561,34 +3113,44 @@ function setLoad(pct,msg){
 async function init(){
   setLoad(10,'Building room...');
   buildRoom();
-  setLoad(30,'Lighting torches...');
+  setLoad(22,'Lighting torches...');
   buildLighting();
-  setLoad(45,'Placing table...');
+  applyLightingPreset(settings.lighting||'gallery');
+  setLoad(34,'Placing table...');
   buildTable();
-  setLoad(55,'Loading card gallery...');
+  setLoad(44,'Loading card gallery...');
   buildGallery(0);
-  setLoad(70,'Setting up chronicle panels...');
+  setLoad(54,'Setting up chronicle panels...');
   buildChroniclePanels();
-  setLoad(80,'Adding wall labels...');
+  setLoad(62,'Adding wall labels...');
   addWallLabels();
-  setLoad(88,'Summoning dust motes...');
+  setLoad(67,'Building notice board...');
+  buildNoticeBoard();
+  setLoad(72,'Shelving books...');
+  buildBookshelf();
+  setLoad(78,'Building The Study...');
+  buildRoom2();
+  buildDoor();
+  setLoad(84,'Summoning dust motes...');
   buildParticles();
-  setLoad(92,'Setting up controls...');
+  setLoad(90,'Setting up controls...');
   setupVirtualJoysticks();
   updateJoystickVisibility();
-  setLoad(96,'Loading whiteboard drawings...');
-  // Wait for fonts before building gallery textures
+  setFPSVisible();
+  setLoad(95,'Loading whiteboard drawings...');
   await document.fonts.ready;
   wbInitTextures();
   setLoad(100,'Welcome to the Forge Room.');
   await new Promise(r=>setTimeout(r,600));
   document.getElementById('loading').style.display='none';
   animate();
-  // Jump to gallery on start
   setTimeout(()=>{
-    jumpToWall('north');
-    document.getElementById('wallNav').classList.add('show');
-    toast('Welcome to the Forge Room ✦','good');
+    const restored=restoreCameraPos();
+    if(!restored){
+      jumpToWall('north');
+      document.getElementById('wallNav').classList.add('show');
+    }
+    toast(restored?'Welcome back ✦':'Welcome to the Forge Room ✦','good');
   },400);
 }
 
@@ -2640,8 +3202,10 @@ let backPressTimer = null;
 // Handle popstate (Android back button fires this)
 history.pushState({page:'forge-room'}, '');
 window.addEventListener('popstate', e=>{
-  // First, check if any overlay is open and close it
   if(drawMode){ wbClose(); history.pushState({page:'forge-room'},''); return; }
+  if(document.getElementById('stickyOverlay').classList.contains('open')){
+    closeStickyBoard(); history.pushState({page:'forge-room'},''); return;
+  }
   if(document.getElementById('playtestOverlay').classList.contains('open')){
     closePlatyest(); history.pushState({page:'forge-room'},''); return;
   }
@@ -2651,6 +3215,7 @@ window.addEventListener('popstate', e=>{
   if(document.getElementById('modal').classList.contains('open')){
     closeModal(); history.pushState({page:'forge-room'},''); return;
   }
+  if(inRoom2){ exitRoom2(); history.pushState({page:'forge-room'},''); return; }
   // Nothing open — double-back to exit
   backPressCount++;
   history.pushState({page:'forge-room'},'');
