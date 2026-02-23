@@ -2,11 +2,11 @@ const CACHE = 'chronicle-v6';
 const ASSETS = [
   './index.html',
   './manifest.json',
-  './modules/dashboard.html',
-  './modules/notes.html',
-  './modules/calendar.html',
-  './modules/persona.html',
-  './modules/people.html',
+  './dashboard.html',
+  './notes.html',
+  './calendar.html',
+  './persona.html',
+  './people.html',
   'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap'
 ];
 

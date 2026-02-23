@@ -509,7 +509,7 @@ function scheduleNotif(e) {
   if (ms > 0 && ms < 7 * 24 * 60 * 60 * 1000) {
     setTimeout(() => {
       if (Notification.permission === 'granted') {
-        new Notification('Chronicle', { body: e.text, icon: '../icon-192.png' });
+        new Notification('Chronicle', { body: e.text, icon: './icon-192.png' });
       }
     }, ms);
   }

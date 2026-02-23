@@ -221,7 +221,7 @@ function loadModule(name) {
   document.getElementById('headerSub').textContent = SUBS[name] || '';
   // Load module
   const frame = document.getElementById('moduleFrame');
-  frame.src = 'modules/' + name + '.html';
+  frame.src = name + '.html';
 }
 
 // Listen for messages from modules
