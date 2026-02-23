@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;--border:#2e2e42;--border2:#3d3d58;--gold:#c9a84c;--gold2:#e8c97a;--text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;--red:#cc5555;--green:#55aa77;--accent:#7b6cee;--accent2:#a99bff;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;padding:14px;min-height:100vh;padding-bottom:40px;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4;}
+.btn{padding:7px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,#8a6a20,var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+.field{margin-bottom:12px;}
+label{display:block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;color:var(--text2);text-transform:uppercase;margin-bottom:4px;}
+input[type="text"],textarea,select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;}
+input:focus,textarea:focus{border-color:var(--gold);}
+select option{background:var(--bg3);}
+textarea{resize:vertical;min-height:80px;}
+.empty-state{text-align:center;padding:20px;color:var(--text3);font-style:italic;font-size:13px;}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;}.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:5px 12px;border:1px solid var(--border);border-radius:14px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.06em;cursor:pointer;white-space:nowrap;color:var(--text2);background:transparent;transition:all .15s;}
+.tab.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.08);}
+.actions-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+
+/* Arc card */
+.arc-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;}
+.arc-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;background:var(--bg3);}
+.arc-title{font-family:'Cinzel',serif;font-size:12px;color:var(--gold);letter-spacing:.06em;}
+.arc-body{padding:0;max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;}
+.arc-body.open{max-height:2000px;padding:12px 14px;}
+.chevron{font-size:10px;color:var(--text3);transition:transform .2s;}.chevron.open{transform:rotate(90deg);color:var(--gold);}
+
+/* Panels */
+.panel-row{display:flex;gap:8px;margin-bottom:8px;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;}
+.panel-num{font-family:'Cinzel',serif;font-size:10px;color:var(--accent2);min-width:30px;padding-top:2px;}
+.panel-text{flex:1;font-size:14px;line-height:1.5;}
+.panel-edit{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;flex-shrink:0;}
+
+/* World Bible */
+.wb-entry{display:flex;gap:8px;margin-bottom:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;}
+.wb-tag{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;color:var(--accent2);background:rgba(123,108,238,.12);border:1px solid rgba(123,108,238,.3);padding:1px 6px;border-radius:10px;white-space:nowrap;height:fit-content;}
+.wb-text{flex:1;font-size:14px;line-height:1.5;}
+
+/* Modals */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:8px 8px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:.1em;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="tabs" id="comicTabs"></div>
+<div class="actions-row">
+  <button class="btn" onclick="editCurrentComic()">⚙ Comic Settings</button>
+  <button class="btn" onclick="openWorldBible()">📖 World Bible</button>
+  <button class="btn btn-gold" onclick="openAddArc()">+ Arc / Chapter</button>
+</div>
+<div id="arcList"></div>
+
+<!-- Comic Modal -->
+<div class="modal-overlay" id="modal-comic">
+  <div class="modal">
+    <h2 id="comicModalTitle">New Comic</h2>
+    <div class="field"><label>Title</label><input type="text" id="comicTitle" placeholder="Comic title"></div>
+    <div class="field"><label>Tagline</label><input type="text" id="comicTagline" placeholder="Short description"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="delComicBtn" onclick="deleteComic()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-comic')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveComic()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Arc Modal -->
+<div class="modal-overlay" id="modal-arc">
+  <div class="modal">
+    <h2 id="arcModalTitle">New Arc</h2>
+    <div class="field"><label>Title</label><input type="text" id="arcTitle" placeholder="Arc / chapter name"></div>
+    <div class="field"><label>Summary</label><textarea id="arcSummary" placeholder="Brief arc summary…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="delArcBtn" onclick="deleteArc()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-arc')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveArc()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Panel Modal -->
+<div class="modal-overlay" id="modal-panel">
+  <div class="modal">
+    <h2 id="panelModalTitle">Add Panel</h2>
+    <div class="field"><label>Description</label><textarea id="panelDesc" placeholder="What happens in this panel…"></textarea></div>
+    <div class="field"><label>Dialogue</label><textarea id="panelDialogue" placeholder="Any dialogue or captions…" style="min-height:60px;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="delPanelBtn" onclick="deletePanel()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-panel')">Cancel</button>
+      <button class="btn btn-gold" onclick="savePanel()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- World Bible Modal -->
+<div class="modal-overlay" id="modal-wb">
+  <div class="modal">
+    <h2>World Bible</h2>
+    <div id="wbList"></div>
+    <button class="btn btn-gold" style="width:100%;margin-top:10px;" onclick="openWbEntry(null)">+ New Entry</button>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('modal-wb')">Close</button></div>
+  </div>
+</div>
+
+<!-- WB Entry Modal -->
+<div class="modal-overlay" id="modal-wb-entry">
+  <div class="modal">
+    <h2 id="wbEntryTitle">New Entry</h2>
+    <div class="field"><label>Tag (e.g. CHARACTER, LOCATION, LORE)</label><input type="text" id="wbTag" placeholder="NOTE"></div>
+    <div class="field"><label>Content</label><textarea id="wbText" placeholder="Entry content…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="delWbBtn" onclick="deleteWbEntry()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal('modal-wb-entry')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveWbEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+let editingComicId=null,editingArcId=null,editingPanelId=null,editingPanelArcId=null,editingWbId=null;
+
+function getData(){try{const s=localStorage.getItem('chronicle_data');return s?JSON.parse(s):{};}catch(e){return{};}}
+function saveData(d){localStorage.setItem('chronicle_data',JSON.stringify(d));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(m){if(window.parent!==window)window.parent.postMessage({type:'toast',msg:m},'*');}
+
+function getComic(){
+  const d=getData();if(!d.comic)d.comic={comics:[],activeComicId:null};
+  // migrate old flat arcs
+  if(d.comic.arcs&&!d.comic.comics.length){
+    const c={id:uid(),title:'No Gods Yet',tagline:'',arcs:d.comic.arcs,worldBible:d.comic.worldBible||[]};
+    d.comic.comics=[c];d.comic.activeComicId=c.id;delete d.comic.arcs;saveData(d);
+  }
+  if(!d.comic.comics.length){
+    const c={id:uid(),title:'My Comic',tagline:'',arcs:[],worldBible:[]};
+    d.comic.comics=[c];d.comic.activeComicId=c.id;saveData(d);
+  }
+  return d;
+}
+function getActive(){const d=getComic();return d.comic.comics.find(c=>c.id===d.comic.activeComicId)||d.comic.comics[0];}
+
+// ═══ RENDER ═══
+function renderAll(){renderTabs();renderArcs();}
+
+function renderTabs(){
+  const d=getComic();
+  document.getElementById('comicTabs').innerHTML=d.comic.comics.map(c=>
+    `<button class="tab${c.id===d.comic.activeComicId?' active':''}" onclick="switchComic('${c.id}')">${esc(c.title)}</button>`
+  ).join('')+`<button class="tab" onclick="openAddComic()">+ Comic</button>`;
+}
+
+function renderArcs(){
+  const comic=getActive();const el=document.getElementById('arcList');
+  if(!(comic.arcs||[]).length){el.innerHTML='<div class="empty-state">No arcs yet. Start building your story.</div>';return;}
+  el.innerHTML=(comic.arcs||[]).map(arc=>{
+    const panels=arc.panels||[];
+    return`<div class="arc-card"><div class="arc-hdr" onclick="toggleArc('ab-${arc.id}','ach-${arc.id}')"><div><span class="arc-title">${esc(arc.title)}</span><span style="font-size:11px;color:var(--text2);margin-left:8px;">${panels.length} panel${panels.length!==1?'s':''}</span></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" style="font-size:9px;padding:2px 8px;" onclick="event.stopPropagation();editArc('${arc.id}')">Edit</button><span class="chevron" id="ach-${arc.id}">▶</span></div></div>
+    <div class="arc-body" id="ab-${arc.id}">${arc.summary?`<div style="font-size:13px;color:var(--text2);font-style:italic;margin-bottom:10px;">${esc(arc.summary)}</div>`:''}${panels.map((p,pi)=>`<div class="panel-row"><span class="panel-num">P${pi+1}</span><div class="panel-text"><div>${esc(p.desc)}</div>${p.dialogue?`<div style="font-size:13px;color:var(--gold2);margin-top:3px;font-style:italic;">${esc(p.dialogue)}</div>`:''}</div><button class="panel-edit" onclick="editPanel('${arc.id}','${p.id}')">✎</button></div>`).join('')}<button class="btn" style="width:100%;margin-top:8px;font-size:10px;" onclick="openAddPanel('${arc.id}')">+ Add Panel</button></div></div>`;
+  }).join('');
+}
+
+function toggleArc(bodyId,chevId){const b=document.getElementById(bodyId),ch=document.getElementById(chevId);b.classList.toggle('open');ch.classList.toggle('open',b.classList.contains('open'));}
+function switchComic(id){const d=getComic();d.comic.activeComicId=id;saveData(d);renderAll();}
+
+// ═══ COMIC CRUD ═══
+function openAddComic(){editingComicId=null;document.getElementById('comicModalTitle').textContent='New Comic';document.getElementById('comicTitle').value='';document.getElementById('comicTagline').value='';document.getElementById('delComicBtn').style.display='none';openModal('modal-comic');}
+function editCurrentComic(){const c=getActive();editingComicId=c.id;document.getElementById('comicModalTitle').textContent='Edit Comic';document.getElementById('comicTitle').value=c.title;document.getElementById('comicTagline').value=c.tagline||'';document.getElementById('delComicBtn').style.display='inline-block';openModal('modal-comic');}
+function saveComic(){
+  const title=document.getElementById('comicTitle').value.trim();if(!title)return;
+  const d=getComic();
+  if(editingComicId){const c=d.comic.comics.find(x=>x.id===editingComicId);if(c){c.title=title;c.tagline=document.getElementById('comicTagline').value.trim();}}
+  else{const c={id:uid(),title,tagline:document.getElementById('comicTagline').value.trim(),arcs:[],worldBible:[]};d.comic.comics.push(c);d.comic.activeComicId=c.id;}
+  saveData(d);closeModal('modal-comic');renderAll();toast('Comic saved ✦');
+}
+function deleteComic(){const d=getComic();if(d.comic.comics.length<=1){alert('Need at least one comic.');return;}if(!confirm('Delete this comic?'))return;d.comic.comics=d.comic.comics.filter(c=>c.id!==editingComicId);d.comic.activeComicId=d.comic.comics[0].id;saveData(d);closeModal('modal-comic');renderAll();}
+
+// ═══ ARC CRUD ═══
+function openAddArc(){editingArcId=null;document.getElementById('arcModalTitle').textContent='New Arc / Chapter';document.getElementById('arcTitle').value='';document.getElementById('arcSummary').value='';document.getElementById('delArcBtn').style.display='none';openModal('modal-arc');}
+function editArc(id){editingArcId=id;const comic=getActive();const arc=(comic.arcs||[]).find(a=>a.id===id);if(!arc)return;document.getElementById('arcModalTitle').textContent='Edit Arc';document.getElementById('arcTitle').value=arc.title;document.getElementById('arcSummary').value=arc.summary||'';document.getElementById('delArcBtn').style.display='inline-block';openModal('modal-arc');}
+function saveArc(){
+  const title=document.getElementById('arcTitle').value.trim();if(!title)return;
+  const d=getComic();const comic=d.comic.comics.find(c=>c.id===d.comic.activeComicId);if(!comic)return;if(!comic.arcs)comic.arcs=[];
+  if(editingArcId){const i=comic.arcs.findIndex(a=>a.id===editingArcId);if(i>=0){comic.arcs[i].title=title;comic.arcs[i].summary=document.getElementById('arcSummary').value.trim();}}
+  else comic.arcs.push({id:uid(),title,summary:document.getElementById('arcSummary').value.trim(),panels:[]});
+  saveData(d);closeModal('modal-arc');renderArcs();toast('Arc saved ✦');
+}
+function deleteArc(){if(!confirm('Delete this arc and all panels?'))return;const d=getComic();const comic=d.comic.comics.find(c=>c.id===d.comic.activeComicId);if(!comic)return;comic.arcs=(comic.arcs||[]).filter(a=>a.id!==editingArcId);saveData(d);closeModal('modal-arc');renderArcs();}
+
+// ═══ PANEL CRUD ═══
+function openAddPanel(arcId){editingPanelId=null;editingPanelArcId=arcId;document.getElementById('panelModalTitle').textContent='Add Panel';document.getElementById('panelDesc').value='';document.getElementById('panelDialogue').value='';document.getElementById('delPanelBtn').style.display='none';openModal('modal-panel');}
+function editPanel(arcId,panelId){editingPanelArcId=arcId;editingPanelId=panelId;const comic=getActive();const arc=(comic.arcs||[]).find(a=>a.id===arcId);if(!arc)return;const p=(arc.panels||[]).find(x=>x.id===panelId);if(!p)return;document.getElementById('panelModalTitle').textContent='Edit Panel';document.getElementById('panelDesc').value=p.desc||'';document.getElementById('panelDialogue').value=p.dialogue||'';document.getElementById('delPanelBtn').style.display='inline-block';openModal('modal-panel');}
+function savePanel(){
+  const desc=document.getElementById('panelDesc').value.trim();if(!desc)return;
+  const d=getComic();const comic=d.comic.comics.find(c=>c.id===d.comic.activeComicId);if(!comic)return;
+  const arc=(comic.arcs||[]).find(a=>a.id===editingPanelArcId);if(!arc)return;
+  if(editingPanelId){const i=(arc.panels||[]).findIndex(p=>p.id===editingPanelId);if(i>=0){arc.panels[i].desc=desc;arc.panels[i].dialogue=document.getElementById('panelDialogue').value.trim();}}
+  else{if(!arc.panels)arc.panels=[];arc.panels.push({id:uid(),desc,dialogue:document.getElementById('panelDialogue').value.trim()});}
+  saveData(d);closeModal('modal-panel');renderArcs();toast('Panel saved ✦');
+}
+function deletePanel(){if(!confirm('Delete this panel?'))return;const d=getComic();const comic=d.comic.comics.find(c=>c.id===d.comic.activeComicId);if(!comic)return;const arc=(comic.arcs||[]).find(a=>a.id===editingPanelArcId);if(!arc)return;arc.panels=(arc.panels||[]).filter(p=>p.id!==editingPanelId);saveData(d);closeModal('modal-panel');renderArcs();}
+
+// ═══ WORLD BIBLE ═══
+function openWorldBible(){renderWbList();openModal('modal-wb');}
+function renderWbList(){
+  const comic=getActive();const entries=comic.worldBible||[];
+  document.getElementById('wbList').innerHTML=entries.length?entries.map(e=>
+    `<div class="wb-entry"><span class="wb-tag">${esc(e.tag||'NOTE')}</span><div class="wb-text">${esc(e.text)}</div><button class="btn" style="font-size:9px;padding:2px 7px;flex-shrink:0;" onclick="openWbEntry('${e.id}')">Edit</button></div>`
+  ).join(''):'<div class="empty-state">No entries yet.</div>';
+}
+function openWbEntry(id){
+  editingWbId=id;
+  if(id){const comic=getActive();const e=(comic.worldBible||[]).find(x=>x.id===id);if(!e)return;document.getElementById('wbEntryTitle').textContent='Edit Entry';document.getElementById('wbTag').value=e.tag||'';document.getElementById('wbText').value=e.text||'';document.getElementById('delWbBtn').style.display='inline-block';}
+  else{document.getElementById('wbEntryTitle').textContent='New Entry';document.getElementById('wbTag').value='';document.getElementById('wbText').value='';document.getElementById('delWbBtn').style.display='none';}
+  openModal('modal-wb-entry');
+}
+function saveWbEntry(){
+  const text=document.getElementById('wbText').value.trim();if(!text)return;
+  const d=getComic();const comic=d.comic.comics.find(c=>c.id===d.comic.activeComicId);if(!comic)return;if(!comic.worldBible)comic.worldBible=[];
+  const entry={id:editingWbId||uid(),tag:document.getElementById('wbTag').value.trim().toUpperCase()||'NOTE',text};
+  if(editingWbId){const i=comic.worldBible.findIndex(x=>x.id===editingWbId);if(i>=0)comic.worldBible[i]=entry;else comic.worldBible.push(entry);}
+  else comic.worldBible.push(entry);
+  saveData(d);closeModal('modal-wb-entry');renderWbList();toast('Entry saved ✦');
+}
+function deleteWbEntry(){if(!confirm('Delete?'))return;const d=getComic();const comic=d.comic.comics.find(c=>c.id===d.comic.activeComicId);if(!comic)return;comic.worldBible=(comic.worldBible||[]).filter(x=>x.id!==editingWbId);saveData(d);closeModal('modal-wb-entry');renderWbList();}
+
+// ═══ MODAL ═══
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
+
+renderAll();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderAll();});
+</script>
+</body>
+</html>

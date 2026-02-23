@@ -1,4 +1,4 @@
-const CACHE = 'chronicle-v6';
+const CACHE = 'chronicle-v7';
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -7,6 +7,10 @@ const ASSETS = [
   './calendar.html',
   './persona.html',
   './people.html',
+  './books.html',
+  './boards.html',
+  './comic.html',
+  './rpg.html',
   'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap'
 ];
 
