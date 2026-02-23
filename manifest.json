@@ -1,8 +1,8 @@
 {
-  "name": "Chronicle",
+  "name": "Chronicle & Forge",
   "short_name": "Chronicle",
-  "description": "Your personal life management tome",
-  "start_url": "./lifeapp.html",
+  "description": "Your personal life management & game creation tome",
+  "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0d0d0f",

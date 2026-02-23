@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0d0f">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Chronicle & Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;
+  --border:#2e2e42;--border2:#3d3d58;
+  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#f5e0a0;
+  --text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;
+  --red:#cc5555;--green:#55aa77;--amber:#cc8844;
+  --accent:#7b6cee;--accent2:#a99bff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;
+  -webkit-tap-highlight-color:transparent;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.4;}
+
+/* ═══ LOCK SCREEN ═══ */
+#lockScreen{position:fixed;inset:0;background:var(--bg);z-index:5000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px;}
+#lockScreen .brand{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:8px;}
+#lockScreen .brand-icon{font-size:36px;color:var(--gold);filter:drop-shadow(0 0 20px rgba(201,168,76,0.4));
+  animation:pulse 3s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:0.9;transform:scale(1);}50%{opacity:1;transform:scale(1.05);}}
+#lockScreen h1{font-family:'Cinzel',serif;font-size:22px;color:var(--gold);letter-spacing:0.2em;
+  text-shadow:0 0 40px rgba(201,168,76,0.3);}
+#lockScreen .lock-sub{font-size:12px;color:var(--text2);letter-spacing:0.05em;}
+.pin-dots{display:flex;gap:14px;margin:4px 0;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);
+  background:transparent;transition:all 0.15s;}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold);box-shadow:0 0 10px rgba(201,168,76,0.5);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px;}
+.pin-btn{width:72px;height:72px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);
+  color:var(--text);font-family:'Cinzel',serif;font-size:20px;cursor:pointer;transition:all 0.15s;
+  display:flex;align-items:center;justify-content:center;}
+.pin-btn:active{background:var(--bg4);border-color:var(--gold);color:var(--gold);transform:scale(0.95);}
+.pin-btn.del{font-size:16px;color:var(--text2);}
+.pin-btn.bio-icon{font-size:22px;}
+.pin-error{color:var(--red);font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.1em;
+  min-height:18px;text-align:center;}
+#lockSetupMsg{font-size:12px;color:var(--text2);text-align:center;max-width:240px;line-height:1.6;display:none;}
+
+/* ═══ APP SHELL ═══ */
+#appShell{height:100%;flex-direction:column;display:none;}
+#appShell.open{display:flex;}
+
+/* Header */
+#appHeader{background:linear-gradient(180deg,#0d0d0f 0%,var(--bg2) 100%);
+  border-bottom:1px solid var(--border);padding:12px 16px 8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;}
+#appHeader h1{font-family:'Cinzel',serif;font-size:18px;font-weight:600;color:var(--gold);
+  letter-spacing:0.15em;text-shadow:0 0 30px rgba(201,168,76,0.3);}
+#appHeader .header-sub{font-size:10px;color:var(--text2);letter-spacing:0.05em;margin-top:1px;}
+#appHeader .header-btn{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);
+  padding:5px 10px;border-radius:3px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.06em;
+  cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:5px;}
+#appHeader .header-btn:active{border-color:var(--gold);color:var(--gold);}
+
+/* Module iframe area */
+#moduleFrame{flex:1;border:none;width:100%;background:var(--bg);}
+
+/* Bottom nav */
+nav{position:relative;flex-shrink:0;background:var(--bg2);border-top:1px solid var(--border);
+  display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0);overflow-x:auto;}
+nav::-webkit-scrollbar{display:none;}
+nav button{flex:0 0 auto;min-width:56px;background:none;border:none;color:var(--text3);
+  padding:9px 8px 7px;font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.03em;
+  text-transform:uppercase;cursor:pointer;transition:color 0.2s;
+  display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;}
+nav button svg{width:18px;height:18px;stroke-width:1.5;stroke:currentColor;fill:none;}
+nav button.active{color:var(--gold);}
+nav button.active::after{content:'';position:absolute;top:0;left:25%;right:25%;height:2px;
+  background:var(--gold);border-radius:0 0 2px 2px;}
+
+/* Toast */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--green);color:#fff;padding:8px 20px;border-radius:20px;
+  font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.04em;z-index:9000;
+  opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.bad{background:var(--red);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOCK SCREEN ═══ -->
+<div id="lockScreen">
+  <div class="brand">
+    <div class="brand-icon">✦</div>
+    <h1>CHRONICLE</h1>
+  </div>
+  <div class="lock-sub" id="lockSubtitle">Enter your PIN</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-error" id="pinError"></div>
+  <div class="pin-pad">
+    <button class="pin-btn" onclick="pinPress('1')">1</button>
+    <button class="pin-btn" onclick="pinPress('2')">2</button>
+    <button class="pin-btn" onclick="pinPress('3')">3</button>
+    <button class="pin-btn" onclick="pinPress('4')">4</button>
+    <button class="pin-btn" onclick="pinPress('5')">5</button>
+    <button class="pin-btn" onclick="pinPress('6')">6</button>
+    <button class="pin-btn" onclick="pinPress('7')">7</button>
+    <button class="pin-btn" onclick="pinPress('8')">8</button>
+    <button class="pin-btn" onclick="pinPress('9')">9</button>
+    <button class="pin-btn bio-icon" id="bioPadBtn" onclick="pinPress('bio')" style="display:none;">⬡</button>
+    <button class="pin-btn" onclick="pinPress('0')" id="zeroBtn">0</button>
+    <button class="pin-btn del" onclick="pinPress('del')">⌫</button>
+  </div>
+  <div id="lockSetupMsg"></div>
+</div>
+
+<!-- ═══ APP SHELL ═══ -->
+<div id="appShell">
+  <div id="appHeader">
+    <div>
+      <h1>✦ CHRONICLE</h1>
+      <div class="header-sub" id="headerSub">Your personal tome</div>
+    </div>
+  </div>
+
+  <iframe id="moduleFrame" src="about:blank"></iframe>
+
+  <nav id="mainNav">
+    <button class="active" onclick="loadModule('dashboard')" id="nav-dashboard">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </button>
+    <button onclick="loadModule('calendar')" id="nav-calendar">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+      Calendar
+    </button>
+    <button onclick="loadModule('persona')" id="nav-persona">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Persona
+    </button>
+    <button onclick="loadModule('notes')" id="nav-notes">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Notes
+    </button>
+    <button onclick="loadModule('books')" id="nav-books">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Books
+    </button>
+    <button onclick="loadModule('boards')" id="nav-boards">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="10" rx="1"/><rect x="14" y="17" width="7" height="4" rx="1"/></svg>
+      Boards
+    </button>
+    <button onclick="loadModule('comic')" id="nav-comic">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="9" y2="15"/></svg>
+      Comic
+    </button>
+    <button onclick="loadModule('rpg')" id="nav-rpg">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+      RPG
+    </button>
+    <button onclick="loadModule('cards')" id="nav-cards">
+      <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 2v4M8 2v4M2 10h20"/><circle cx="8" cy="15" r="1.5" fill="currentColor"/></svg>
+      Cards
+    </button>
+    <button onclick="loadModule('vault')" id="nav-vault">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
+      Vault
+    </button>
+    <button onclick="loadModule('settings')" id="nav-settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </button>
+  </nav>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════
+//  MODULE LOADER
+// ════════════════════════════════════
+let currentModule = null;
+const SUBS = {
+  dashboard:'Your personal tome', calendar:'Weekly scroll of time',
+  persona:'Who you are today', people:'Those who walk beside you',
+  notes:'Quick thoughts & ideas', books:'Your written world',
+  boards:'Projects & tasks', comic:'Comics & story panels',
+  rpg:'RPG world & playtest', cards:'Card Forge', vault:'The sealed vault',
+  settings:'Backup & security'
+};
+
+function loadModule(name) {
+  if (currentModule === name) return;
+  currentModule = name;
+  // Update nav
+  document.querySelectorAll('#mainNav button').forEach(b => b.classList.remove('active'));
+  const nb = document.getElementById('nav-' + name);
+  if (nb) nb.classList.add('active');
+  // Update header
+  document.getElementById('headerSub').textContent = SUBS[name] || '';
+  // Load module
+  const frame = document.getElementById('moduleFrame');
+  frame.src = 'modules/' + name + '.html';
+}
+
+// Listen for messages from modules
+window.addEventListener('message', e => {
+  if (!e.data || !e.data.type) return;
+  if (e.data.type === 'navigate') {
+    loadModule(e.data.module);
+  }
+  if (e.data.type === 'toast') {
+    toast(e.data.msg, e.data.cls || '');
+  }
+  if (e.data.type === 'setTitle') {
+    document.getElementById('headerSub').textContent = e.data.text || '';
+  }
+});
+
+// ════════════════════════════════════
+//  PIN / BIOMETRIC (same as existing)
+// ════════════════════════════════════
+let pinBuffer = '', pinMode = 'unlock', pinSetupFirst = '';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('chronicle_salt_v1_' + str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function getSavedHash() { return localStorage.getItem('chronicle_pin'); }
+
+function pinPress(v) {
+  if (v === 'bio') { tryBiometric(); return; }
+  if (v === 'del') { pinBuffer = pinBuffer.slice(0, -1); updateDots(); return; }
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += v; updateDots();
+  if (pinBuffer.length === 4) setTimeout(processPinEntry, 80);
+}
+
+function updateDots() {
+  for (let i = 0; i < 4; i++)
+    document.getElementById('d' + i).classList.toggle('filled', i < pinBuffer.length);
+}
+
+async function processPinEntry() {
+  const saved = getSavedHash();
+  if (pinMode === 'setup2') {
+    if (pinBuffer !== pinSetupFirst) {
+      showPinErr('PINs did not match — try again');
+      pinBuffer = ''; pinSetupFirst = ''; pinMode = 'setup1'; updateDots();
+      document.getElementById('lockSubtitle').textContent = 'Choose a new PIN';
+      return;
+    }
+    localStorage.setItem('chronicle_pin', await sha256(pinBuffer));
+    pinBuffer = ''; pinMode = 'unlock'; unlock(); return;
+  }
+  if (!saved || pinMode === 'setup1') {
+    pinSetupFirst = pinBuffer; pinBuffer = ''; updateDots();
+    document.getElementById('lockSubtitle').textContent = 'Confirm your PIN';
+    document.getElementById('lockSetupMsg').textContent = 'Enter the same PIN again to confirm.';
+    document.getElementById('lockSetupMsg').style.display = 'block';
+    pinMode = 'setup2'; return;
+  }
+  if (await sha256(pinBuffer) === saved) { pinBuffer = ''; updateDots(); unlock(); }
+  else { showPinErr('Incorrect PIN'); pinBuffer = ''; updateDots(); }
+}
+
+function showPinErr(msg) {
+  const el = document.getElementById('pinError'); el.textContent = msg;
+  setTimeout(() => { el.textContent = ''; }, 2200);
+}
+
+function unlock() {
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('appShell').classList.add('open');
+  loadModule('dashboard');
+}
+
+function tryBiometric() {
+  const cid = localStorage.getItem('chronicle_bio_cred');
+  if (!cid || !window.PublicKeyCredential) { showPinErr('No biometric enrolled'); return; }
+  navigator.credentials.get({ publicKey: {
+    challenge: crypto.getRandomValues(new Uint8Array(32)),
+    allowCredentials: [{ id: Uint8Array.from(atob(cid), c => c.charCodeAt(0)), type: 'public-key' }],
+    userVerification: 'required', timeout: 30000
+  }}).then(() => unlock()).catch(() => showPinErr('Biometric failed'));
+}
+
+// Auto-lock when app goes to background
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && document.getElementById('appShell').classList.contains('open')) {
+    document.getElementById('appShell').classList.remove('open');
+    document.getElementById('lockScreen').style.display = 'flex';
+    pinBuffer = ''; updateDots();
+    document.getElementById('pinError').textContent = '';
+    document.getElementById('lockSubtitle').textContent = 'Enter your PIN';
+  }
+});
+
+function initLock() {
+  const hasBio = localStorage.getItem('chronicle_bio_on') === '1';
+  document.getElementById('bioPadBtn').style.display = hasBio ? 'flex' : 'none';
+  if (!getSavedHash()) {
+    document.getElementById('lockSubtitle').textContent = 'Choose a 4-digit PIN';
+    document.getElementById('lockSetupMsg').textContent = 'First time — pick a PIN to secure Chronicle.';
+    document.getElementById('lockSetupMsg').style.display = 'block';
+    document.getElementById('zeroBtn').style.gridColumn = '2';
+    pinMode = 'setup1';
+  } else {
+    document.getElementById('lockSubtitle').textContent = 'Enter your PIN';
+    if (hasBio) setTimeout(tryBiometric, 400);
+  }
+}
+
+// ════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════
+let toastTimer;
+function toast(msg, cls) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + (cls || '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 2400);
+}
+
+// ════════════════════════════════════
+//  BACK BUTTON HANDLING
+// ════════════════════════════════════
+let backCount = 0, backTimer;
+history.pushState({ page: 'chronicle' }, '');
+window.addEventListener('popstate', () => {
+  history.pushState({ page: 'chronicle' }, '');
+  // If not on dashboard, go to dashboard
+  if (currentModule !== 'dashboard') {
+    loadModule('dashboard');
+    return;
+  }
+  // On dashboard — double back to exit
+  backCount++;
+  if (backCount === 1) {
+    toast('Press back again to exit');
+    backTimer = setTimeout(() => { backCount = 0; }, 2000);
+  } else {
+    clearTimeout(backTimer);
+    backCount = 0;
+    history.back(); history.back();
+  }
+});
+
+// ════════════════════════════════════
+//  PWA INSTALL
+// ════════════════════════════════════
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+// ════════════════════════════════════
+//  INIT
+// ════════════════════════════════════
+initLock();
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

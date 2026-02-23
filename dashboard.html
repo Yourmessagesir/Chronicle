@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;
+  --border:#2e2e42;--border2:#3d3d58;
+  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#f5e0a0;
+  --text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;
+  --red:#cc5555;--green:#55aa77;--amber:#cc8844;
+  --accent:#7b6cee;--accent2:#a99bff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;
+  padding:16px 14px 24px;overflow-x:hidden;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.4;}
+
+/* Greeting */
+.greeting{margin-bottom:20px;}
+.greeting h2{font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:0.12em;margin-bottom:2px;}
+.greeting .date{font-size:13px;color:var(--text2);letter-spacing:0.04em;}
+
+/* Stat cards row */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 10px;text-align:center;}
+.stat-card .stat-num{font-family:'Cinzel',serif;font-size:22px;color:var(--gold2);line-height:1;}
+.stat-card .stat-label{font-family:'Cinzel',serif;font-size:8px;color:var(--text2);letter-spacing:0.1em;
+  text-transform:uppercase;margin-top:4px;}
+
+/* Section */
+.section{margin-bottom:18px;}
+.section-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:var(--gold);
+  text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:14px;
+  margin-bottom:8px;position:relative;cursor:pointer;transition:border-color 0.2s;}
+.card:active{border-color:var(--gold);}
+.card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+  background:linear-gradient(180deg,var(--gold),transparent);border-radius:4px 0 0 4px;}
+.card-title{font-family:'Cinzel',serif;font-size:12px;color:var(--text);letter-spacing:0.06em;margin-bottom:3px;}
+.card-sub{font-size:13px;color:var(--text2);line-height:1.4;}
+.card-tag{display:inline-block;font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.06em;
+  padding:2px 7px;border-radius:10px;margin-right:4px;}
+
+/* Persona card */
+.persona-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);
+  border-radius:8px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden;}
+.persona-card::after{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;
+  background:radial-gradient(circle,rgba(123,108,238,0.1) 0%,transparent 70%);pointer-events:none;}
+.persona-name{font-family:'Cinzel',serif;font-size:16px;color:var(--accent2);letter-spacing:0.1em;margin-bottom:2px;}
+.persona-class{font-size:12px;color:var(--text2);font-style:italic;margin-bottom:12px;}
+.mini-bar-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.mini-bar-label{font-family:'Cinzel',serif;font-size:8px;color:var(--text2);min-width:70px;
+  letter-spacing:0.06em;text-transform:uppercase;}
+.mini-bar-bg{flex:1;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;}
+.mini-bar-fill{height:100%;border-radius:2px;transition:width 0.6s ease;}
+.mini-bar-val{font-family:'Cinzel',serif;font-size:9px;color:var(--text2);min-width:20px;text-align:right;}
+
+/* Quick actions */
+.quick-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:18px;}
+.qa-btn{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px 10px;
+  text-align:center;cursor:pointer;transition:all 0.2s;font-family:'Cinzel',serif;}
+.qa-btn:active{border-color:var(--gold);background:var(--bg3);}
+.qa-btn .qa-icon{font-size:22px;margin-bottom:4px;display:block;}
+.qa-btn .qa-label{font-size:9px;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;}
+
+/* Today's entries */
+.entry-item{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;
+  background:var(--bg3);border-radius:4px;margin-bottom:4px;}
+.entry-time{font-family:'Cinzel',serif;font-size:10px;color:var(--gold);min-width:44px;
+  letter-spacing:0.06em;padding-top:2px;}
+.entry-text{font-size:14px;color:var(--text);line-height:1.4;flex:1;}
+.entry-type{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.06em;padding:1px 6px;
+  border-radius:10px;flex-shrink:0;}
+
+/* Empty state */
+.empty{text-align:center;padding:20px 16px;color:var(--text3);font-style:italic;font-size:14px;}
+
+/* Note preview */
+.note-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;
+  padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:border-color 0.2s;}
+.note-card:active{border-color:var(--gold);}
+.note-title{font-family:'Cinzel',serif;font-size:11px;color:var(--text);letter-spacing:0.04em;
+  margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.note-preview{font-size:12px;color:var(--text2);line-height:1.4;max-height:32px;overflow:hidden;}
+.note-meta{font-family:'Cinzel',serif;font-size:8px;color:var(--text3);margin-top:3px;letter-spacing:0.05em;}
+</style>
+</head>
+<body>
+
+<div class="greeting">
+  <h2 id="greetText">Good morning</h2>
+  <div class="date" id="dateText"></div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-num" id="statWords">0</div>
+    <div class="stat-label">Words Written</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" id="statTasks">0</div>
+    <div class="stat-label">Open Tasks</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" id="statNotes">0</div>
+    <div class="stat-label">Notes</div>
+  </div>
+</div>
+
+<div id="personaSection" class="section" style="display:none;">
+  <div class="section-title">Active Persona</div>
+  <div id="personaCard"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Quick Actions</div>
+  <div class="quick-actions">
+    <div class="qa-btn" onclick="nav('notes')">
+      <span class="qa-icon">✏</span>
+      <span class="qa-label">New Note</span>
+    </div>
+    <div class="qa-btn" onclick="nav('calendar')">
+      <span class="qa-icon">📅</span>
+      <span class="qa-label">Calendar</span>
+    </div>
+    <div class="qa-btn" onclick="nav('books')">
+      <span class="qa-icon">📖</span>
+      <span class="qa-label">Write</span>
+    </div>
+    <div class="qa-btn" onclick="nav('boards')">
+      <span class="qa-icon">📋</span>
+      <span class="qa-label">Boards</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Today's Schedule</div>
+  <div id="todayEntries"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Recent Notes</div>
+  <div id="recentNotes"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Writing Progress</div>
+  <div id="bookCards"></div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════
+//  DATA HELPERS
+// ════════════════════════════════════
+function getChronicle() {
+  try { const s = localStorage.getItem('chronicle_data'); return s ? JSON.parse(s) : null; } catch(e) { return null; }
+}
+function getForge() {
+  try { const s = localStorage.getItem('cardforge_v3'); return s ? JSON.parse(s) : null; } catch(e) { return null; }
+}
+function getNotes() {
+  try { const s = localStorage.getItem('chronicle_notes'); return s ? JSON.parse(s) : []; } catch(e) { return []; }
+}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Navigate via parent shell
+function nav(module) {
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'navigate', module }, '*');
+  } else {
+    window.location.href = module + '.html';
+  }
+}
+
+// ════════════════════════════════════
+//  GREETING
+// ════════════════════════════════════
+function renderGreeting() {
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 21 ? 'Good evening' : 'Burning midnight oil';
+  document.getElementById('greetText').textContent = greet;
+  const opts = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+  document.getElementById('dateText').textContent = new Date().toLocaleDateString('en-US', opts);
+}
+
+// ════════════════════════════════════
+//  STATS
+// ════════════════════════════════════
+function renderStats() {
+  const cd = getChronicle();
+  // Total words across all books
+  let words = 0;
+  if (cd && cd.books) {
+    cd.books.forEach(b => {
+      (b.chapters || []).forEach(ch => {
+        words += (ch.content || '').trim().split(/\s+/).filter(Boolean).length;
+      });
+    });
+  }
+  document.getElementById('statWords').textContent = words > 999 ? (words/1000).toFixed(1) + 'k' : words;
+
+  // Open tasks (board cards not in 'Done' columns)
+  let tasks = 0;
+  if (cd && cd.boards) {
+    const doneCols = new Set((cd.boards.cols || []).filter(c => /done|complete/i.test(c.name)).map(c => c.id));
+    tasks = (cd.boards.cards || []).filter(c => !doneCols.has(c.colId)).length;
+  }
+  document.getElementById('statTasks').textContent = tasks;
+
+  // Notes count
+  const notes = getNotes();
+  document.getElementById('statNotes').textContent = notes.length;
+}
+
+// ════════════════════════════════════
+//  ACTIVE PERSONA
+// ════════════════════════════════════
+const STAT_COLORS = {
+  Happiness:'#55aa77',Sadness:'#5566aa',Anger:'#cc4444',Anxiety:'#cc8844',
+  Fear:'#9944cc',Confidence:'#c9a84c',Energy:'#e8c97a',Focus:'#5588cc',
+  Creativity:'#9955cc',Motivation:'#55aacc',Calm:'#66bbcc'
+};
+
+function renderPersona() {
+  const cd = getChronicle();
+  if (!cd || !cd.personas || !cd.personas.length) return;
+  const active = cd.personas.find(p => p.active) || cd.personas[0];
+  if (!active) return;
+
+  document.getElementById('personaSection').style.display = 'block';
+  const stats = active.stats || {};
+  // Show top 5 stats
+  const sorted = Object.entries(stats).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const barsHtml = sorted.map(([k, v]) => {
+    const color = STAT_COLORS[k] || '#888';
+    return `<div class="mini-bar-row">
+      <span class="mini-bar-label">${esc(k)}</span>
+      <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${v}%;background:${color};"></div></div>
+      <span class="mini-bar-val">${v}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('personaCard').innerHTML = `
+    <div class="persona-card" onclick="nav('persona')">
+      <div class="persona-name">${esc(active.name)}</div>
+      <div class="persona-class">${esc(active.archetype || active.class || '')}</div>
+      ${barsHtml}
+    </div>`;
+}
+
+// ════════════════════════════════════
+//  TODAY'S ENTRIES
+// ════════════════════════════════════
+function renderToday() {
+  const cd = getChronicle();
+  const el = document.getElementById('todayEntries');
+  if (!cd || !cd.entries || !cd.entries.length) {
+    el.innerHTML = '<div class="empty">No entries for today. Tap Calendar to add one.</div>';
+    return;
+  }
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay()); weekStart.setHours(0,0,0,0);
+  const wk = weekStart.toISOString().slice(0, 10);
+
+  const entries = cd.entries.filter(e =>
+    parseInt(e.dayOfWeek) === dayOfWeek &&
+    (e.type === 'routine' || (e.type === 'note' && e.weekKey === wk))
+  ).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+  if (!entries.length) {
+    el.innerHTML = '<div class="empty">Nothing scheduled for today.</div>';
+    return;
+  }
+
+  el.innerHTML = entries.map(e => {
+    const typeColor = e.type === 'routine' ? 'background:rgba(85,170,119,0.15);color:#55aa77;border:1px solid rgba(85,170,119,0.3);'
+      : 'background:rgba(123,108,238,0.15);color:#a99bff;border:1px solid rgba(123,108,238,0.3);';
+    return `<div class="entry-item" onclick="nav('calendar')">
+      <span class="entry-time">${esc(e.time || '—')}</span>
+      <span class="entry-text">${esc(e.text)}</span>
+      <span class="entry-type" style="${typeColor}">${e.type === 'routine' ? 'Routine' : 'Entry'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════
+//  RECENT NOTES
+// ════════════════════════════════════
+function renderRecentNotes() {
+  const notes = getNotes();
+  const el = document.getElementById('recentNotes');
+  if (!notes.length) {
+    el.innerHTML = '<div class="empty">No notes yet. Tap Quick Actions to start.</div>';
+    return;
+  }
+  const recent = notes.sort((a, b) => (b.updated || b.created || 0) - (a.updated || a.created || 0)).slice(0, 3);
+  el.innerHTML = recent.map(n => {
+    const d = new Date(n.updated || n.created);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const catColors = { idea:'#9955cc', reminder:'#cc8844', reference:'#5588cc', dream:'#7766aa', quote:'#55aa77' };
+    const catColor = catColors[n.category] || '#888';
+    return `<div class="note-card" onclick="nav('notes')">
+      <div class="note-title">${esc(n.title || 'Untitled')}</div>
+      <div class="note-preview">${esc((n.body || '').slice(0, 80))}</div>
+      <div class="note-meta">${dateStr}${n.category ? ' · <span style="color:' + catColor + '">' + esc(n.category) + '</span>' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════
+//  WRITING PROGRESS
+// ════════════════════════════════════
+function renderBooks() {
+  const cd = getChronicle();
+  const el = document.getElementById('bookCards');
+  if (!cd || !cd.books || !cd.books.length) {
+    el.innerHTML = '<div class="empty">No books yet. Start writing in the Books tab.</div>';
+    return;
+  }
+  el.innerHTML = cd.books.map(b => {
+    const chapters = (b.chapters || []).length;
+    const words = (b.chapters || []).reduce((a, c) => a + (c.content || '').trim().split(/\s+/).filter(Boolean).length, 0);
+    const wordStr = words > 999 ? (words/1000).toFixed(1) + 'k' : words;
+    return `<div class="card" onclick="nav('books')">
+      <div class="card-title">${esc(b.title || 'Untitled')}</div>
+      <div class="card-sub">${chapters} chapter${chapters !== 1 ? 's' : ''} · ~${wordStr} words</div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════
+//  INIT
+// ════════════════════════════════════
+renderGreeting();
+renderStats();
+renderPersona();
+renderToday();
+renderRecentNotes();
+renderBooks();
+
+// Refresh when tab becomes visible (data may have changed)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    renderStats();
+    renderPersona();
+    renderToday();
+    renderRecentNotes();
+    renderBooks();
+  }
+});
+</script>
+</body>
+</html>
