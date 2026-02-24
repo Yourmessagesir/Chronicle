@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Map Maker — Chronicle & Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;--border:#2e2e42;--border2:#3d3d58;--gold:#c9a84c;--gold2:#e8c97a;--gold3:#8a6a20;--text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;--red:#cc5555;--green:#55aa77;--accent:#7b6cee;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Crimson Pro',serif;}
+.topbar{display:flex;align-items:center;gap:7px;padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;}
+.back-btn{background:none;border:none;color:var(--text2);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.07em;cursor:pointer;white-space:nowrap;}
+.back-btn:active{color:var(--gold);}
+.map-select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:3px;font-family:'Cinzel',serif;font-size:9px;flex:1;min-width:80px;max-width:160px;outline:none;}
+.map-select option{background:var(--bg3);}
+.btn{padding:5px 10px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.05em;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.btn:active,.btn:hover{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:700;}
+.btn-gold:hover{color:#1a1200;}
+.btn-sm{padding:4px 8px;font-size:8px;}
+.toolbar{display:flex;align-items:center;gap:5px;padding:7px 10px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;}
+.tool-btn{width:32px;height:32px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);border-radius:4px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;user-select:none;}
+.tool-btn.active{border-color:var(--gold);background:rgba(201,168,76,.15);color:var(--gold);}
+.tool-sep{width:1px;height:24px;background:var(--border);flex-shrink:0;margin:0 2px;}
+.layer-btn{padding:4px 10px;border:1px solid var(--border);background:var(--bg3);color:var(--text3);border-radius:3px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:.07em;cursor:pointer;flex-shrink:0;transition:all .15s;user-select:none;}
+.layer-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(123,108,238,.12);}
+.zoom-val{font-family:'Cinzel',serif;font-size:9px;color:var(--text2);min-width:28px;text-align:center;}
+.workspace{display:flex;flex:1;overflow:hidden;min-height:0;}
+.sidebar{width:130px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.sidebar-top{padding:7px 8px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.ts-select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:3px;font-family:'Cinzel',serif;font-size:8px;width:100%;outline:none;}
+.ts-select option{background:var(--bg3);}
+.palette-wrap{flex:1;overflow-y:auto;overflow-x:hidden;cursor:crosshair;}
+#paletteCanvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;}
+.canvas-wrap{flex:1;overflow:auto;background:#111;cursor:crosshair;}
+#mapCanvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-top:1px solid var(--gold3);border-radius:8px 8px 0 0;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:.1em;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.field{margin-bottom:11px;}
+.field label{display:block;font-family:'Cinzel',serif;font-size:8px;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:4px;}
+.field input,.field textarea,.field select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:14px;width:100%;outline:none;}
+.field input:focus,.field textarea:focus{border-color:var(--gold);}
+.field textarea{resize:vertical;min-height:60px;line-height:1.6;}
+.field select option{background:var(--bg3);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-actions{display:flex;gap:8px;margin-top:13px;justify-content:space-between;align-items:center;}
+.hint{font-size:12px;color:var(--text3);font-style:italic;margin-top:4px;line-height:1.4;}
+.no-map{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--text3);font-style:italic;font-size:14px;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--gold3);border-radius:4px;padding:8px 16px;font-family:'Cinzel',serif;font-size:10px;color:var(--gold);z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+::-webkit-scrollbar{width:3px;height:3px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body style="display:flex;flex-direction:column;height:100%;">
+
+<div class="topbar">
+  <button class="back-btn" onclick="goBack()">← Hub</button>
+  <select class="map-select" id="mapSelect" onchange="switchMap(this.value)"><option value="">— Select Map —</option></select>
+  <button class="btn" onclick="openNewMap()">+ Map</button>
+  <button class="btn" onclick="openTilesetModal()">+ Tiles</button>
+  <button class="btn btn-sm btn-gold" id="playBtn" onclick="openPlay()" style="display:none;">▶ Play</button>
+</div>
+
+<div class="toolbar">
+  <div class="tool-btn active" id="tool-paint"     onclick="setTool('paint')"     title="Paint">🖌</div>
+  <div class="tool-btn"        id="tool-erase"     onclick="setTool('erase')"     title="Erase">⬜</div>
+  <div class="tool-btn"        id="tool-collision" onclick="setTool('collision')" title="Collision">🚫</div>
+  <div class="tool-btn"        id="tool-npc"       onclick="setTool('npc')"       title="Place NPC">💬</div>
+  <div class="tool-btn"        id="tool-start"     onclick="setTool('start')"     title="Player Start">⭐</div>
+  <div class="tool-sep"></div>
+  <div class="layer-btn active" id="layer-ground"  onclick="setLayer('ground')">Ground</div>
+  <div class="layer-btn"        id="layer-objects" onclick="setLayer('objects')">Objects</div>
+  <div class="tool-sep"></div>
+  <div class="tool-btn" onclick="adjustZoom(-1)" title="Zoom out" style="font-size:18px;font-weight:700;">−</div>
+  <div class="zoom-val" id="zoomVal">1×</div>
+  <div class="tool-btn" onclick="adjustZoom(1)"  title="Zoom in"  style="font-size:18px;font-weight:700;">+</div>
+  <div class="tool-sep"></div>
+  <div class="tool-btn active" id="gridToggle" onclick="toggleGrid()" title="Grid" style="font-size:10px;font-family:Cinzel,serif;letter-spacing:.04em;width:auto;padding:0 7px;">Grid</div>
+</div>
+
+<div class="workspace">
+  <div class="sidebar">
+    <div class="sidebar-top">
+      <select class="ts-select" id="tsSelect" onchange="switchTileset(this.value)"><option value="">No tileset</option></select>
+    </div>
+    <div class="palette-wrap" id="paletteWrap">
+      <canvas id="paletteCanvas"></canvas>
+    </div>
+  </div>
+  <div class="canvas-wrap" id="canvasWrap">
+    <div class="no-map" id="noMapMsg">Create or select a map to begin.</div>
+    <canvas id="mapCanvas" style="display:none;"></canvas>
+  </div>
+</div>
+
+<!-- NEW MAP MODAL -->
+<div class="overlay" id="modal-map">
+  <div class="modal">
+    <h2 id="mapModalTitle">New Map</h2>
+    <div class="field"><label>Map Name</label><input type="text" id="inMapName" placeholder="e.g. Thornwood Village"></div>
+    <div class="row2">
+      <div class="field"><label>Width (tiles)</label><input type="number" id="inMapW" value="24" min="5" max="120"></div>
+      <div class="field"><label>Height (tiles)</label><input type="number" id="inMapH" value="18" min="5" max="120"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Tile Size (px)</label><input type="number" id="inMapTS" value="32" min="8" max="128"></div>
+      <div class="field" style="display:flex;align-items:flex-end;padding-bottom:4px;"><span id="mapSizeHint" style="font-size:12px;color:var(--text3);font-style:italic;"></span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="delMapBtn" onclick="deleteMap()" style="display:none;color:var(--red);border-color:var(--red);">Delete Map</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="closeModal('modal-map')">Cancel</button>
+        <button class="btn btn-gold" onclick="saveMap()">Save ✦</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TILESET MODAL -->
+<div class="overlay" id="modal-tileset">
+  <div class="modal">
+    <h2>Import Tileset</h2>
+    <div class="field"><label>Tileset Name</label><input type="text" id="inTsName" placeholder="e.g. Fantasy Overworld"></div>
+    <div class="field"><label>Tile Size in Image (px)</label><input type="number" id="inTsSize" value="32" min="8" max="256">
+      <div class="hint">How large each tile is in your PNG. Common: 16px, 32px, 48px.</div>
+    </div>
+    <div class="field"><label>Tileset Image</label>
+      <input type="file" id="tsFile" accept="image/*" style="color:var(--text2);">
+      <div class="hint">Keep PNGs under ~1MB. Smaller = faster. The image is saved to localStorage.</div>
+    </div>
+    <div id="tsPreviewWrap" style="margin-top:8px;display:none;"><canvas id="tsPreview" style="max-width:100%;border:1px solid var(--border);border-radius:3px;image-rendering:pixelated;"></canvas></div>
+    <div class="modal-actions">
+      <div></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="closeModal('modal-tileset')">Cancel</button>
+        <button class="btn btn-gold" onclick="importTileset()">Import ✦</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NPC MODAL -->
+<div class="overlay" id="modal-npc">
+  <div class="modal">
+    <h2 id="npcModalTitle">Place NPC</h2>
+    <div class="field"><label>Name</label><input type="text" id="inNpcName" placeholder="e.g. Old Miller"></div>
+    <div class="field"><label>Dialogue</label><textarea id="inNpcDialogue" placeholder="What does this character say?"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn" id="delNpcBtn" onclick="deleteNpc()" style="display:none;color:var(--red);border-color:var(--red);">Remove NPC</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="closeModal('modal-npc')">Cancel</button>
+        <button class="btn btn-gold" onclick="saveNpc()">Save ✦</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const $toast = msg => { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2200); };
+const openModal  = id => { document.getElementById(id).classList.add('open');    };
+const closeModal = id => { document.getElementById(id).classList.remove('open'); };
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); }));
+
+function getData()  { try { return JSON.parse(localStorage.getItem('chronicle_ttrpg') || '{}'); } catch { return {}; } }
+function saveData(d){ localStorage.setItem('chronicle_ttrpg', JSON.stringify(d)); }
+function getMaps()     { return getData().maps     || []; }
+function getTilesets() { return getData().tilesets || []; }
+function saveMaps(m)  { const d = getData(); d.maps     = m; saveData(d); }
+function saveTilesets(t){ const d = getData(); d.tilesets = t; saveData(d); }
+
+let maps = [], tilesets = [], currentMap = null, activeTileset = null;
+let activeTool = 'paint', activeLayer = 'ground', zoom = 1, showGrid = true;
+let painting = false, lastCell = null, editingNpc = null, npcTX = 0, npcTY = 0, editingMapId = null;
+let selTile = null, paletteScale = 1;
+const imgCache = {};
+
+function getImg(ts) {
+  if (!ts) return null;
+  if (imgCache[ts.id]?.complete) return imgCache[ts.id];
+  if (!imgCache[ts.id]) {
+    const img = new Image();
+    img.onload = () => { imgCache[ts.id] = img; renderPalette(); renderMap(); };
+    img.src = ts.imageData;
+    imgCache[ts.id] = img;
+  }
+  return null;
+}
+
+// ── MAP LIST ──
+function refreshMapSelect() {
+  const sel = document.getElementById('mapSelect');
+  sel.innerHTML = '<option value="">— Select Map —</option>' + maps.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  if (currentMap) sel.value = currentMap.id;
+}
+function switchMap(id) {
+  const canvas = document.getElementById('mapCanvas'), msg = document.getElementById('noMapMsg');
+  currentMap = maps.find(m => m.id === id) || null;
+  if (currentMap) { msg.style.display = 'none'; canvas.style.display = 'block'; document.getElementById('playBtn').style.display = 'inline-block'; renderMap(); }
+  else            { msg.style.display = 'flex';  canvas.style.display = 'none';  document.getElementById('playBtn').style.display = 'none'; }
+}
+
+function openNewMap() {
+  editingMapId = null;
+  document.getElementById('mapModalTitle').textContent = 'New Map';
+  ['inMapName','inMapW','inMapH','inMapTS'].forEach(id => document.getElementById(id).value = ({inMapW:'24',inMapH:'18',inMapTS:'32'})[id] || '');
+  document.getElementById('delMapBtn').style.display = 'none';
+  updateSizeHint(); openModal('modal-map');
+}
+function updateSizeHint() {
+  const w = +document.getElementById('inMapW').value || 0, h = +document.getElementById('inMapH').value || 0, ts = +document.getElementById('inMapTS').value || 0;
+  document.getElementById('mapSizeHint').textContent = w && h && ts ? `${w*ts}×${h*ts}px` : '';
+}
+['inMapW','inMapH','inMapTS'].forEach(id => document.getElementById(id).addEventListener('input', updateSizeHint));
+
+function saveMap() {
+  const name = document.getElementById('inMapName').value.trim(); if (!name) return;
+  const width = Math.max(5, +document.getElementById('inMapW').value || 24);
+  const height = Math.max(5, +document.getElementById('inMapH').value || 18);
+  const tileSize = Math.max(8, +document.getElementById('inMapTS').value || 32);
+  if (editingMapId) {
+    const m = maps.find(x => x.id === editingMapId); if (m) { m.name = name; m.tileSize = tileSize; }
+  } else {
+    const size = width * height;
+    const m = { id: uid(), name, width, height, tileSize, layers: { ground: Array(size).fill(null), objects: Array(size).fill(null) }, collision: Array(size).fill(false), npcs: [], playerStart: {x:0,y:0} };
+    maps.push(m); currentMap = m;
+  }
+  saveMaps(maps); refreshMapSelect(); closeModal('modal-map'); switchMap(currentMap?.id); $toast('Map saved ✦');
+}
+function deleteMap() {
+  if (!editingMapId || !confirm('Delete this map?')) return;
+  maps = maps.filter(m => m.id !== editingMapId); saveMaps(maps); currentMap = null;
+  closeModal('modal-map'); refreshMapSelect(); switchMap('');
+}
+
+// ── TILESETS ──
+function openTilesetModal() {
+  document.getElementById('inTsName').value = ''; document.getElementById('inTsSize').value = '32';
+  document.getElementById('tsFile').value = ''; document.getElementById('tsPreviewWrap').style.display = 'none';
+  openModal('modal-tileset');
+}
+document.getElementById('tsFile').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const pc = document.getElementById('tsPreview');
+      const scale = Math.min(1, 280 / img.naturalWidth);
+      pc.width = img.naturalWidth * scale; pc.height = img.naturalHeight * scale;
+      pc.getContext('2d').drawImage(img, 0, 0, pc.width, pc.height);
+      document.getElementById('tsPreviewWrap').style.display = 'block';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+function importTileset() {
+  const name = document.getElementById('inTsName').value.trim() || 'Tileset';
+  const tileSize = +document.getElementById('inTsSize').value || 32;
+  const file = document.getElementById('tsFile').files[0]; if (!file) { $toast('Choose an image'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const imageData = ev.target.result;
+    const img = new Image();
+    img.onload = () => {
+      const ts = { id: uid(), name, tileSize, imageData, imgW: img.naturalWidth, imgH: img.naturalHeight };
+      tilesets.push(ts);
+      try { saveTilesets(tilesets); } catch { tilesets.pop(); $toast('File too large for localStorage — try a smaller image'); return; }
+      imgCache[ts.id] = img;
+      refreshTsSelect(); activeTileset = ts; document.getElementById('tsSelect').value = ts.id;
+      renderPalette(); closeModal('modal-tileset'); $toast(`${name} imported ✦`);
+    };
+    img.src = imageData;
+  };
+  reader.readAsDataURL(file);
+}
+function refreshTsSelect() {
+  const sel = document.getElementById('tsSelect');
+  sel.innerHTML = '<option value="">— No tileset —</option>' + tilesets.map(t => `<option value="${t.id}">${t.name} (${t.tileSize}px)</option>`).join('');
+  if (activeTileset) sel.value = activeTileset.id;
+}
+function switchTileset(id) { activeTileset = tilesets.find(t => t.id === id) || null; renderPalette(); }
+
+// ── PALETTE ──
+function renderPalette() {
+  const canvas = document.getElementById('paletteCanvas'), wrap = document.getElementById('paletteWrap');
+  const ctx = canvas.getContext('2d');
+  if (!activeTileset) { canvas.width = 0; canvas.height = 0; return; }
+  const img = getImg(activeTileset); if (!img) return;
+  const ts = activeTileset.tileSize, cols = Math.floor(activeTileset.imgW / ts), rows = Math.floor(activeTileset.imgH / ts);
+  const pW = wrap.clientWidth || 122;
+  paletteScale = pW / (cols * ts);
+  canvas.width = pW; canvas.height = Math.round(rows * ts * paletteScale);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.5;
+  for (let x = 0; x <= cols; x++) { const px = Math.round(x*ts*paletteScale); ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px, canvas.height); ctx.stroke(); }
+  for (let y = 0; y <= rows; y++) { const py = Math.round(y*ts*paletteScale); ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(canvas.width,py); ctx.stroke(); }
+  if (selTile?.tsId === activeTileset.id) {
+    ctx.strokeStyle = '#e8c97a'; ctx.lineWidth = 2;
+    ctx.strokeRect(selTile.tx*ts*paletteScale+1, selTile.ty*ts*paletteScale+1, ts*paletteScale-2, ts*paletteScale-2);
+  }
+}
+document.getElementById('paletteCanvas').addEventListener('click', e => {
+  if (!activeTileset) return;
+  const rect = e.target.getBoundingClientRect(), ts = activeTileset.tileSize;
+  selTile = { tsId: activeTileset.id, tx: Math.floor((e.clientX - rect.left) / (ts * paletteScale)), ty: Math.floor((e.clientY - rect.top) / (ts * paletteScale)) };
+  setTool('paint'); renderPalette();
+});
+
+// ── MAP RENDER ──
+const mapCanvas = document.getElementById('mapCanvas');
+function renderMap() {
+  if (!currentMap) return;
+  const {width, height, tileSize} = currentMap, z = zoom;
+  mapCanvas.width = width * tileSize * z; mapCanvas.height = height * tileSize * z;
+  const ctx = mapCanvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = '#080810'; ctx.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
+  ['ground','objects'].forEach(l => {
+    currentMap.layers[l].forEach((cell, i) => {
+      if (!cell) return;
+      const ts = tilesets.find(t => t.id === cell.tsId); if (!ts) return;
+      const img = getImg(ts); if (!img) return;
+      const tx = i % width, ty = Math.floor(i / width);
+      ctx.drawImage(img, cell.tx*ts.tileSize, cell.ty*ts.tileSize, ts.tileSize, ts.tileSize, tx*tileSize*z, ty*tileSize*z, tileSize*z, tileSize*z);
+    });
+  });
+  // Collision
+  currentMap.collision.forEach((solid, i) => {
+    if (!solid) return;
+    ctx.fillStyle = 'rgba(204,85,85,0.32)';
+    ctx.fillRect((i%width)*tileSize*z, Math.floor(i/width)*tileSize*z, tileSize*z, tileSize*z);
+  });
+  // NPCs
+  currentMap.npcs.forEach(npc => {
+    const cx = (npc.x+.5)*tileSize*z, cy = (npc.y+.5)*tileSize*z, r = tileSize*z*0.3;
+    ctx.fillStyle = 'rgba(123,108,238,0.75)'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = `${Math.max(9, tileSize*z*0.36)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('💬', cx, cy);
+  });
+  // Player start
+  const ps = currentMap.playerStart, px = ps.x*tileSize*z, py = ps.y*tileSize*z, pt = tileSize*z;
+  ctx.fillStyle = 'rgba(85,170,119,0.4)'; ctx.fillRect(px, py, pt, pt);
+  ctx.strokeStyle = '#55aa77'; ctx.lineWidth = 2; ctx.strokeRect(px+1, py+1, pt-2, pt-2);
+  ctx.fillStyle = '#55aa77'; ctx.font = `${Math.max(9,pt*0.5)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('⭐', px+pt/2, py+pt/2);
+  // Grid
+  if (showGrid) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 0.5;
+    for (let x = 0; x <= width; x++) { ctx.beginPath(); ctx.moveTo(x*tileSize*z,0); ctx.lineTo(x*tileSize*z, mapCanvas.height); ctx.stroke(); }
+    for (let y = 0; y <= height; y++) { ctx.beginPath(); ctx.moveTo(0,y*tileSize*z); ctx.lineTo(mapCanvas.width, y*tileSize*z); ctx.stroke(); }
+  }
+}
+
+// ── INPUT ──
+function getTile(e) {
+  const rect = mapCanvas.getBoundingClientRect(), ts = currentMap.tileSize;
+  const tx = Math.floor((e.clientX - rect.left) / (ts * zoom)), ty = Math.floor((e.clientY - rect.top) / (ts * zoom));
+  return {tx, ty, valid: tx >= 0 && tx < currentMap.width && ty >= 0 && ty < currentMap.height};
+}
+function applyTool(e, isStart) {
+  if (!currentMap) return;
+  const {tx, ty, valid} = getTile(e); if (!valid) return;
+  const key = `${tx},${ty}`; if (!isStart && key === lastCell) return; lastCell = key;
+  const idx = ty * currentMap.width + tx;
+  if (activeTool === 'paint') {
+    if (!selTile) { $toast('Select a tile from the palette first'); return; }
+    currentMap.layers[activeLayer][idx] = {tsId:selTile.tsId, tx:selTile.tx, ty:selTile.ty}; renderMap();
+  } else if (activeTool === 'erase') {
+    currentMap.layers[activeLayer][idx] = null; renderMap();
+  } else if (activeTool === 'collision') {
+    currentMap.collision[idx] = !currentMap.collision[idx]; renderMap();
+  } else if (activeTool === 'start' && isStart) {
+    currentMap.playerStart = {x:tx, y:ty}; renderMap(); saveCurrent(); $toast('Player start set ✦');
+  } else if (activeTool === 'npc' && isStart) {
+    npcTX = tx; npcTY = ty;
+    editingNpc = currentMap.npcs.find(n => n.x===tx && n.y===ty) || null;
+    document.getElementById('npcModalTitle').textContent = editingNpc ? 'Edit NPC' : 'Place NPC';
+    document.getElementById('inNpcName').value = editingNpc?.name || '';
+    document.getElementById('inNpcDialogue').value = editingNpc?.dialogue || '';
+    document.getElementById('delNpcBtn').style.display = editingNpc ? 'inline-block' : 'none';
+    openModal('modal-npc');
+  }
+}
+mapCanvas.addEventListener('mousedown',  e => { painting = true;  lastCell = null; applyTool(e, true);  });
+mapCanvas.addEventListener('mousemove',  e => { if (painting) applyTool(e, false); });
+mapCanvas.addEventListener('mouseup',    () => { painting = false; saveCurrent(); });
+mapCanvas.addEventListener('mouseleave', () => { if (painting) saveCurrent(); painting = false; });
+mapCanvas.addEventListener('touchstart', e => { e.preventDefault(); painting = true;  lastCell = null; applyTool(e.touches[0], true);  }, {passive:false});
+mapCanvas.addEventListener('touchmove',  e => { e.preventDefault(); if (painting) applyTool(e.touches[0], false); }, {passive:false});
+mapCanvas.addEventListener('touchend',   () => { painting = false; saveCurrent(); });
+
+function saveCurrent() { if (!currentMap) return; const i = maps.findIndex(m => m.id === currentMap.id); if (i >= 0) maps[i] = currentMap; saveMaps(maps); }
+
+// ── NPC ──
+function saveNpc() {
+  const name = document.getElementById('inNpcName').value.trim() || 'Stranger';
+  const dialogue = document.getElementById('inNpcDialogue').value.trim();
+  if (editingNpc) { editingNpc.name = name; editingNpc.dialogue = dialogue; }
+  else currentMap.npcs.push({id:uid(), x:npcTX, y:npcTY, name, dialogue});
+  saveCurrent(); closeModal('modal-npc'); renderMap();
+}
+function deleteNpc() {
+  if (!editingNpc) return;
+  currentMap.npcs = currentMap.npcs.filter(n => n.id !== editingNpc.id);
+  saveCurrent(); closeModal('modal-npc'); renderMap();
+}
+
+// ── TOOLS / LAYERS ──
+function setTool(t) {
+  activeTool = t;
+  document.querySelectorAll('.tool-btn[id^="tool-"]').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('tool-' + t); if (el) el.classList.add('active');
+}
+function setLayer(l) {
+  activeLayer = l;
+  document.getElementById('layer-ground').classList.toggle('active',  l === 'ground');
+  document.getElementById('layer-objects').classList.toggle('active', l === 'objects');
+}
+function adjustZoom(dir) {
+  const steps = [0.5, 1, 1.5, 2, 3], idx = steps.indexOf(zoom);
+  zoom = steps[Math.max(0, Math.min(steps.length-1, idx+dir))];
+  document.getElementById('zoomVal').textContent = zoom + '×'; renderMap();
+}
+function toggleGrid() { showGrid = !showGrid; document.getElementById('gridToggle').classList.toggle('active', showGrid); renderMap(); }
+
+// ── NAVIGATION ──
+function goBack() { if (window.parent && window.parent !== window) window.parent.postMessage({type:'navigate',module:'dashboard'},'*'); else window.location.href = 'dashboard.html'; }
+function openPlay() {
+  if (!currentMap) return;
+  const d = getData(); d.activeMapId = currentMap.id; saveData(d);
+  if (window.parent && window.parent !== window) window.parent.postMessage({type:'navigate',module:'rpg-mapplay'},'*');
+  else window.location.href = 'rpg-mapplay.html';
+}
+
+// ── INIT ──
+maps = getMaps(); tilesets = getTilesets();
+refreshMapSelect(); refreshTsSelect();
+tilesets.forEach(ts => getImg(ts));
+if (tilesets.length) { activeTileset = tilesets[0]; document.getElementById('tsSelect').value = tilesets[0].id; }
+const _d = getData();
+if (_d.activeMapId && maps.find(m => m.id === _d.activeMapId)) { document.getElementById('mapSelect').value = _d.activeMapId; switchMap(_d.activeMapId); }
+else if (maps.length) { document.getElementById('mapSelect').value = maps[0].id; switchMap(maps[0].id); }
+window.addEventListener('resize', () => { renderPalette(); renderMap(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Play Map — Chronicle & Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--border:#2e2e42;--border2:#3d3d58;--gold:#c9a84c;--gold2:#e8c97a;--gold3:#8a6a20;--text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;--red:#cc5555;--green:#55aa77;--accent:#7b6cee;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:#000;font-family:'Crimson Pro',serif;}
+
+.topbar{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(13,13,15,.92);border-bottom:1px solid var(--border);z-index:20;backdrop-filter:blur(4px);}
+.back-btn{background:none;border:none;color:var(--text2);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.07em;cursor:pointer;}
+.back-btn:active{color:var(--gold);}
+.map-title{font-family:'Cinzel',serif;font-size:11px;color:var(--gold);letter-spacing:.08em;flex:1;}
+.btn{padding:4px 9px;border:1px solid var(--border2);background:rgba(26,26,36,.9);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.05em;cursor:pointer;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:700;}
+
+/* game canvas */
+#gameCanvas{display:block;position:absolute;top:40px;left:0;right:0;bottom:0;width:100%;height:calc(100% - 40px);image-rendering:pixelated;image-rendering:crisp-edges;}
+
+/* D-pad */
+.dpad{position:absolute;bottom:28px;left:20px;z-index:20;display:grid;grid-template-columns:44px 44px 44px;grid-template-rows:44px 44px 44px;gap:4px;opacity:.72;}
+.dpad-btn{background:rgba(30,30,45,.85);border:1px solid var(--border2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text2);cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:none;}
+.dpad-btn:active{background:rgba(201,168,76,.2);border-color:var(--gold);color:var(--gold);}
+.dpad-center{background:transparent;border:none;}
+
+/* interact */
+.interact-btn{position:absolute;bottom:28px;right:20px;z-index:20;width:56px;height:56px;background:rgba(123,108,238,.2);border:1px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.8;cursor:pointer;}
+.interact-btn:active{background:rgba(123,108,238,.5);}
+
+/* sprite picker */
+.sprite-picker{position:absolute;top:50px;right:10px;z-index:30;background:rgba(13,13,15,.94);border:1px solid var(--border2);border-radius:5px;padding:7px;display:grid;grid-template-columns:repeat(3,38px);gap:5px;}
+.sp-btn{width:38px;height:38px;border:1px solid var(--border);border-radius:4px;background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.sp-btn.active{border-color:var(--gold);}
+.sp-label{grid-column:1/-1;font-family:'Cinzel',serif;font-size:7px;letter-spacing:.1em;color:var(--text3);text-align:center;margin-bottom:2px;}
+
+/* dialogue box */
+.dialogue{position:absolute;bottom:130px;left:12px;right:12px;background:rgba(13,13,15,.96);border:1px solid var(--gold3);border-radius:6px;padding:14px 16px;z-index:25;display:none;}
+.dialogue-name{font-family:'Cinzel',serif;font-size:11px;color:var(--gold2);letter-spacing:.08em;margin-bottom:6px;}
+.dialogue-text{font-size:15px;color:var(--text);line-height:1.6;}
+.dialogue-hint{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.1em;color:var(--text3);text-align:right;margin-top:8px;}
+
+/* overlay */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:50;display:none;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.panel{background:var(--bg2);border:1px solid var(--border2);border-top:2px solid var(--gold3);border-radius:8px;padding:18px;width:90%;max-width:340px;}
+.panel h2{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:.1em;margin-bottom:14px;}
+.no-map-msg{color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:14px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="goToEditor()">← Editor</button>
+  <div class="map-title" id="mapTitle">Loading…</div>
+  <button class="btn" onclick="toggleSpritePicker()">👤</button>
+  <button class="btn btn-gold" onclick="goBack()">Chronicle</button>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<!-- D-PAD -->
+<div class="dpad" id="dpad">
+  <div></div>
+  <div class="dpad-btn" id="dUp"   >↑</div>
+  <div></div>
+  <div class="dpad-btn" id="dLeft" >←</div>
+  <div class="dpad-center"></div>
+  <div class="dpad-btn" id="dRight">→</div>
+  <div></div>
+  <div class="dpad-btn" id="dDown" >↓</div>
+  <div></div>
+</div>
+
+<!-- INTERACT -->
+<div class="interact-btn" id="interactBtn" onclick="interact()">💬</div>
+
+<!-- DIALOGUE -->
+<div class="dialogue" id="dialogue">
+  <div class="dialogue-name" id="dialogueName"></div>
+  <div class="dialogue-text"  id="dialogueText"></div>
+  <div class="dialogue-hint">Tap or press Space to close</div>
+</div>
+
+<!-- SPRITE PICKER -->
+<div class="sprite-picker" id="spritePicker" style="display:none;">
+  <div class="sp-label">Character</div>
+</div>
+
+<!-- NO MAP PANEL -->
+<div class="overlay" id="noMapOverlay">
+  <div class="panel">
+    <h2>No Map Selected</h2>
+    <div class="no-map-msg">Go back to the Map Editor, open a map, and press <strong>▶ Play</strong>.</div>
+    <button class="btn" onclick="goToEditor()">← Open Editor</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+function getData(){try{return JSON.parse(localStorage.getItem('chronicle_ttrpg')||'{}');}catch{return{};}}
+function saveData(d){localStorage.setItem('chronicle_ttrpg',JSON.stringify(d));}
+
+// ── BUILT-IN SPRITES ──
+// Each sprite is drawn on a 16×16 virtual canvas, scaled to tileSize at render time.
+// Format: { label, emoji, color, shape }
+const SPRITES = [
+  {id:'knight',  label:'Knight',   color:'#7b9cee', hat:'⚔'},
+  {id:'wizard',  label:'Wizard',   color:'#c97ac9', hat:'🧙'},
+  {id:'rogue',   label:'Rogue',    color:'#55aa77', hat:'🗡'},
+  {id:'ranger',  label:'Ranger',   color:'#8a9a5a', hat:'🏹'},
+  {id:'scholar', label:'Scholar',  color:'#c9a84c', hat:'📖'},
+  {id:'ghost',   label:'Ghost',    color:'#aaaacc', hat:'👻'},
+];
+let activeSprite = SPRITES[0];
+let spriteFrame = 0, spriteTimer = 0;
+let showSpritePicker = false;
+
+// ── STATE ──
+let map = null, tilesets = {}, imgCache = {};
+let px = 0, py = 0;          // player tile position
+let camX = 0, camY = 0;      // camera pixel offset
+let scale = 1;                 // display scale
+let dialogueOpen = false;
+const keys = {};
+let lastTime = 0, moveDelay = 0;
+const MOVE_INTERVAL = 160; // ms between moves
+
+// ── INIT ──
+function init() {
+  const d = getData();
+  const mapId = d.activeMapId;
+  const maps = d.maps || [];
+  if (!mapId) { document.getElementById('noMapOverlay').classList.add('open'); return; }
+  map = maps.find(m => m.id === mapId) || null;
+  if (!map) { document.getElementById('noMapOverlay').classList.add('open'); return; }
+
+  document.getElementById('mapTitle').textContent = map.name;
+
+  // Load tilesets
+  (d.tilesets || []).forEach(ts => {
+    tilesets[ts.id] = ts;
+    const img = new Image();
+    img.src = ts.imageData;
+    img.onload = () => { imgCache[ts.id] = img; };
+  });
+
+  // Player start
+  px = map.playerStart?.x || 0;
+  py = map.playerStart?.y || 0;
+
+  // Load saved sprite preference
+  const saved = d.playTable?.spriteId;
+  if (saved) activeSprite = SPRITES.find(s => s.id === saved) || SPRITES[0];
+
+  buildSpritePicker();
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  requestAnimationFrame(loop);
+}
+
+// ── SPRITE PICKER ──
+function buildSpritePicker() {
+  const picker = document.getElementById('spritePicker');
+  const label = picker.querySelector('.sp-label');
+  picker.innerHTML = '';
+  picker.appendChild(label);
+  SPRITES.forEach(sp => {
+    const btn = document.createElement('div');
+    btn.className = 'sp-btn' + (sp.id === activeSprite.id ? ' active' : '');
+    btn.textContent = sp.hat;
+    btn.title = sp.label;
+    btn.style.background = sp.color + '33';
+    btn.style.borderColor = sp.id === activeSprite.id ? 'var(--gold)' : 'var(--border)';
+    btn.onclick = () => { selectSprite(sp); };
+    picker.appendChild(btn);
+  });
+}
+function selectSprite(sp) {
+  activeSprite = sp;
+  const d = getData(); if (!d.playTable) d.playTable = {}; d.playTable.spriteId = sp.id; saveData(d);
+  buildSpritePicker();
+}
+function toggleSpritePicker() {
+  showSpritePicker = !showSpritePicker;
+  document.getElementById('spritePicker').style.display = showSpritePicker ? 'grid' : 'none';
+}
+
+// ── CANVAS / CAMERA ──
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() {
+  canvas.width  = canvas.clientWidth  || window.innerWidth;
+  canvas.height = canvas.clientHeight || window.innerHeight - 40;
+  if (map) {
+    // Auto-scale: fit the map if smaller than screen, otherwise 1:1
+    const scaleX = canvas.width  / (map.width  * map.tileSize);
+    const scaleY = canvas.height / (map.height * map.tileSize);
+    scale = Math.min(2, Math.max(1, Math.floor(Math.min(scaleX, scaleY))));
+  }
+}
+function updateCamera() {
+  if (!map) return;
+  const ts = map.tileSize * scale;
+  const targetX = px * ts + ts/2 - canvas.width/2;
+  const targetY = py * ts + ts/2 - canvas.height/2;
+  const maxX = map.width  * ts - canvas.width;
+  const maxY = map.height * ts - canvas.height;
+  camX = Math.max(0, Math.min(maxX, targetX));
+  camY = Math.max(0, Math.min(maxY, targetY));
+}
+
+// ── DRAWING ──
+function drawSprite(cx, cy, ts) {
+  const sp = activeSprite;
+  const s = ts * 0.78;
+  const ox = (ts - s) / 2, oy = (ts - s) / 2;
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath(); ctx.ellipse(cx+ts/2, cy+ts-3*scale, ts*0.3, ts*0.12, 0, 0, Math.PI*2); ctx.fill();
+  // Body
+  ctx.fillStyle = sp.color;
+  const bob = Math.sin(spriteFrame * 0.4) * scale * 0.8;
+  ctx.beginPath();
+  ctx.roundRect(cx+ox, cy+oy+bob, s, s*0.6, s*0.2);
+  ctx.fill();
+  // Head
+  ctx.fillStyle = '#f0d8b0';
+  ctx.beginPath();
+  ctx.arc(cx+ts/2, cy+oy+bob - s*0.08, s*0.28, 0, Math.PI*2);
+  ctx.fill();
+  // Hat/icon
+  ctx.font = `${Math.max(8, ts*0.32)}px serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(sp.hat, cx+ts/2, cy+oy+bob + s*0.3);
+}
+
+function render() {
+  if (!map) return;
+  ctx.imageSmoothingEnabled = false;
+  const ts = map.tileSize * scale;
+  ctx.fillStyle = '#080810';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.save();
+  ctx.translate(-camX, -camY);
+
+  // Ground layer
+  drawLayer(map.layers.ground, ts);
+  // Player
+  const plx = px * ts, ply = py * ts;
+  drawSprite(plx, ply, ts);
+  // Objects layer (drawn above player — roofs, trees, etc.)
+  drawLayer(map.layers.objects, ts);
+  // NPC markers
+  map.npcs.forEach(npc => {
+    const nx = npc.x * ts, ny = npc.y * ts;
+    ctx.fillStyle = 'rgba(232,201,122,0.18)';
+    ctx.strokeStyle = 'rgba(232,201,122,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(nx+2, ny+2, ts-4, ts-4, 3); ctx.fill(); ctx.stroke();
+    ctx.font = `${Math.max(9, ts*0.38)}px serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('💬', nx+ts/2, ny+ts/2);
+    // Name tag
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    const tw = ctx.measureText(npc.name).width + 8;
+    ctx.beginPath(); ctx.roundRect(nx+ts/2-tw/2, ny-14*scale, tw, 12*scale, 2); ctx.fill();
+    ctx.fillStyle = '#e8c97a';
+    ctx.font = `${Math.max(7, scale*8)}px Cinzel, serif`;
+    ctx.fillText(npc.name, nx+ts/2, ny-8*scale);
+  });
+
+  ctx.restore();
+}
+
+function drawLayer(layer, ts) {
+  layer.forEach((cell, i) => {
+    if (!cell) return;
+    const tsData = tilesets[cell.tsId]; if (!tsData) return;
+    const img = imgCache[cell.tsId]; if (!img) return;
+    const tx = i % map.width, ty = Math.floor(i / map.width);
+    ctx.drawImage(img, cell.tx*tsData.tileSize, cell.ty*tsData.tileSize, tsData.tileSize, tsData.tileSize, tx*ts, ty*ts, ts, ts);
+  });
+}
+
+// ── MOVEMENT ──
+function isBlocked(x, y) {
+  if (!map) return true;
+  if (x < 0 || y < 0 || x >= map.width || y >= map.height) return true;
+  return map.collision[y * map.width + x];
+}
+function tryMove(dx, dy) {
+  if (dialogueOpen) return;
+  const nx = px + dx, ny = py + dy;
+  if (!isBlocked(nx, ny)) { px = nx; py = ny; spriteFrame++; }
+}
+function interact() {
+  if (dialogueOpen) { closeDialogue(); return; }
+  const dirs = [[0,0],[0,-1],[0,1],[-1,0],[1,0]];
+  for (const [dx,dy] of dirs) {
+    const tx = px+dx, ty = py+dy;
+    const npc = map.npcs.find(n => n.x===tx && n.y===ty);
+    if (npc) { openDialogue(npc); return; }
+  }
+}
+function openDialogue(npc) {
+  dialogueOpen = true;
+  document.getElementById('dialogueName').textContent = npc.name;
+  document.getElementById('dialogueText').textContent = npc.dialogue || '…';
+  document.getElementById('dialogue').style.display = 'block';
+  document.getElementById('dpad').style.opacity = '0.3';
+  document.getElementById('interactBtn').textContent = '✕';
+}
+function closeDialogue() {
+  dialogueOpen = false;
+  document.getElementById('dialogue').style.display = 'none';
+  document.getElementById('dpad').style.opacity = '0.72';
+  document.getElementById('interactBtn').textContent = '💬';
+}
+document.getElementById('dialogue').addEventListener('click', () => { if (dialogueOpen) closeDialogue(); });
+
+// ── GAME LOOP ──
+function loop(timestamp) {
+  const dt = timestamp - lastTime; lastTime = timestamp;
+  if (!dialogueOpen) {
+    moveDelay -= dt;
+    if (moveDelay <= 0) {
+      if (keys['ArrowUp']    || keys['w']) { tryMove(0,-1);  moveDelay = MOVE_INTERVAL; }
+      if (keys['ArrowDown']  || keys['s']) { tryMove(0, 1);  moveDelay = MOVE_INTERVAL; }
+      if (keys['ArrowLeft']  || keys['a']) { tryMove(-1, 0); moveDelay = MOVE_INTERVAL; }
+      if (keys['ArrowRight'] || keys['d']) { tryMove( 1, 0); moveDelay = MOVE_INTERVAL; }
+    }
+  }
+  spriteTimer += dt;
+  updateCamera();
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ── KEYBOARD ──
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (dialogueOpen) closeDialogue(); else interact(); }
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+  // Close sprite picker on any key
+  if (showSpritePicker) { showSpritePicker = false; document.getElementById('spritePicker').style.display = 'none'; }
+});
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+// ── D-PAD ──
+function dpadPress(dx, dy) {
+  tryMove(dx, dy); moveDelay = MOVE_INTERVAL;
+  if (showSpritePicker) { showSpritePicker = false; document.getElementById('spritePicker').style.display = 'none'; }
+}
+// Use both touch and mouse for d-pad
+function attachDpad(id, dx, dy) {
+  const el = document.getElementById(id);
+  const startRepeat = () => {
+    tryMove(dx, dy); moveDelay = 0;
+    keys[`dpad_${id}`] = {dx, dy};
+  };
+  const stopRepeat = () => { delete keys[`dpad_${id}`]; };
+  el.addEventListener('mousedown',  startRepeat);
+  el.addEventListener('mouseup',    stopRepeat);
+  el.addEventListener('mouseleave', stopRepeat);
+  el.addEventListener('touchstart', e => { e.preventDefault(); startRepeat(); }, {passive:false});
+  el.addEventListener('touchend',   e => { e.preventDefault(); stopRepeat(); },  {passive:false});
+}
+attachDpad('dUp',    0,-1);
+attachDpad('dDown',  0, 1);
+attachDpad('dLeft', -1, 0);
+attachDpad('dRight', 1, 0);
+
+// D-pad continuous movement via held state
+function dpadTick(timestamp) {
+  // handled in main loop via tryMove above — d-pad sets keys
+}
+
+// ── SWIPE ──
+let touchStart = null;
+canvas.addEventListener('touchstart', e => { touchStart = {x:e.touches[0].clientX, y:e.touches[0].clientY}; e.preventDefault(); }, {passive:false});
+canvas.addEventListener('touchend', e => {
+  if (!touchStart) return;
+  const dx = e.changedTouches[0].clientX - touchStart.x;
+  const dy = e.changedTouches[0].clientY - touchStart.y;
+  const adx = Math.abs(dx), ady = Math.abs(dy);
+  if (adx < 10 && ady < 10) { interact(); }
+  else if (adx > ady) { tryMove(dx > 0 ? 1 : -1, 0); }
+  else { tryMove(0, dy > 0 ? 1 : -1); }
+  touchStart = null;
+}, {passive:false});
+
+// ── NAV ──
+function goBack() {
+  if (window.parent && window.parent !== window) window.parent.postMessage({type:'navigate',module:'dashboard'},'*');
+  else window.location.href = 'dashboard.html';
+}
+function goToEditor() {
+  if (window.parent && window.parent !== window) window.parent.postMessage({type:'navigate',module:'rpg-map'},'*');
+  else window.location.href = 'rpg-map.html';
+}
+
+// ── PATCH roundRect for older browsers ──
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+    r = Math.min(r, w/2, h/2);
+    this.moveTo(x+r, y); this.lineTo(x+w-r, y); this.arcTo(x+w,y,x+w,y+r,r);
+    this.lineTo(x+w, y+h-r); this.arcTo(x+w,y+h,x+w-r,y+h,r);
+    this.lineTo(x+r, y+h); this.arcTo(x,y+h,x,y+h-r,r);
+    this.lineTo(x, y+r); this.arcTo(x,y,x+r,y,r); this.closePath();
+    return this;
+  };
+}
+
+init();
+</script>
+</body>
+</html>

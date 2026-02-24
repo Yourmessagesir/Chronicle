@@ -153,10 +153,6 @@ nav button.active::after{content:'';position:absolute;top:0;left:25%;right:25%;h
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       Persona
     </button>
-    <button onclick="loadModule('people')" id="nav-people">
-      <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M2 19c0-3.3 3.1-6 7-6s7 2.7 7 6"/><circle cx="17" cy="7" r="2"/><path d="M22 19c0-2.2-2.1-4-5-4"/></svg>
-      People
-    </button>
     <button onclick="loadModule('notes')" id="nav-notes">
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       Notes
@@ -176,6 +172,10 @@ nav button.active::after{content:'';position:absolute;top:0;left:25%;right:25%;h
     <button onclick="loadModule('rpg')" id="nav-rpg">
       <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
       RPG
+    </button>
+    <button onclick="loadModule('rpg-map')" id="nav-rpg-map">
+      <svg viewBox="0 0 24 24"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+      Maps
     </button>
     <button onclick="loadModule('cards')" id="nav-cards">
       <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 2v4M8 2v4M2 10h20"/><circle cx="8" cy="15" r="1.5" fill="currentColor"/></svg>
@@ -203,10 +203,11 @@ nav button.active::after{content:'';position:absolute;top:0;left:25%;right:25%;h
 let currentModule = null;
 const SUBS = {
   dashboard:'Your personal tome', calendar:'Weekly scroll of time',
-  persona:'Who you are today', people:'Those who walk beside you', people:'Those who walk beside you',
+  persona:'Who you are today', people:'Those who walk beside you',
   notes:'Quick thoughts & ideas', books:'Your written world',
   boards:'Projects & tasks', comic:'Comics & story panels',
-  rpg:'RPG world & playtest', cards:'Card Forge', vault:'The sealed vault',
+  rpg:'RPG world & playtest', 'rpg-map':'Tile map editor & world builder',
+  'rpg-mapplay':'Map playtester', cards:'Card Forge', vault:'The sealed vault',
   settings:'Backup & security'
 };
 
