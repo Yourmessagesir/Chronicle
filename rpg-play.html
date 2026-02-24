@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Play Table — Chronicle & Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;
+  --border:#2e2e42;--border2:#3d3d58;
+  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#8a6a20;
+  --text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;
+  --red:#cc5555;--green:#55aa77;--accent:#7b6cee;--orange:#cc8844;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;padding:0 0 60px;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4;}
+
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:10;}
+.topbar-back{background:none;border:none;color:var(--text2);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;cursor:pointer;padding:4px 0;}
+.topbar-back:active{color:var(--gold);}
+.topbar-title{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:.08em;flex:1;}
+.mood-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.1em;color:var(--text3);padding:3px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;}
+.mood-label:active{border-color:var(--gold);color:var(--gold);}
+
+.mode-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);}
+.mode-tab{flex:1;padding:11px 4px;text-align:center;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.mode-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+.view{display:none;padding:12px 14px;}
+.view.active{display:block;}
+
+.btn{padding:6px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.btn-sm{padding:4px 9px;font-size:9px;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+.section-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;color:var(--text3);text-transform:uppercase;margin:14px 0 8px;}
+.section-label:first-child{margin-top:0;}
+
+/* ── DICE TAB ── */
+.die-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.die-btn{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:all .15s;}
+.die-btn:active{border-color:var(--gold);background:var(--bg3);transform:scale(.93);}
+.die-glyph{font-size:22px;line-height:1;}
+.die-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.08em;color:var(--text3);}
+
+.result-panel{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:12px;min-height:80px;display:flex;align-items:center;gap:14px;}
+.result-big{font-family:'Cinzel',serif;font-size:52px;color:var(--gold2);line-height:1;min-width:70px;text-align:center;transition:all .2s;}
+.result-info{flex:1;}
+.result-expr{font-family:'Cinzel',serif;font-size:11px;color:var(--text2);letter-spacing:.06em;margin-bottom:4px;}
+.result-outcome{font-size:14px;font-style:italic;}
+.result-outcome.success{color:var(--gold);}
+.result-outcome.partial{color:var(--orange);}
+.result-outcome.miss{color:var(--red);}
+.result-outcome.neutral{color:var(--text3);}
+.result-breakdown{font-family:'Cinzel',serif;font-size:9px;color:var(--text3);margin-top:4px;}
+
+.custom-row{display:flex;gap:8px;margin-bottom:12px;align-items:center;}
+.custom-input{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;flex:1;outline:none;}
+.custom-input:focus{border-color:var(--gold);}
+
+.history-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto;}
+.history-item{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:7px 12px;display:flex;align-items:center;justify-content:space-between;}
+.history-val{font-family:'Cinzel',serif;font-size:16px;color:var(--gold);}
+.history-meta{font-size:12px;color:var(--text3);text-align:right;}
+
+@keyframes rollPop{0%{transform:scale(1.4) rotate(-5deg);opacity:.6;}60%{transform:scale(1.05);}100%{transform:scale(1);opacity:1;}}
+.rolling{animation:rollPop .3s cubic-bezier(.22,1.8,.36,1);}
+
+/* ── ENCOUNTER TAB ── */
+.round-bar{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:10px 14px;margin-bottom:10px;}
+.round-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.12em;color:var(--text3);}
+.round-num{font-family:'Cinzel',serif;font-size:22px;color:var(--gold);margin:0 10px;}
+.round-controls{display:flex;gap:6px;align-items:center;}
+
+.combatant-card{background:var(--bg2);border:1px solid var(--border);border-radius:5px;margin-bottom:7px;overflow:hidden;transition:all .2s;}
+.combatant-card.active-turn{border-color:var(--gold);box-shadow:0 0 12px rgba(201,168,76,.2);}
+.combatant-card.defeated{opacity:.45;}
+.combatant-header{display:flex;align-items:center;gap:10px;padding:10px 12px;}
+.combatant-init{font-family:'Cinzel',serif;font-size:13px;color:var(--text3);width:22px;text-align:center;flex-shrink:0;}
+.combatant-active-turn .combatant-init{color:var(--gold);}
+.combatant-info{flex:1;min-width:0;}
+.combatant-name{font-family:'Cinzel',serif;font-size:12px;color:var(--text);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.combatant-type{font-size:11px;color:var(--text3);margin-top:1px;}
+.hp-row{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.hp-display{font-family:'Cinzel',serif;font-size:13px;min-width:50px;text-align:right;}
+.hp-bar-wrap{width:60px;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;}
+.hp-bar-fill{height:100%;border-radius:2px;transition:width .4s;}
+.hp-full{background:var(--green);}
+.hp-mid{background:var(--orange);}
+.hp-low{background:var(--red);}
+.combatant-expand{padding:0 12px 10px;border-top:1px solid var(--border);display:none;}
+.combatant-card.open .combatant-expand{display:block;}
+.hp-adjust{display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap;}
+.conditions-wrap{display:flex;gap:5px;flex-wrap:wrap;}
+.cond-chip{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.07em;padding:2px 8px;border-radius:8px;border:1px solid var(--border);color:var(--text3);cursor:pointer;transition:all .15s;}
+.cond-chip.on{background:rgba(204,85,85,.2);border-color:var(--red);color:var(--red);}
+.empty-state{text-align:center;padding:30px 16px;color:var(--text3);font-style:italic;font-size:13px;}
+
+/* ── NOTES TAB ── */
+.notes-textarea{background:var(--bg2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Crimson Pro',serif;font-size:15px;line-height:1.8;padding:14px;width:100%;min-height:260px;resize:none;outline:none;}
+.notes-textarea:focus{border-color:var(--gold3);}
+.loot-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
+.loot-item:last-child{border-bottom:none;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-top:1px solid var(--gold3);border-radius:8px 8px 0 0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:.1em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.field{margin-bottom:12px;}
+label{display:block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:5px;}
+input[type="text"],input[type="number"],select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;}
+input:focus{border-color:var(--gold);}
+select option{background:var(--bg3);}
+.modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:space-between;align-items:center;}
+.combatant-source-list{max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;margin-bottom:12px;}
+.source-item{padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:14px;transition:background .15s;}
+.source-item:last-child{border-bottom:none;}
+.source-item:active{background:var(--bg3);}
+.source-item-name{font-family:'Cinzel',serif;font-size:11px;color:var(--text);}
+.source-item-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="topbar-back" onclick="goBack()">← Hub</button>
+  <div class="topbar-title">Play Table</div>
+  <div class="mood-label" id="moodLabel" onclick="cycleMood()">⚔ Combat</div>
+</div>
+
+<div class="mode-tabs">
+  <div class="mode-tab active" id="tabDice" onclick="switchTab('dice')">Dice</div>
+  <div class="mode-tab" id="tabEncounter" onclick="switchTab('encounter')">Encounter</div>
+  <div class="mode-tab" id="tabNotes" onclick="switchTab('notes')">Notes</div>
+</div>
+
+<!-- ── DICE TAB ── -->
+<div class="view active" id="view-dice">
+  <div class="result-panel" id="resultPanel">
+    <div class="result-big" id="resultBig">—</div>
+    <div class="result-info">
+      <div class="result-expr" id="resultExpr">Roll a die to begin</div>
+      <div class="result-outcome neutral" id="resultOutcome"></div>
+      <div class="result-breakdown" id="resultBreakdown"></div>
+    </div>
+  </div>
+
+  <div class="die-grid">
+    <div class="die-btn" onclick="rollSingle(4)"><div class="die-glyph">◇</div><div class="die-label">d4</div></div>
+    <div class="die-btn" onclick="rollSingle(6)"><div class="die-glyph">⬡</div><div class="die-label">d6</div></div>
+    <div class="die-btn" onclick="rollSingle(8)"><div class="die-glyph">◈</div><div class="die-label">d8</div></div>
+    <div class="die-btn" onclick="rollSingle(10)"><div class="die-glyph">◉</div><div class="die-label">d10</div></div>
+    <div class="die-btn" onclick="rollSingle(12)"><div class="die-glyph">⬟</div><div class="die-label">d12</div></div>
+    <div class="die-btn" onclick="rollSingle(20)"><div class="die-glyph">△</div><div class="die-label">d20</div></div>
+    <div class="die-btn" onclick="roll2d6(false)"><div class="die-glyph" style="font-size:16px;">2d6</div><div class="die-label">Standard</div></div>
+    <div class="die-btn" onclick="roll2d6(true)"><div class="die-glyph" style="font-size:16px;">2d6+</div><div class="die-label">Advantage</div></div>
+  </div>
+
+  <div class="section-label">Custom Pool</div>
+  <div class="custom-row">
+    <input class="custom-input" type="text" id="customExpr" placeholder="e.g. 3d6, 2d8+3, d20+5" onkeydown="if(event.key==='Enter')rollCustom()">
+    <button class="btn btn-gold" onclick="rollCustom()">Roll ✦</button>
+  </div>
+
+  <div class="section-label">Roll History</div>
+  <div class="history-list" id="historyList">
+    <div class="empty-state" style="padding:12px;">No rolls yet.</div>
+  </div>
+</div>
+
+<!-- ── ENCOUNTER TAB ── -->
+<div class="view" id="view-encounter">
+  <div class="round-bar">
+    <div>
+      <div class="round-label">ROUND</div>
+      <div style="display:flex;align-items:center;">
+        <button class="btn btn-sm" onclick="changeRound(-1)">−</button>
+        <div class="round-num" id="roundNum">1</div>
+        <button class="btn btn-sm" onclick="changeRound(1)">+</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
+      <button class="btn btn-sm btn-gold" onclick="openAddCombatant()">+ Add</button>
+      <button class="btn btn-sm" onclick="nextTurn()">Next Turn →</button>
+      <button class="btn btn-sm btn-danger" onclick="clearEncounter()">Clear All</button>
+    </div>
+  </div>
+
+  <div id="combatantList"></div>
+  <div id="encounterEmpty" class="empty-state">No combatants. Tap + Add to begin the encounter.</div>
+</div>
+
+<!-- ── NOTES TAB ── -->
+<div class="view" id="view-notes">
+  <div class="section-label">Session Scratchpad</div>
+  <textarea class="notes-textarea" id="notesBody" placeholder="Notes for this session — clues, decisions, NPC names, things to remember…" oninput="saveNotes()"></textarea>
+
+  <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;">
+    <span>Loot Collected</span>
+    <button class="btn btn-sm" onclick="addLootItem()">+ Add</button>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:10px 14px;margin-bottom:14px;">
+    <div id="lootList"><div style="font-size:13px;color:var(--text3);font-style:italic;">No loot recorded.</div></div>
+  </div>
+
+  <div class="section-label">Quick Reference</div>
+  <div id="quickRef" style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:12px;font-size:13px;color:var(--text2);line-height:1.7;"></div>
+</div>
+
+<!-- ADD COMBATANT MODAL -->
+<div class="modal-overlay" id="modal-combatant">
+  <div class="modal">
+    <h2>Add to Encounter</h2>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-sm" id="srcManual" onclick="setSource('manual')" style="flex:1;">Manual</button>
+      <button class="btn btn-sm" id="srcChar" onclick="setSource('char')" style="flex:1;">Character</button>
+      <button class="btn btn-sm" id="srcBestiary" onclick="setSource('bestiary')" style="flex:1;">Bestiary</button>
+    </div>
+
+    <div id="sourceList" style="display:none;">
+      <div class="combatant-source-list" id="sourceListInner"></div>
+    </div>
+
+    <div id="manualFields">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field"><label>Name</label><input type="text" id="inCombName" placeholder="Name…"></div>
+        <div class="field"><label>Type</label>
+          <select id="inCombType">
+            <option value="player">Player</option>
+            <option value="creature">Creature</option>
+            <option value="npc">NPC</option>
+            <option value="boss">Boss</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field"><label>Initiative</label><input type="number" id="inCombInit" placeholder="Roll or enter" min="1" max="30"></div>
+        <div class="field"><label>Max HP</label><input type="number" id="inCombHP" placeholder="e.g. 20" min="1"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <div></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="closeModal('modal-combatant')">Cancel</button>
+        <button class="btn btn-gold" onclick="addCombatant()">Add ✦</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MOOD MODAL -->
+<div class="modal-overlay" id="modal-mood">
+  <div class="modal">
+    <h2>Scene Mood</h2>
+    <div id="moodOptions" style="display:flex;flex-direction:column;gap:7px;"></div>
+    <div class="modal-actions"><div></div><button class="btn" onclick="closeModal('modal-mood')">Close</button></div>
+  </div>
+</div>
+
+<script>
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function esc(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function getData(){try{return JSON.parse(localStorage.getItem('chronicle_ttrpg')||'{}');}catch{return {};}}
+function saveData(d){localStorage.setItem('chronicle_ttrpg',JSON.stringify(d));}
+
+// ── STATE ──
+let rollHistory=[];
+let encounter={round:1,activeTurn:0,combatants:[]};
+let expandedId=null;
+let addSource='manual';
+let selectedSourceEntry=null;
+const MOODS=['⚔ Combat','🌆 Town','🌲 Wilderness','🕯 Dungeon','😰 Tense','😌 Calm','🌑 Ominous','✨ Wondrous'];
+let moodIdx=0;
+let notesTimer=null;
+let loot=[];
+
+// ── NAV ──
+function goBack(){if(window.parent&&window.parent!==window){window.parent.postMessage({type:'navigate',module:'rpg.html'},'*');}else window.location.href='rpg.html';}
+function switchTab(tab){
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
+  document.getElementById('view-'+tab).classList.add('active');
+  if(tab==='encounter')renderEncounter();
+  if(tab==='notes'){loadNotes();buildQuickRef();}
+}
+
+// ── DICE ──
+function d(sides){return Math.floor(Math.random()*sides)+1;}
+function rollSingle(sides){
+  const result=d(sides);
+  const isCrit=result===sides,isFumble=result===1;
+  const outcome=isCrit?'Critical — Maximum!':isFumble?'Fumble — Minimum':null;
+  const cls=isCrit?'success':isFumble?'miss':'neutral';
+  showResult(result,`d${sides}`,outcome,cls,[result]);
+}
+function roll2d6(advantage){
+  if(advantage){
+    const sets=[[d(6),d(6)],[d(6),d(6)]];
+    const totals=sets.map(s=>s[0]+s[1]);
+    const best=Math.max(...totals);const idx=totals.indexOf(best);
+    const breakdown=`Sets: [${sets[0]}]=${totals[0]}  [${sets[1]}]=${totals[1]}  → took ${best}`;
+    showResult(best,`2d6 Advantage`,outcomeText(best),outcomeClass(best),sets[idx],breakdown);
+  } else {
+    const rolls=[d(6),d(6)];const total=rolls[0]+rolls[1];
+    showResult(total,'2d6',outcomeText(total),outcomeClass(total),rolls,`Rolled: ${rolls[0]} + ${rolls[1]}`);
+  }
+}
+function outcomeText(t){return t>=10?'Full success ✦':t>=7?'Partial success — cost or complication':'Miss — failure or setback';}
+function outcomeClass(t){return t>=10?'success':t>=7?'partial':'miss';}
+
+function rollCustom(){
+  const expr=document.getElementById('customExpr').value.trim().toLowerCase();
+  if(!expr)return;
+  const match=expr.match(/^(\d+)?d(\d+)([+-]\d+)?$/);
+  if(!match){showResult('?',expr,'Invalid expression — try: 2d6+3','neutral',[]);return;}
+  const count=parseInt(match[1]||1);const sides=parseInt(match[2]);const mod=parseInt(match[3]||0);
+  if(count<1||count>20||sides<2||sides>100){showResult('?',expr,'Out of range','neutral',[]);return;}
+  const rolls=Array.from({length:count},()=>d(sides));
+  const total=rolls.reduce((a,b)=>a+b,0)+mod;
+  const breakdown=count>1?`Rolls: [${rolls.join(', ')}]${mod?` ${mod>0?'+':''}${mod}`:''}`:'';
+  showResult(total,expr.toUpperCase(),null,'neutral',rolls,breakdown);
+}
+
+function showResult(val,expr,outcome,cls,rolls=[],breakdown=''){
+  const el=document.getElementById('resultBig');
+  el.textContent=val;
+  el.classList.remove('rolling');void el.offsetWidth;el.classList.add('rolling');
+  document.getElementById('resultExpr').textContent=expr;
+  const outEl=document.getElementById('resultOutcome');
+  outEl.textContent=outcome||'';outEl.className='result-outcome '+(cls||'neutral');
+  document.getElementById('resultBreakdown').textContent=breakdown;
+  // Log
+  rollHistory.unshift({val,expr,outcome:outcome||'',time:new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});
+  if(rollHistory.length>20)rollHistory.pop();
+  renderHistory();
+}
+function renderHistory(){
+  const el=document.getElementById('historyList');
+  if(!rollHistory.length){el.innerHTML='<div class="empty-state" style="padding:12px;">No rolls yet.</div>';return;}
+  el.innerHTML=rollHistory.map(r=>`
+    <div class="history-item">
+      <div class="history-val">${esc(r.val)}</div>
+      <div class="history-meta"><div style="color:var(--text2);">${esc(r.expr)}</div><div>${esc(r.time)}</div></div>
+    </div>`).join('');
+}
+
+// ── ENCOUNTER ──
+function renderEncounter(){
+  const list=document.getElementById('combatantList');
+  const empty=document.getElementById('encounterEmpty');
+  document.getElementById('roundNum').textContent=encounter.round;
+  if(!encounter.combatants.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const tmpl=(getData().sheet_template)||{conditions:['Injured','Exhausted','Poisoned']};
+  const conditions=tmpl.conditions||['Injured','Exhausted','Poisoned'];
+
+  list.innerHTML=encounter.combatants.map((c,i)=>{
+    const pct=c.maxHp?Math.max(0,Math.round(c.hp/c.maxHp*100)):100;
+    const hpClass=pct>60?'hp-full':pct>25?'hp-mid':'hp-low';
+    const isActive=i===encounter.activeTurn%encounter.combatants.length;
+    const isOpen=expandedId===c.id;
+    const condChips=conditions.map(cd=>`<div class="cond-chip ${(c.conditions||[]).includes(cd)?'on':''}" onclick="toggleCond('${c.id}','${esc(cd)}')">${esc(cd)}</div>`).join('');
+
+    return `<div class="combatant-card${isActive?' active-turn':''}${c.hp<=0?' defeated':''}${isOpen?' open':''}" id="cc_${c.id}">
+      <div class="combatant-header" onclick="toggleExpand('${c.id}')">
+        <div class="combatant-init">${isActive?'▸':esc(c.init||'?')}</div>
+        <div class="combatant-info">
+          <div class="combatant-name">${esc(c.name)}</div>
+          <div class="combatant-type">${esc(c.type||'')}${(c.conditions||[]).length?` · <span style="color:var(--red)">${c.conditions.join(', ')}</span>`:''}</div>
+        </div>
+        <div class="hp-row">
+          <div class="hp-bar-wrap"><div class="hp-bar-fill ${hpClass}" style="width:${pct}%"></div></div>
+          <div class="hp-display" style="color:${c.hp<=0?'var(--red)':c.hp/c.maxHp<.26?'var(--red)':c.hp/c.maxHp<.61?'var(--orange)':'var(--green)'};">${c.maxHp?c.hp+'/'+c.maxHp:'—'}</div>
+        </div>
+      </div>
+      <div class="combatant-expand">
+        <div class="hp-adjust">
+          <button class="btn btn-sm btn-danger" onclick="adjustHp('${c.id}',-1)">−1</button>
+          <button class="btn btn-sm btn-danger" onclick="adjustHp('${c.id}',-5)">−5</button>
+          <button class="btn btn-sm" onclick="adjustHp('${c.id}',1)">+1</button>
+          <button class="btn btn-sm" onclick="adjustHp('${c.id}',5)">+5</button>
+          <button class="btn btn-sm" onclick="healFull('${c.id}')" style="margin-left:auto;">Full HP</button>
+          <button class="btn btn-sm btn-danger" onclick="removeCombatant('${c.id}')">Remove</button>
+        </div>
+        <div class="conditions-wrap">${condChips}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function nextTurn(){
+  if(!encounter.combatants.length)return;
+  encounter.activeTurn=(encounter.activeTurn+1);
+  if(encounter.activeTurn>=encounter.combatants.length){encounter.activeTurn=0;encounter.round++;}
+  renderEncounter();
+}
+function changeRound(d){encounter.round=Math.max(1,encounter.round+d);renderEncounter();}
+function toggleExpand(id){expandedId=expandedId===id?null:id;renderEncounter();}
+function adjustHp(id,delta){
+  const c=encounter.combatants.find(x=>x.id===id);if(!c||!c.maxHp)return;
+  c.hp=Math.max(0,Math.min(c.maxHp,c.hp+delta));renderEncounter();
+}
+function healFull(id){const c=encounter.combatants.find(x=>x.id===id);if(c)c.hp=c.maxHp;renderEncounter();}
+function toggleCond(id,cond){
+  const c=encounter.combatants.find(x=>x.id===id);if(!c)return;
+  if(!c.conditions)c.conditions=[];
+  const i=c.conditions.indexOf(cond);if(i>=0)c.conditions.splice(i,1);else c.conditions.push(cond);
+  renderEncounter();
+}
+function removeCombatant(id){encounter.combatants=encounter.combatants.filter(x=>x.id!==id);expandedId=null;renderEncounter();}
+function clearEncounter(){if(!confirm('Clear all combatants and reset round?'))return;encounter={round:1,activeTurn:0,combatants:[]};expandedId=null;renderEncounter();}
+
+// ── ADD COMBATANT ──
+function openAddCombatant(){
+  setSource('manual');selectedSourceEntry=null;
+  document.getElementById('inCombName').value='';document.getElementById('inCombInit').value='';
+  document.getElementById('inCombHP').value='';document.getElementById('inCombType').value='creature';
+  openModal('modal-combatant');
+}
+function setSource(src){
+  addSource=src;
+  ['manual','char','bestiary'].forEach(s=>document.getElementById('src'+s.charAt(0).toUpperCase()+s.slice(1)).style.borderColor=s===src?'var(--gold)':'var(--border2)');
+  const showList=src!=='manual';
+  document.getElementById('sourceList').style.display=showList?'block':'none';
+  document.getElementById('manualFields').style.display=showList?'none':'block';
+  if(src==='char')populateSourceList('char');
+  if(src==='bestiary')populateSourceList('bestiary');
+}
+function populateSourceList(type){
+  const d=getData();
+  const items=type==='char'?(d.characters||[]):( d.bestiary||[]);
+  const inner=document.getElementById('sourceListInner');
+  if(!items.length){inner.innerHTML='<div class="empty-state" style="padding:12px;">None found.</div>';return;}
+  inner.innerHTML=items.map(e=>`
+    <div class="source-item" onclick="selectSourceEntry('${e.id}','${esc(e.name)}','${type}')">
+      <div class="source-item-name">${esc(e.name)}</div>
+      <div class="source-item-sub">${type==='char'?'Character':'Creature · '+(e.type||'')}</div>
+    </div>`).join('');
+}
+function selectSourceEntry(id,name,type){
+  selectedSourceEntry={id,name,type};
+  // Pre-fill manual fields from the entry
+  const d=getData();
+  let hp=20;
+  if(type==='char'){const c=(d.characters||[]).find(x=>x.id===id);if(c&&c.stats){const hpStat=Object.values(c.stats).find((_,i)=>Object.keys(c.stats)[i].toLowerCase().includes('hp')||Object.keys(c.stats)[i].toLowerCase().includes('health'));if(hpStat)hp=parseInt(hpStat)||20;}}
+  document.getElementById('inCombName').value=name;
+  document.getElementById('inCombHP').value=hp;
+  document.getElementById('inCombType').value=type==='char'?'player':'creature';
+  document.getElementById('sourceList').style.display='none';
+  document.getElementById('manualFields').style.display='block';
+}
+function addCombatant(){
+  const name=document.getElementById('inCombName').value.trim();if(!name)return;
+  const initVal=parseInt(document.getElementById('inCombInit').value)||d(6)+d(6);
+  const maxHp=parseInt(document.getElementById('inCombHP').value)||0;
+  const comb={id:uid(),name,type:document.getElementById('inCombType').value,init:initVal,hp:maxHp,maxHp,conditions:[],sourceId:selectedSourceEntry?.id||null};
+  encounter.combatants.push(comb);
+  // Sort by initiative desc
+  encounter.combatants.sort((a,b)=>b.init-a.init);
+  encounter.activeTurn=0;
+  closeModal('modal-combatant');renderEncounter();
+}
+
+// ── MOOD ──
+function cycleMood(){
+  const el=document.getElementById('moodOptions');
+  el.innerHTML=MOODS.map((m,i)=>`<button class="btn${i===moodIdx?' btn-gold':''}" onclick="setMood(${i})">${m}</button>`).join('');
+  openModal('modal-mood');
+}
+function setMood(i){moodIdx=i;document.getElementById('moodLabel').textContent=MOODS[i];closeModal('modal-mood');}
+
+// ── NOTES ──
+function loadNotes(){
+  const d=getData();const pt=d.playTable||{};
+  document.getElementById('notesBody').value=pt.notes||'';
+  loot=pt.loot||[];renderLoot();
+}
+function saveNotes(){
+  clearTimeout(notesTimer);
+  notesTimer=setTimeout(()=>{
+    const d=getData();if(!d.playTable)d.playTable={};
+    d.playTable.notes=document.getElementById('notesBody').value;
+    d.playTable.loot=loot;saveData(d);
+  },800);
+}
+function renderLoot(){
+  const el=document.getElementById('lootList');
+  if(!loot.length){el.innerHTML='<div style="font-size:13px;color:var(--text3);font-style:italic;">No loot recorded.</div>';return;}
+  el.innerHTML=loot.map((item,i)=>`<div class="loot-item"><span style="flex:1;font-size:14px;">${esc(item)}</span><button style="background:none;border:none;color:var(--red);cursor:pointer;" onclick="removeLoot(${i})">×</button></div>`).join('');
+}
+function addLootItem(){
+  const name=prompt('Add loot item:');if(!name||!name.trim())return;
+  loot.push(name.trim());renderLoot();saveNotes();
+}
+function removeLoot(i){loot.splice(i,1);renderLoot();saveNotes();}
+
+function buildQuickRef(){
+  const d=getData();const meta=d.meta||{};const sys=meta.diceSystem||'2d6';
+  const refs={'2d6':'<b>2d6 Resolution</b><br>10+ Full success<br>7–9 Partial success — success at a cost<br>6− Failure — GM makes a move','d20':'<b>d20 Resolution</b><br>Roll d20 + modifier vs DC<br>DC 10 Easy · DC 15 Moderate · DC 20 Hard<br>Nat 20 Critical · Nat 1 Fumble','d6pool':'<b>d6 Pool</b><br>Roll Xd6, count 5s and 6s as successes<br>0 successes: Failure<br>1 success: Partial<br>2+ successes: Full success','custom':'See your Rulebook for resolution rules.'};
+  document.getElementById('quickRef').innerHTML=refs[sys]||refs['2d6'];
+}
+
+// ── PLAYQUEUE (from bestiary) ──
+function checkPlayQueue(){
+  const d=getData();const queue=d.playQueue||[];if(!queue.length)return;
+  const bestiary=d.bestiary||[];
+  queue.forEach(id=>{
+    const entry=bestiary.find(x=>x.id===id);if(!entry)return;
+    if(encounter.combatants.some(c=>c.sourceId===id))return;
+    encounter.combatants.push({id:uid(),name:entry.name,type:entry.type||'creature',init:d(6)+d(6),hp:20,maxHp:20,conditions:[],sourceId:id});
+  });
+  d.playQueue=[];saveData(d);
+  if(queue.length){switchTab('encounter');encounter.combatants.sort((a,b)=>b.init-a.init);renderEncounter();}
+}
+
+// ── MODAL ──
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
+
+// ── INIT ──
+checkPlayQueue();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkPlayQueue();});
+</script>
+</body>
+</html>

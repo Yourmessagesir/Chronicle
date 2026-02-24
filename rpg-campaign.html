@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Campaign — Chronicle & Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;
+  --border:#2e2e42;--border2:#3d3d58;
+  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#8a6a20;
+  --text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;
+  --red:#cc5555;--green:#55aa77;--accent:#7b6cee;--purple:#c97ac9;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;padding:0 0 60px;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4;}
+
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:10;}
+.topbar-back{background:none;border:none;color:var(--text2);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;cursor:pointer;padding:4px 0;}
+.topbar-back:active{color:var(--gold);}
+.topbar-title{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:.08em;flex:1;}
+.btn{padding:6px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.btn-sm{padding:4px 9px;font-size:9px;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+
+/* ── TABS ── */
+.mode-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg2);}
+.mode-tab{flex:1;padding:10px 4px;text-align:center;font-family:'Cinzel',serif;font-size:8px;letter-spacing:.08em;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.mode-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+.view{display:none;padding:14px;}
+.view.active{display:block;}
+.section-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;color:var(--text3);text-transform:uppercase;margin:16px 0 9px;}
+.section-label:first-child{margin-top:0;}
+
+/* ── OVERVIEW ── */
+.overview-card{background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--gold3);border-radius:5px;padding:14px;margin-bottom:12px;}
+.overview-field{margin-bottom:10px;}
+.overview-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.12em;color:var(--text3);margin-bottom:4px;}
+.overview-input{background:none;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;padding:3px 0;line-height:1.6;}
+.overview-input:focus{border-bottom-color:var(--gold);}
+textarea.overview-input{resize:none;min-height:60px;}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);transition:background .3s;flex-shrink:0;}
+.save-dot.saved{background:var(--green);}
+
+/* ── SESSION LOG ── */
+.session-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:5px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.session-card:active{border-left-color:var(--gold);}
+.session-num{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.1em;color:var(--accent);margin-bottom:3px;}
+.session-title{font-family:'Cinzel',serif;font-size:12px;color:var(--text);letter-spacing:.04em;margin-bottom:3px;}
+.session-meta{font-size:12px;color:var(--text3);}
+.session-summary{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.5;font-style:italic;}
+
+/* ── FACTIONS ── */
+.faction-card{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.faction-card:active{border-color:var(--gold3);}
+.faction-status{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.status-ally{background:var(--green);}
+.status-neutral{background:var(--gold);}
+.status-hostile{background:var(--red);}
+.status-unknown{background:var(--text3);}
+.faction-name{font-family:'Cinzel',serif;font-size:12px;color:var(--text);flex:1;}
+.faction-note{font-size:12px;color:var(--text3);}
+
+/* ── THREADS ── */
+.thread-card{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:10px 13px;margin-bottom:7px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;}
+.thread-card:active{border-color:var(--gold3);}
+.thread-status-badge{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.08em;padding:2px 8px;border-radius:8px;flex-shrink:0;margin-top:2px;}
+.ts-open{background:rgba(123,108,238,.2);color:var(--accent);border:1px solid rgba(123,108,238,.3);}
+.ts-resolved{background:rgba(85,170,119,.2);color:var(--green);border:1px solid rgba(85,170,119,.3);}
+.ts-abandoned{background:rgba(90,88,112,.2);color:var(--text3);border:1px solid var(--border);}
+.thread-title{font-family:'Cinzel',serif;font-size:11px;color:var(--text);letter-spacing:.04em;flex:1;}
+.thread-note{font-size:12px;color:var(--text3);margin-top:3px;}
+
+/* ── TIMELINE ── */
+.timeline-item{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start;}
+.timeline-dot{width:8px;height:8px;border-radius:50%;background:var(--gold3);border:2px solid var(--gold);flex-shrink:0;margin-top:5px;}
+.timeline-line{position:relative;}
+.timeline-line::after{content:'';position:absolute;top:13px;left:3px;width:2px;bottom:-10px;background:var(--border);}
+.timeline-date{font-family:'Cinzel',serif;font-size:9px;color:var(--gold);letter-spacing:.06em;margin-bottom:2px;}
+.timeline-event{font-size:14px;color:var(--text2);}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-top:1px solid var(--gold3);border-radius:8px 8px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:.1em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.field{margin-bottom:12px;}
+label{display:block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:5px;}
+input[type="text"],input[type="date"],textarea,select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;}
+input:focus,textarea:focus{border-color:var(--gold);}
+textarea{resize:vertical;min-height:70px;line-height:1.6;}
+select option{background:var(--bg3);}
+.modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:space-between;align-items:center;}
+.empty-state{text-align:center;padding:24px 16px;color:var(--text3);font-style:italic;font-size:13px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="topbar-back" onclick="goBack()">← Hub</button>
+  <div class="topbar-title" id="topTitle">Campaign</div>
+  <button class="btn btn-sm btn-gold" id="topAddBtn" onclick="topAdd()">+ New</button>
+</div>
+
+<div class="mode-tabs">
+  <div class="mode-tab active" id="tabOverview" onclick="switchTab('overview')">Overview</div>
+  <div class="mode-tab" id="tabSessions" onclick="switchTab('sessions')">Sessions</div>
+  <div class="mode-tab" id="tabFactions" onclick="switchTab('factions')">Factions</div>
+  <div class="mode-tab" id="tabThreads" onclick="switchTab('threads')">Threads</div>
+  <div class="mode-tab" id="tabTimeline" onclick="switchTab('timeline')">Timeline</div>
+</div>
+
+<!-- OVERVIEW -->
+<div class="view active" id="view-overview">
+  <div class="overview-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span style="font-family:Cinzel,serif;font-size:9px;letter-spacing:.12em;color:var(--text3);">CAMPAIGN DETAILS</span>
+      <div class="save-dot" id="saveDot"></div>
+    </div>
+    <div class="overview-field">
+      <div class="overview-label">Campaign Title</div>
+      <input type="text" class="overview-input" id="ovTitle" placeholder="Untitled Campaign" oninput="scheduleOverviewSave()">
+    </div>
+    <div class="overview-field">
+      <div class="overview-label">Setting / World</div>
+      <input type="text" class="overview-input" id="ovSetting" placeholder="Where does the story take place?" oninput="scheduleOverviewSave()">
+    </div>
+    <div class="overview-field">
+      <div class="overview-label">Premise</div>
+      <textarea class="overview-input" id="ovPremise" placeholder="What is this campaign about? What's at stake?" oninput="scheduleOverviewSave()"></textarea>
+    </div>
+    <div class="overview-field">
+      <div class="overview-label">GM Notes</div>
+      <textarea class="overview-input" id="ovGMNotes" placeholder="Private GM notes — secrets, future plans…" style="min-height:80px;" oninput="scheduleOverviewSave()"></textarea>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:12px;text-align:center;">
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--gold);" id="ovStatSessions">0</div>
+      <div style="font-family:Cinzel,serif;font-size:7px;letter-spacing:.1em;color:var(--text3);margin-top:3px;">SESSIONS</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:12px;text-align:center;">
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--gold);" id="ovStatThreads">0</div>
+      <div style="font-family:Cinzel,serif;font-size:7px;letter-spacing:.1em;color:var(--text3);margin-top:3px;">OPEN THREADS</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:12px;text-align:center;">
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--gold);" id="ovStatFactions">0</div>
+      <div style="font-family:Cinzel,serif;font-size:7px;letter-spacing:.1em;color:var(--text3);margin-top:3px;">FACTIONS</div>
+    </div>
+  </div>
+</div>
+
+<!-- SESSIONS -->
+<div class="view" id="view-sessions">
+  <div id="sessionList"></div>
+  <div id="sessionEmpty" class="empty-state">No sessions logged yet. Tap + New to add your first.</div>
+</div>
+
+<!-- FACTIONS -->
+<div class="view" id="view-factions">
+  <div id="factionList"></div>
+  <div id="factionEmpty" class="empty-state">No factions yet.</div>
+</div>
+
+<!-- THREADS -->
+<div class="view" id="view-threads">
+  <div id="threadList"></div>
+  <div id="threadEmpty" class="empty-state">No plot threads yet.</div>
+</div>
+
+<!-- TIMELINE -->
+<div class="view" id="view-timeline">
+  <div id="timelineList"></div>
+  <div id="timelineEmpty" class="empty-state">No timeline events yet.</div>
+</div>
+
+<!-- SESSION MODAL -->
+<div class="modal-overlay" id="modal-session">
+  <div class="modal">
+    <h2 id="sessionModalTitle">New Session</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="field"><label>Session #</label><input type="text" id="inSessNum" placeholder="1"></div>
+      <div class="field"><label>Date</label><input type="date" id="inSessDate"></div>
+    </div>
+    <div class="field"><label>Title</label><input type="text" id="inSessTitle" placeholder="e.g. The Ember Road"></div>
+    <div class="field"><label>Participants</label><input type="text" id="inSessPlayers" placeholder="Who played?"></div>
+    <div class="field"><label>Summary</label><textarea id="inSessSummary" placeholder="What happened this session?"></textarea></div>
+    <div class="field"><label>Outcome / Cliffhanger</label><input type="text" id="inSessOutcome" placeholder="How did it end?"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="delSessBtn" style="display:none;" onclick="deleteSession()">Delete</button>
+      <div style="display:flex;gap:8px;"><button class="btn" onclick="closeModal('modal-session')">Cancel</button><button class="btn btn-gold" onclick="saveSession()">Save ✦</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- FACTION MODAL -->
+<div class="modal-overlay" id="modal-faction">
+  <div class="modal">
+    <h2 id="factionModalTitle">New Faction</h2>
+    <div class="field"><label>Name</label><input type="text" id="inFacName" placeholder="Faction name…"></div>
+    <div class="field"><label>Status</label>
+      <select id="inFacStatus">
+        <option value="unknown">Unknown</option>
+        <option value="neutral">Neutral</option>
+        <option value="ally">Ally</option>
+        <option value="hostile">Hostile</option>
+      </select>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="inFacNotes" placeholder="Who are they? What do they want?"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="delFacBtn" style="display:none;" onclick="deleteFaction()">Delete</button>
+      <div style="display:flex;gap:8px;"><button class="btn" onclick="closeModal('modal-faction')">Cancel</button><button class="btn btn-gold" onclick="saveFaction()">Save ✦</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- THREAD MODAL -->
+<div class="modal-overlay" id="modal-thread">
+  <div class="modal">
+    <h2 id="threadModalTitle">New Thread</h2>
+    <div class="field"><label>Title</label><input type="text" id="inThTitle" placeholder="e.g. Who killed the Warden?"></div>
+    <div class="field"><label>Status</label>
+      <select id="inThStatus">
+        <option value="open">Open</option>
+        <option value="resolved">Resolved</option>
+        <option value="abandoned">Abandoned</option>
+      </select>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="inThNotes" placeholder="What do the players know? What's the truth?"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="delThBtn" style="display:none;" onclick="deleteThread()">Delete</button>
+      <div style="display:flex;gap:8px;"><button class="btn" onclick="closeModal('modal-thread')">Cancel</button><button class="btn btn-gold" onclick="saveThread()">Save ✦</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- TIMELINE MODAL -->
+<div class="modal-overlay" id="modal-timeline">
+  <div class="modal">
+    <h2 id="timelineModalTitle">New Event</h2>
+    <div class="field"><label>World Date / Era</label><input type="text" id="inTLDate" placeholder="e.g. Year 3, Day 14 · After the Burning"></div>
+    <div class="field"><label>Event</label><textarea id="inTLEvent" placeholder="What happened?"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="delTLBtn" style="display:none;" onclick="deleteTimeline()">Delete</button>
+      <div style="display:flex;gap:8px;"><button class="btn" onclick="closeModal('modal-timeline')">Cancel</button><button class="btn btn-gold" onclick="saveTimeline()">Save ✦</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function esc(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function getData(){try{return JSON.parse(localStorage.getItem('chronicle_ttrpg')||'{}');}catch{return {};}}
+function saveData(d){localStorage.setItem('chronicle_ttrpg',JSON.stringify(d));}
+function getCampaign(){const d=getData();return d.campaign||{title:'',setting:'',premise:'',gmNotes:'',sessions:[],factions:[],threads:[],timeline:[]};}
+function saveCampaign(c){const d=getData();d.campaign=c;saveData(d);}
+
+let currentTab='overview';
+let editingId=null;
+let overviewTimer=null;
+
+// ── TABS ──
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
+  document.getElementById('view-'+tab).classList.add('active');
+  const labels={overview:'Campaign',sessions:'Sessions',factions:'Factions',threads:'Threads',timeline:'Timeline'};
+  document.getElementById('topTitle').textContent=labels[tab];
+  const hideAdd=['overview'];
+  document.getElementById('topAddBtn').style.display=hideAdd.includes(tab)?'none':'inline-block';
+  if(tab!=='overview')render(tab);
+}
+function topAdd(){
+  const modals={sessions:'modal-session',factions:'modal-faction',threads:'modal-thread',timeline:'modal-timeline'};
+  const modal=modals[currentTab];if(!modal)return;
+  editingId=null;clearModalInputs(modal);
+  document.getElementById('del'+currentTab.slice(0,4).charAt(0).toUpperCase()+currentTab.slice(0,4).slice(1)+'Btn')||null;
+  openModal(modal);
+}
+function clearModalInputs(modalId){
+  document.getElementById(modalId).querySelectorAll('input,textarea,select').forEach(el=>{if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';});
+  // Hide delete btns
+  ['delSessBtn','delFacBtn','delThBtn','delTLBtn'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+}
+
+// ── OVERVIEW ──
+function loadOverview(){
+  const c=getCampaign();
+  document.getElementById('ovTitle').value=c.title||'';
+  document.getElementById('ovSetting').value=c.setting||'';
+  document.getElementById('ovPremise').value=c.premise||'';
+  document.getElementById('ovGMNotes').value=c.gmNotes||'';
+  const openThreads=(c.threads||[]).filter(t=>t.status==='open').length;
+  document.getElementById('ovStatSessions').textContent=(c.sessions||[]).length;
+  document.getElementById('ovStatThreads').textContent=openThreads;
+  document.getElementById('ovStatFactions').textContent=(c.factions||[]).length;
+}
+function scheduleOverviewSave(){
+  document.getElementById('saveDot').className='save-dot';
+  clearTimeout(overviewTimer);
+  overviewTimer=setTimeout(()=>{
+    const c=getCampaign();
+    c.title=document.getElementById('ovTitle').value.trim();
+    c.setting=document.getElementById('ovSetting').value.trim();
+    c.premise=document.getElementById('ovPremise').value.trim();
+    c.gmNotes=document.getElementById('ovGMNotes').value.trim();
+    saveCampaign(c);
+    document.getElementById('saveDot').className='save-dot saved';
+    setTimeout(()=>document.getElementById('saveDot').className='save-dot',2000);
+  },800);
+}
+
+// ── RENDER ──
+function render(tab){
+  const c=getCampaign();
+  if(tab==='sessions')renderSessions(c);
+  else if(tab==='factions')renderFactions(c);
+  else if(tab==='threads')renderThreads(c);
+  else if(tab==='timeline')renderTimeline(c);
+}
+
+function renderSessions(c){
+  const list=document.getElementById('sessionList');
+  const empty=document.getElementById('sessionEmpty');
+  const sessions=[...(c.sessions||[])].reverse();
+  if(!sessions.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=sessions.map(s=>`
+    <div class="session-card" onclick="editSession('${s.id}')">
+      <div class="session-num">SESSION ${esc(s.num||'?')} ${s.date?'· '+s.date:''}</div>
+      <div class="session-title">${esc(s.title||'Untitled Session')}</div>
+      <div class="session-meta">${esc(s.participants||'')}</div>
+      ${s.summary?`<div class="session-summary">${esc(s.summary.slice(0,160))}${s.summary.length>160?'…':''}</div>`:''}
+    </div>`).join('');
+}
+function renderFactions(c){
+  const list=document.getElementById('factionList');const empty=document.getElementById('factionEmpty');
+  const factions=c.factions||[];
+  if(!factions.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const statusClass={ally:'status-ally',neutral:'status-neutral',hostile:'status-hostile',unknown:'status-unknown'};
+  list.innerHTML=factions.map(f=>`
+    <div class="faction-card" onclick="editFaction('${f.id}')">
+      <div class="faction-status ${statusClass[f.status]||'status-unknown'}"></div>
+      <div style="flex:1;">
+        <div class="faction-name">${esc(f.name)}</div>
+        ${f.notes?`<div class="faction-note">${esc(f.notes.slice(0,80))}${f.notes.length>80?'…':''}</div>`:''}
+      </div>
+      <span style="font-family:Cinzel,serif;font-size:8px;letter-spacing:.06em;color:var(--text3);">${esc(f.status||'unknown')}</span>
+    </div>`).join('');
+}
+function renderThreads(c){
+  const list=document.getElementById('threadList');const empty=document.getElementById('threadEmpty');
+  const threads=c.threads||[];
+  if(!threads.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const sClass={open:'ts-open',resolved:'ts-resolved',abandoned:'ts-abandoned'};
+  // Sort: open first
+  const sorted=[...threads].sort((a,b)=>a.status==='open'?-1:1);
+  list.innerHTML=sorted.map(t=>`
+    <div class="thread-card" onclick="editThread('${t.id}')">
+      <span class="thread-status-badge ${sClass[t.status]||'ts-open'}">${t.status||'open'}</span>
+      <div>
+        <div class="thread-title">${esc(t.title)}</div>
+        ${t.notes?`<div class="thread-note">${esc(t.notes.slice(0,80))}${t.notes.length>80?'…':''}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+function renderTimeline(c){
+  const list=document.getElementById('timelineList');const empty=document.getElementById('timelineEmpty');
+  const events=c.timeline||[];
+  if(!events.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=events.map((e,i)=>`
+    <div class="timeline-item">
+      <div class="timeline-dot ${i<events.length-1?'timeline-line':''}"></div>
+      <div style="flex:1;cursor:pointer;" onclick="editTimeline('${e.id}')">
+        <div class="timeline-date">${esc(e.worldDate||'Unknown time')}</div>
+        <div class="timeline-event">${esc(e.event)}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── SESSIONS CRUD ──
+function editSession(id){
+  const c=getCampaign();const s=c.sessions.find(x=>x.id===id);if(!s)return;
+  editingId=id;
+  document.getElementById('sessionModalTitle').textContent='Edit Session';
+  document.getElementById('inSessNum').value=s.num||'';
+  document.getElementById('inSessDate').value=s.date||'';
+  document.getElementById('inSessTitle').value=s.title||'';
+  document.getElementById('inSessPlayers').value=s.participants||'';
+  document.getElementById('inSessSummary').value=s.summary||'';
+  document.getElementById('inSessOutcome').value=s.outcome||'';
+  document.getElementById('delSessBtn').style.display='inline-block';
+  openModal('modal-session');
+}
+function saveSession(){
+  const title=document.getElementById('inSessTitle').value.trim();if(!title)return;
+  const c=getCampaign();
+  const s={id:editingId||uid(),num:document.getElementById('inSessNum').value.trim(),date:document.getElementById('inSessDate').value,title,participants:document.getElementById('inSessPlayers').value.trim(),summary:document.getElementById('inSessSummary').value.trim(),outcome:document.getElementById('inSessOutcome').value.trim()};
+  if(editingId){const i=c.sessions.findIndex(x=>x.id===editingId);if(i>=0)c.sessions[i]=s;else c.sessions.push(s);}
+  else c.sessions.push(s);
+  saveCampaign(c);closeModal('modal-session');renderSessions(c);loadOverview();
+}
+function deleteSession(){if(!editingId||!confirm('Delete session?'))return;const c=getCampaign();c.sessions=c.sessions.filter(x=>x.id!==editingId);saveCampaign(c);closeModal('modal-session');renderSessions(c);loadOverview();}
+
+// ── FACTIONS CRUD ──
+function editFaction(id){
+  const c=getCampaign();const f=c.factions.find(x=>x.id===id);if(!f)return;
+  editingId=id;document.getElementById('factionModalTitle').textContent='Edit Faction';
+  document.getElementById('inFacName').value=f.name||'';document.getElementById('inFacStatus').value=f.status||'unknown';document.getElementById('inFacNotes').value=f.notes||'';
+  document.getElementById('delFacBtn').style.display='inline-block';openModal('modal-faction');
+}
+function saveFaction(){
+  const name=document.getElementById('inFacName').value.trim();if(!name)return;
+  const c=getCampaign();
+  const f={id:editingId||uid(),name,status:document.getElementById('inFacStatus').value,notes:document.getElementById('inFacNotes').value.trim()};
+  if(editingId){const i=c.factions.findIndex(x=>x.id===editingId);if(i>=0)c.factions[i]=f;else c.factions.push(f);}
+  else c.factions.push(f);
+  saveCampaign(c);closeModal('modal-faction');renderFactions(c);loadOverview();
+}
+function deleteFaction(){if(!editingId||!confirm('Delete faction?'))return;const c=getCampaign();c.factions=c.factions.filter(x=>x.id!==editingId);saveCampaign(c);closeModal('modal-faction');renderFactions(c);loadOverview();}
+
+// ── THREADS CRUD ──
+function editThread(id){
+  const c=getCampaign();const t=c.threads.find(x=>x.id===id);if(!t)return;
+  editingId=id;document.getElementById('threadModalTitle').textContent='Edit Thread';
+  document.getElementById('inThTitle').value=t.title||'';document.getElementById('inThStatus').value=t.status||'open';document.getElementById('inThNotes').value=t.notes||'';
+  document.getElementById('delThBtn').style.display='inline-block';openModal('modal-thread');
+}
+function saveThread(){
+  const title=document.getElementById('inThTitle').value.trim();if(!title)return;
+  const c=getCampaign();
+  const t={id:editingId||uid(),title,status:document.getElementById('inThStatus').value,notes:document.getElementById('inThNotes').value.trim()};
+  if(editingId){const i=c.threads.findIndex(x=>x.id===editingId);if(i>=0)c.threads[i]=t;else c.threads.push(t);}
+  else c.threads.push(t);
+  saveCampaign(c);closeModal('modal-thread');renderThreads(c);loadOverview();
+}
+function deleteThread(){if(!editingId||!confirm('Delete thread?'))return;const c=getCampaign();c.threads=c.threads.filter(x=>x.id!==editingId);saveCampaign(c);closeModal('modal-thread');renderThreads(c);loadOverview();}
+
+// ── TIMELINE CRUD ──
+function editTimeline(id){
+  const c=getCampaign();const e=c.timeline.find(x=>x.id===id);if(!e)return;
+  editingId=id;document.getElementById('timelineModalTitle').textContent='Edit Event';
+  document.getElementById('inTLDate').value=e.worldDate||'';document.getElementById('inTLEvent').value=e.event||'';
+  document.getElementById('delTLBtn').style.display='inline-block';openModal('modal-timeline');
+}
+function saveTimeline(){
+  const event=document.getElementById('inTLEvent').value.trim();if(!event)return;
+  const c=getCampaign();
+  const e={id:editingId||uid(),worldDate:document.getElementById('inTLDate').value.trim(),event};
+  if(editingId){const i=c.timeline.findIndex(x=>x.id===editingId);if(i>=0)c.timeline[i]=e;else c.timeline.push(e);}
+  else c.timeline.push(e);
+  saveCampaign(c);closeModal('modal-timeline');renderTimeline(c);
+}
+function deleteTimeline(){if(!editingId||!confirm('Delete event?'))return;const c=getCampaign();c.timeline=c.timeline.filter(x=>x.id!==editingId);saveCampaign(c);closeModal('modal-timeline');renderTimeline(c);}
+
+// ── MODAL ──
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow='hidden';
+  const titleInputs={sessions:'inSessTitle','modal-session':'inSessTitle','modal-faction':'inFacName','modal-thread':'inThTitle','modal-timeline':'inTLDate'};
+  const inp=document.getElementById(titleInputs[id]);if(inp)setTimeout(()=>inp.focus(),100);
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';editingId=null;}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
+
+function goBack(){if(window.parent&&window.parent!==window){window.parent.postMessage({type:'navigate',module:'rpg.html'},'*');}else{window.location.href='rpg.html';}}
+
+loadOverview();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadOverview();if(currentTab!=='overview')render(currentTab);}});
+</script>
+</body>
+</html>

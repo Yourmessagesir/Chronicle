@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bestiary — Chronicle & Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;
+  --border:#2e2e42;--border2:#3d3d58;
+  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#8a6a20;
+  --text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;
+  --red:#cc5555;--green:#55aa77;--accent:#7b6cee;--purple:#c97ac9;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;padding:0 0 60px;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4;}
+
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:10;}
+.topbar-back{background:none;border:none;color:var(--text2);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;cursor:pointer;padding:4px 0;}
+.topbar-back:active{color:var(--gold);}
+.topbar-title{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:.08em;flex:1;}
+.btn{padding:6px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.btn-sm{padding:4px 9px;font-size:9px;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+
+/* ── FILTER BAR ── */
+.filter-bar{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;gap:7px;overflow-x:auto;}
+.filter-chip{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.08em;padding:4px 10px;border-radius:10px;border:1px solid var(--border);color:var(--text3);cursor:pointer;white-space:nowrap;transition:all .15s;}
+.filter-chip.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.1);}
+
+/* ── SEARCH ── */
+.search-row{padding:10px 14px;border-bottom:1px solid var(--border);}
+.search-input{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;}
+.search-input:focus{border-color:var(--gold);}
+
+/* ── LIST ── */
+.content{padding:12px 14px;}
+.entry-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:all .15s;}
+.entry-card:active{border-color:var(--gold3);}
+.entry-card-header{display:flex;align-items:center;gap:10px;padding:12px 14px;}
+.entry-icon{font-size:24px;flex-shrink:0;}
+.entry-info{flex:1;min-width:0;}
+.entry-name{font-family:'Cinzel',serif;font-size:13px;color:var(--text);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.entry-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.entry-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.tag{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.08em;padding:2px 7px;border-radius:8px;border:1px solid transparent;}
+.tag-creature{background:rgba(204,85,85,.15);color:var(--red);border-color:rgba(204,85,85,.3);}
+.tag-npc{background:rgba(123,108,238,.15);color:var(--accent);border-color:rgba(123,108,238,.3);}
+.tag-boss{background:rgba(201,168,76,.15);color:var(--gold);border-color:rgba(201,168,76,.3);}
+.tag-friendly{background:rgba(85,170,119,.15);color:var(--green);border-color:rgba(85,170,119,.3);}
+.tag-faction{background:rgba(201,122,201,.15);color:var(--purple);border-color:rgba(201,122,201,.3);}
+.entry-chevron{color:var(--text3);font-size:16px;flex-shrink:0;}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-style:italic;font-size:14px;}
+
+/* ── STAT BLOCK ── */
+.stat-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;}
+.stat-pill{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:6px 10px;text-align:center;min-width:52px;}
+.stat-pill-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.1em;color:var(--text3);margin-bottom:2px;}
+.stat-pill-val{font-family:'Cinzel',serif;font-size:16px;color:var(--gold);}
+
+.ability-card{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:9px 12px;margin-bottom:6px;}
+.ability-name{font-family:'Cinzel',serif;font-size:10px;color:var(--gold2);letter-spacing:.06em;margin-bottom:3px;}
+.ability-desc{font-size:13px;color:var(--text2);line-height:1.5;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-top:1px solid var(--gold3);border-radius:8px 8px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:.1em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.field{margin-bottom:12px;}
+label{display:block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:5px;}
+input[type="text"],textarea,select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;}
+input:focus,textarea:focus{border-color:var(--gold);}
+textarea{resize:vertical;min-height:60px;line-height:1.6;}
+select option{background:var(--bg3);}
+.modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:space-between;align-items:center;}
+.section-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;color:var(--text3);text-transform:uppercase;margin:14px 0 8px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="topbar-back" onclick="goBack()">← Hub</button>
+  <div class="topbar-title">Bestiary</div>
+  <button class="btn btn-sm btn-gold" onclick="openNewEntry()">+ New</button>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-chip active" data-filter="all" onclick="setFilter('all')">All</div>
+  <div class="filter-chip" data-filter="creature" onclick="setFilter('creature')">Creatures</div>
+  <div class="filter-chip" data-filter="npc" onclick="setFilter('npc')">NPCs</div>
+  <div class="filter-chip" data-filter="boss" onclick="setFilter('boss')">Bosses</div>
+  <div class="filter-chip" data-filter="friendly" onclick="setFilter('friendly')">Friendly</div>
+  <div class="filter-chip" data-filter="faction" onclick="setFilter('faction')">Factions</div>
+</div>
+
+<div class="search-row">
+  <input class="search-input" type="text" id="searchInput" placeholder="Search bestiary…" oninput="renderList()">
+</div>
+
+<div class="content">
+  <div id="entryList"></div>
+  <div id="emptyState" class="empty-state" style="display:none;">
+    No entries yet.<br>Tap + New to add a creature or NPC.
+  </div>
+</div>
+
+<!-- ENTRY DETAIL (overlay) -->
+<div id="detailView" style="display:none;">
+  <div class="topbar" style="position:sticky;top:0;z-index:10;">
+    <button class="topbar-back" onclick="closeDetail()">← Back</button>
+    <div class="topbar-title" id="detailTitle">Entry</div>
+    <button class="btn btn-sm" onclick="editCurrentEntry()">Edit</button>
+  </div>
+  <div style="padding:14px;" id="detailBody"></div>
+</div>
+
+<!-- ENTRY MODAL -->
+<div class="modal-overlay" id="modal-entry">
+  <div class="modal">
+    <h2 id="entryModalTitle">New Entry</h2>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="field"><label>Name</label><input type="text" id="inputName" placeholder="e.g. Ashwraith"></div>
+      <div class="field"><label>Type</label>
+        <select id="inputType">
+          <option value="creature">Creature</option>
+          <option value="npc">NPC</option>
+          <option value="boss">Boss</option>
+          <option value="friendly">Friendly</option>
+          <option value="faction">Faction</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field"><label>Description</label><textarea id="inputDesc" placeholder="Appearance, lore, behaviour…" style="min-height:70px;"></textarea></div>
+
+    <div class="section-label">Stat Block</div>
+    <div id="statFields" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;"></div>
+
+    <div class="section-label">Special Abilities</div>
+    <div id="abilityFields"></div>
+    <button class="btn btn-sm" onclick="addAbilityField()" style="margin-bottom:12px;">+ Add Ability</button>
+
+    <div class="section-label">Loot / Rewards</div>
+    <div class="field"><textarea id="inputLoot" placeholder="Items dropped, XP rewarded, information gained…" style="min-height:50px;"></textarea></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteEntryBtn" style="display:none;" onclick="deleteEntry()">Delete</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="closeModal('modal-entry')">Cancel</button>
+        <button class="btn btn-gold" onclick="saveEntry()">Save ✦</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function esc(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function getData(){try{return JSON.parse(localStorage.getItem('chronicle_ttrpg')||'{}');}catch{return {};}}
+function saveData(d){localStorage.setItem('chronicle_ttrpg',JSON.stringify(d));}
+function getBestiary(){const d=getData();return d.bestiary||[];}
+function getTemplate(){const d=getData();return d.sheet_template||{stats:[]};}
+
+let activeFilter='all';
+let editingId=null;
+let detailId=null;
+
+// ── ICONS ──
+const TYPE_ICONS={creature:'🐉',npc:'🧑',boss:'💀',friendly:'🌿',faction:'⚔️'};
+const TAG_CLASS={creature:'tag-creature',npc:'tag-npc',boss:'tag-boss',friendly:'tag-friendly',faction:'tag-faction'};
+
+// ── FILTER ──
+function setFilter(f){
+  activeFilter=f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active',c.dataset.filter===f));
+  renderList();
+}
+
+// ── LIST ──
+function renderList(){
+  const search=document.getElementById('searchInput').value.toLowerCase();
+  let entries=getBestiary();
+  if(activeFilter!=='all')entries=entries.filter(e=>e.type===activeFilter);
+  if(search)entries=entries.filter(e=>(e.name||'').toLowerCase().includes(search)||(e.description||'').toLowerCase().includes(search));
+
+  const list=document.getElementById('entryList');
+  const empty=document.getElementById('emptyState');
+
+  if(!entries.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+
+  list.innerHTML=entries.map(e=>{
+    const tmpl=getTemplate();
+    const statSnippet=(tmpl.stats||[]).slice(0,3).map(s=>{
+      const v=e.stats&&e.stats[s.id]!==undefined?e.stats[s.id]:'—';
+      return `<span style="font-family:Cinzel,serif;font-size:9px;color:var(--text3);">${esc(s.label||s.name)} <span style="color:var(--gold2)">${esc(v)}</span></span>`;
+    }).join('<span style="color:var(--border2);margin:0 4px;">·</span>');
+
+    return `<div class="entry-card" onclick="openDetail('${e.id}')">
+      <div class="entry-card-header">
+        <div class="entry-icon">${TYPE_ICONS[e.type]||'📌'}</div>
+        <div class="entry-info">
+          <div class="entry-name">${esc(e.name||'Unnamed')}</div>
+          <div class="entry-sub">${statSnippet||'No stats defined'}</div>
+          <div class="entry-tags" style="margin-top:5px;">
+            <span class="tag ${TAG_CLASS[e.type]||''}">${e.type||'creature'}</span>
+            ${(e.abilities||[]).length?`<span class="tag" style="background:var(--bg4);color:var(--text3);border-color:var(--border);">${e.abilities.length} abilities</span>`:''}
+          </div>
+        </div>
+        <div class="entry-chevron">›</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── DETAIL VIEW ──
+function openDetail(id){
+  detailId=id;
+  const entries=getBestiary();
+  const e=entries.find(x=>x.id===id);
+  if(!e)return;
+  const tmpl=getTemplate();
+
+  document.querySelector('.filter-bar').style.display='none';
+  document.querySelector('.search-row').style.display='none';
+  document.querySelector('.content').style.display='none';
+  document.getElementById('detailView').style.display='block';
+  document.getElementById('detailTitle').textContent=e.name||'Entry';
+
+  const statPills=(tmpl.stats||[]).map(s=>{
+    const v=e.stats&&e.stats[s.id]!==undefined?e.stats[s.id]:'—';
+    return `<div class="stat-pill"><div class="stat-pill-label">${esc(s.label||s.name)}</div><div class="stat-pill-val">${esc(v)}</div></div>`;
+  }).join('');
+
+  const abilities=(e.abilities||[]).map(a=>`
+    <div class="ability-card">
+      <div class="ability-name">${esc(a.name)}</div>
+      <div class="ability-desc">${esc(a.desc)}</div>
+    </div>`).join('');
+
+  document.getElementById('detailBody').innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="font-size:40px;">${TYPE_ICONS[e.type]||'📌'}</div>
+      <div>
+        <div style="font-family:Cinzel,serif;font-size:20px;color:var(--gold2);letter-spacing:.05em;">${esc(e.name)}</div>
+        <div style="margin-top:4px;"><span class="tag ${TAG_CLASS[e.type]||''}" style="display:inline-block;">${e.type}</span></div>
+      </div>
+    </div>
+    ${e.description?`<div style="font-size:15px;color:var(--text2);line-height:1.7;margin-bottom:14px;font-style:italic;">${esc(e.description)}</div>`:''}
+    ${statPills?`<div class="stat-row">${statPills}</div>`:''}
+    ${abilities?`<div class="section-label">Abilities</div>${abilities}`:''}
+    ${e.loot?`<div class="section-label">Loot & Rewards</div><div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-size:14px;color:var(--text2);line-height:1.6;">${esc(e.loot)}</div>`:''}
+    <button class="btn btn-sm" style="margin-top:16px;border-color:var(--accent);color:var(--accent);" onclick="sendToPlay('${e.id}')">⚔ Send to Play Table</button>
+  `;
+}
+function closeDetail(){
+  detailId=null;
+  document.querySelector('.filter-bar').style.display='flex';
+  document.querySelector('.search-row').style.display='block';
+  document.querySelector('.content').style.display='block';
+  document.getElementById('detailView').style.display='none';
+}
+function editCurrentEntry(){if(detailId)openEditEntry(detailId);}
+function sendToPlay(id){
+  // Mark entry for play table to pick up
+  const d=getData();if(!d.playQueue)d.playQueue=[];
+  if(!d.playQueue.includes(id))d.playQueue.push(id);
+  saveData(d);
+  alert('Added to Play Table encounter queue.');
+}
+
+// ── NEW / EDIT ──
+function buildStatFields(){
+  const tmpl=getTemplate();
+  const container=document.getElementById('statFields');
+  if(!(tmpl.stats||[]).length){container.innerHTML='<div style="grid-column:span 3;font-size:12px;color:var(--text3);font-style:italic;">No stat fields defined. Add them in Characters → Sheet Template.</div>';return;}
+  container.innerHTML=tmpl.stats.map(s=>`
+    <div>
+      <label>${esc(s.label||s.name)}</label>
+      <input type="${s.type==='number'?'number':'text'}" id="stat_${s.id}" value="${s.defaultValue||''}" placeholder="0" style="text-align:center;">
+    </div>`).join('');
+}
+function addAbilityField(name='',desc=''){
+  const container=document.getElementById('abilityFields');
+  const div=document.createElement('div');
+  div.style.cssText='background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px;margin-bottom:7px;';
+  div.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+    <input type="text" placeholder="Ability name…" value="${esc(name)}" class="ab-name" style="flex:1;margin-right:8px;">
+    <button type="button" onclick="this.closest('div[style]').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button>
+  </div>
+  <textarea placeholder="What it does…" class="ab-desc" style="min-height:48px;">${esc(desc)}</textarea>`;
+  container.appendChild(div);
+}
+
+function openNewEntry(){
+  editingId=null;
+  document.getElementById('entryModalTitle').textContent='New Entry';
+  document.getElementById('inputName').value='';
+  document.getElementById('inputType').value='creature';
+  document.getElementById('inputDesc').value='';
+  document.getElementById('inputLoot').value='';
+  document.getElementById('abilityFields').innerHTML='';
+  document.getElementById('deleteEntryBtn').style.display='none';
+  buildStatFields();
+  openModal('modal-entry');
+}
+function openEditEntry(id){
+  const e=getBestiary().find(x=>x.id===id);if(!e)return;
+  editingId=id;
+  document.getElementById('entryModalTitle').textContent='Edit Entry';
+  document.getElementById('inputName').value=e.name||'';
+  document.getElementById('inputType').value=e.type||'creature';
+  document.getElementById('inputDesc').value=e.description||'';
+  document.getElementById('inputLoot').value=e.loot||'';
+  document.getElementById('abilityFields').innerHTML='';
+  (e.abilities||[]).forEach(a=>addAbilityField(a.name,a.desc));
+  document.getElementById('deleteEntryBtn').style.display='inline-block';
+  buildStatFields();
+  const tmpl=getTemplate();
+  (tmpl.stats||[]).forEach(s=>{const el=document.getElementById('stat_'+s.id);if(el&&e.stats&&e.stats[s.id]!==undefined)el.value=e.stats[s.id];});
+  openModal('modal-entry');
+}
+function saveEntry(){
+  const name=document.getElementById('inputName').value.trim();if(!name)return;
+  const tmpl=getTemplate();
+  const stats={};
+  (tmpl.stats||[]).forEach(s=>{const el=document.getElementById('stat_'+s.id);if(el)stats[s.id]=s.type==='number'?parseFloat(el.value)||0:el.value;});
+  const abilities=[];
+  document.querySelectorAll('#abilityFields>[style]').forEach(div=>{
+    const n=div.querySelector('.ab-name').value.trim();
+    const d=div.querySelector('.ab-desc').value.trim();
+    if(n)abilities.push({name:n,desc:d});
+  });
+  const entry={
+    id:editingId||uid(),
+    name,
+    type:document.getElementById('inputType').value,
+    description:document.getElementById('inputDesc').value.trim(),
+    stats,abilities,
+    loot:document.getElementById('inputLoot').value.trim(),
+    modified:Date.now()
+  };
+  const d=getData();if(!d.bestiary)d.bestiary=[];
+  if(editingId){const i=d.bestiary.findIndex(x=>x.id===editingId);if(i>=0)d.bestiary[i]=entry;else d.bestiary.push(entry);}
+  else{d.bestiary.push(entry);}
+  saveData(d);closeModal('modal-entry');
+  if(detailId)openDetail(entry.id);else renderList();
+}
+function deleteEntry(){
+  if(!editingId||!confirm('Delete this entry?'))return;
+  const d=getData();d.bestiary=(d.bestiary||[]).filter(x=>x.id!==editingId);
+  saveData(d);closeModal('modal-entry');closeDetail();renderList();
+}
+
+// ── NAV ──
+function goBack(){if(window.parent&&window.parent!==window){window.parent.postMessage({type:'navigate',module:'rpg.html'},'*');}else{window.location.href='rpg.html';}}
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
+
+renderList();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!detailId)renderList();});
+</script>
+</body>
+</html>

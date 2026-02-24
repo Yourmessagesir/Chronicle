@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Rulebook — Chronicle & Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;
+  --border:#2e2e42;--border2:#3d3d58;
+  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#8a6a20;
+  --text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;
+  --red:#cc5555;--green:#55aa77;--accent:#7b6cee;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4;}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg2);}
+.topbar-back{background:none;border:none;color:var(--text2);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;cursor:pointer;padding:4px 0;}
+.topbar-back:active{color:var(--gold);}
+.topbar-title{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:.08em;flex:1;}
+.topbar-meta{font-size:11px;color:var(--text3);text-align:right;line-height:1.4;}
+
+.body-split{display:flex;flex:1;overflow:hidden;}
+
+/* ── SECTION LIST (left panel) ── */
+.section-list{width:160px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;padding:10px 0;background:var(--bg2);}
+.section-item{padding:9px 14px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;}
+.section-item:active,.section-item.active{background:var(--bg3);border-left-color:var(--gold);}
+.section-item-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.07em;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.section-item.active .section-item-title{color:var(--gold2);}
+.section-item-words{font-size:10px;color:var(--text3);margin-top:2px;}
+.section-add{display:block;width:100%;background:none;border:none;border-top:1px solid var(--border);padding:10px 14px;color:var(--text3);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;cursor:pointer;text-align:left;transition:all .15s;}
+.section-add:active{color:var(--gold);}
+
+/* ── EDITOR (right panel) ── */
+.editor-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.editor-toolbar{display:flex;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
+.tool-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:4px 8px;border-radius:3px;font-size:12px;cursor:pointer;transition:all .15s;font-family:'Cinzel',serif;letter-spacing:.04em;font-size:10px;}
+.tool-btn:active{border-color:var(--gold);color:var(--gold);}
+.tool-sep{width:1px;height:18px;background:var(--border);flex-shrink:0;}
+.editor-title-row{padding:14px 16px 6px;flex-shrink:0;}
+.editor-section-title{background:none;border:none;border-bottom:1px solid var(--border);color:var(--gold2);font-family:'Cinzel',serif;font-size:16px;letter-spacing:.06em;width:100%;padding:4px 0 8px;outline:none;}
+.editor-section-title:focus{border-bottom-color:var(--gold);}
+.editor-body{flex:1;padding:8px 16px 16px;overflow:hidden;display:flex;flex-direction:column;}
+.editor-textarea{flex:1;background:none;border:none;color:var(--text);font-family:'Crimson Pro',serif;font-size:16px;line-height:1.8;resize:none;outline:none;width:100%;overflow-y:auto;}
+.editor-textarea::placeholder{color:var(--text3);font-style:italic;}
+.editor-footer{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg2);}
+.editor-footer-stat{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;color:var(--text3);}
+.editor-footer-stat span{color:var(--text2);}
+.save-indicator{font-family:'Cinzel',serif;font-size:9px;color:var(--text3);letter-spacing:.06em;transition:color .3s;}
+.save-indicator.saved{color:var(--green);}
+
+/* ── EMPTY STATE ── */
+.empty-editor{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);padding:30px;}
+.empty-editor-icon{font-size:36px;margin-bottom:12px;opacity:.4;}
+.empty-editor-text{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.1em;text-align:center;}
+
+/* ── PAGE BAR ── */
+.page-bar{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;}
+.page-badge{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.08em;padding:3px 9px;border-radius:10px;white-space:nowrap;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+.page-badge.pg8{background:rgba(85,170,119,.15);color:var(--green);border-color:rgba(85,170,119,.3);}
+.page-badge.pg16{background:rgba(123,108,238,.15);color:var(--accent);border-color:rgba(123,108,238,.3);}
+.page-badge.pg24{background:rgba(201,168,76,.15);color:var(--gold);border-color:rgba(201,168,76,.3);}
+.page-badge.pg32{background:rgba(204,85,85,.15);color:var(--red);border-color:rgba(204,85,85,.3);}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-top:1px solid var(--gold3);border-radius:8px 8px 0 0;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:.1em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.field{margin-bottom:12px;}
+label{display:block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:5px;}
+input[type="text"],select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;}
+input:focus{border-color:var(--gold);}
+select option{background:var(--bg3);}
+.modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:space-between;align-items:center;}
+.btn{padding:7px 13px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .15s;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <button class="topbar-back" onclick="goBack()">← Hub</button>
+    <div class="topbar-title">Rulebook</div>
+    <div class="topbar-meta">
+      <div id="metaWords">0 words</div>
+      <div id="metaPages">~0 pages</div>
+    </div>
+  </div>
+
+  <!-- PAGE FORMAT BAR -->
+  <div class="page-bar">
+    <span style="font-family:Cinzel,serif;font-size:8px;color:var(--text3);letter-spacing:.08em;white-space:nowrap;">ZINE TARGET:</span>
+    <span class="page-badge pg8" onclick="showPageInfo(8)">8-page · 2k words</span>
+    <span class="page-badge pg16" onclick="showPageInfo(16)">16-page · 4k words</span>
+    <span class="page-badge pg24" onclick="showPageInfo(24)">24-page · 6k words</span>
+    <span class="page-badge pg32" onclick="showPageInfo(32)">32-page · 8k words</span>
+    <span id="pageProgress" style="margin-left:auto;font-family:Cinzel,serif;font-size:8px;color:var(--text3);white-space:nowrap;"></span>
+  </div>
+
+  <!-- BODY -->
+  <div class="body-split">
+
+    <!-- SECTION LIST -->
+    <div class="section-list" id="sectionList">
+      <!-- populated by JS -->
+      <button class="section-add" onclick="openNewSection()">+ New Section</button>
+    </div>
+
+    <!-- EDITOR -->
+    <div class="editor-panel" id="editorPanel">
+      <div class="editor-toolbar" id="editorToolbar" style="display:none;">
+        <button class="tool-btn" onclick="insertMarkup('**','**')"><b>B</b></button>
+        <button class="tool-btn" onclick="insertMarkup('*','*')"><i>I</i></button>
+        <button class="tool-btn" onclick="insertMarkup('# ','')">H</button>
+        <div class="tool-sep"></div>
+        <button class="tool-btn" onclick="insertMarkup('- ','')">List</button>
+        <button class="tool-btn" onclick="insertDiceTag()">🎲 Dice</button>
+        <button class="tool-btn" onclick="insertRuleBox()">□ Rule Box</button>
+        <div class="tool-sep"></div>
+        <button class="tool-btn" onclick="openSectionSettings()">⚙</button>
+        <button class="tool-btn btn-danger" style="margin-left:auto;" onclick="deleteSection()">Delete</button>
+      </div>
+
+      <div id="emptyState" class="empty-editor">
+        <div class="empty-editor-icon">📜</div>
+        <div class="empty-editor-text">Select a section to begin writing,<br>or create your first section.</div>
+      </div>
+
+      <div id="activeEditor" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+        <div class="editor-title-row">
+          <input type="text" class="editor-section-title" id="sectionTitleInput" placeholder="Section title…" oninput="onTitleChange()">
+        </div>
+        <div class="editor-body">
+          <textarea class="editor-textarea" id="sectionBody" placeholder="Begin writing…&#10;&#10;Use **bold**, *italic*, # Heading&#10;🎲 [2d6+STR] for inline dice tags&#10;□ [RULE: text] for rule boxes" oninput="onBodyChange()"></textarea>
+        </div>
+      </div>
+
+      <div class="editor-footer" id="editorFooter" style="display:none;">
+        <div style="display:flex;gap:16px;">
+          <div class="editor-footer-stat">Words: <span id="footerWords">0</span></div>
+          <div class="editor-footer-stat">Est. pages: <span id="footerPages">0</span></div>
+        </div>
+        <div class="save-indicator" id="saveIndicator">—</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SECTION MODAL -->
+<div class="modal-overlay" id="modal-section">
+  <div class="modal">
+    <h2 id="sectionModalTitle">New Section</h2>
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="inputSectionTitle" placeholder="e.g. Core Mechanic">
+    </div>
+    <div class="field">
+      <label>Type</label>
+      <select id="inputSectionType">
+        <option value="intro">Introduction</option>
+        <option value="characters">Character Creation</option>
+        <option value="mechanic">Core Mechanic</option>
+        <option value="skills">Skills & Abilities</option>
+        <option value="combat">Combat</option>
+        <option value="equipment">Equipment & Gear</option>
+        <option value="bestiary">Bestiary Reference</option>
+        <option value="scenario">Starter Scenario</option>
+        <option value="appendix">Appendix / Notes</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteSectionBtn" onclick="confirmDeleteSection()" style="display:none;">Delete</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="closeModal('modal-section')">Cancel</button>
+        <button class="btn btn-gold" onclick="saveNewSection()">Save ✦</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ DATA ═══
+function getData(){try{return JSON.parse(localStorage.getItem('chronicle_ttrpg')||'{}');}catch{return {};}}
+function saveData(d){localStorage.setItem('chronicle_ttrpg',JSON.stringify(d));}
+function getRules(){const d=getData();if(!d.rules)d.rules={sections:[]};return d;}
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function wordCount(t){return t?t.trim().split(/\s+/).filter(Boolean).length:0;}
+function wordsToPages(w){return Math.round(w/250*10)/10;}
+
+// ═══ STATE ═══
+let activeId=null;
+let saveTimer=null;
+
+// ═══ RENDER SECTION LIST ═══
+function renderList(){
+  const d=getRules();
+  const sections=d.rules.sections||[];
+  const list=document.getElementById('sectionList');
+
+  // clear except add button
+  list.querySelectorAll('.section-item').forEach(el=>el.remove());
+  const addBtn=list.querySelector('.section-add');
+
+  let totalWords=0;
+  sections.forEach(s=>{
+    const wc=wordCount(s.content||'');
+    totalWords+=wc;
+    const el=document.createElement('div');
+    el.className='section-item'+(s.id===activeId?' active':'');
+    el.innerHTML=`<div class="section-item-title">${esc(s.title||'Untitled')}</div><div class="section-item-words">${wc} w</div>`;
+    el.onclick=()=>openSection(s.id);
+    list.insertBefore(el,addBtn);
+  });
+
+  updateMeta(totalWords);
+}
+
+function updateMeta(totalWords){
+  const pages=wordsToPages(totalWords);
+  document.getElementById('metaWords').textContent=`${totalWords} words`;
+  document.getElementById('metaPages').textContent=`~${pages} pages`;
+
+  // Progress toward nearest target
+  const targets=[2000,4000,6000,8000];
+  const labels=[8,16,24,32];
+  let target=targets.find(t=>totalWords<t)||8000;
+  let label=labels[targets.indexOf(target)]||32;
+  const pct=Math.min(100,Math.round(totalWords/target*100));
+  document.getElementById('pageProgress').textContent=`${pct}% toward ${label}-pg zine`;
+}
+
+// ═══ OPEN SECTION ═══
+function openSection(id){
+  const d=getRules();
+  const s=d.rules.sections.find(x=>x.id===id);
+  if(!s)return;
+  activeId=id;
+
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('activeEditor').style.display='flex';
+  document.getElementById('editorToolbar').style.display='flex';
+  document.getElementById('editorFooter').style.display='flex';
+
+  document.getElementById('sectionTitleInput').value=s.title||'';
+  document.getElementById('sectionBody').value=s.content||'';
+  updateFooter(s.content||'');
+  setSaveIndicator('');
+
+  renderList();
+}
+
+function updateFooter(content){
+  const wc=wordCount(content);
+  const pages=wordsToPages(wc);
+  document.getElementById('footerWords').textContent=wc;
+  document.getElementById('footerPages').textContent=pages;
+}
+
+// ═══ AUTO SAVE ═══
+function onBodyChange(){
+  updateFooter(document.getElementById('sectionBody').value);
+  setSaveIndicator('editing…');
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(autoSave,900);
+}
+function onTitleChange(){
+  setSaveIndicator('editing…');
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(autoSave,900);
+}
+function autoSave(){
+  if(!activeId)return;
+  const d=getRules();
+  const idx=d.rules.sections.findIndex(s=>s.id===activeId);
+  if(idx<0)return;
+  d.rules.sections[idx].title=document.getElementById('sectionTitleInput').value.trim()||'Untitled';
+  d.rules.sections[idx].content=document.getElementById('sectionBody').value;
+  d.rules.sections[idx].wordCount=wordCount(d.rules.sections[idx].content);
+  d.rules.sections[idx].modified=Date.now();
+  saveData(d);
+  renderList();
+  setSaveIndicator('saved ✦');
+  setTimeout(()=>setSaveIndicator(''),2000);
+}
+function setSaveIndicator(text){
+  const el=document.getElementById('saveIndicator');
+  el.textContent=text;
+  el.className='save-indicator'+(text==='saved ✦'?' saved':'');
+}
+
+// ═══ INSERT HELPERS ═══
+function insertMarkup(before,after){
+  const ta=document.getElementById('sectionBody');
+  const start=ta.selectionStart,end=ta.selectionEnd;
+  const sel=ta.value.slice(start,end);
+  const replacement=before+sel+after;
+  ta.setRangeText(replacement,start,end,'end');
+  ta.focus();onBodyChange();
+}
+function insertDiceTag(){
+  const d=getRules();
+  const sys=(getData().meta||{}).diceSystem||'2d6';
+  insertMarkup(`[${sys}]`,'');
+}
+function insertRuleBox(){
+  insertMarkup('[RULE: ',']\n');
+}
+
+// ═══ NEW SECTION MODAL ═══
+let editingSectionId=null;
+function openNewSection(){
+  editingSectionId=null;
+  document.getElementById('sectionModalTitle').textContent='New Section';
+  document.getElementById('inputSectionTitle').value='';
+  document.getElementById('inputSectionType').value='custom';
+  document.getElementById('deleteSectionBtn').style.display='none';
+  openModal('modal-section');
+}
+function openSectionSettings(){
+  if(!activeId)return;
+  const d=getRules();
+  const s=d.rules.sections.find(x=>x.id===activeId);
+  if(!s)return;
+  editingSectionId=activeId;
+  document.getElementById('sectionModalTitle').textContent='Section Settings';
+  document.getElementById('inputSectionTitle').value=s.title||'';
+  document.getElementById('inputSectionType').value=s.type||'custom';
+  document.getElementById('deleteSectionBtn').style.display='inline-block';
+  openModal('modal-section');
+}
+function saveNewSection(){
+  const title=document.getElementById('inputSectionTitle').value.trim();
+  if(!title)return;
+  const type=document.getElementById('inputSectionType').value;
+  const d=getRules();
+
+  if(editingSectionId){
+    const idx=d.rules.sections.findIndex(s=>s.id===editingSectionId);
+    if(idx>=0){d.rules.sections[idx].title=title;d.rules.sections[idx].type=type;}
+    closeModal('modal-section');
+    autoSave();
+  } else {
+    const id=uid();
+    d.rules.sections.push({id,title,type,content:'',wordCount:0,created:Date.now()});
+    saveData(d);
+    closeModal('modal-section');
+    renderList();
+    openSection(id);
+  }
+}
+function confirmDeleteSection(){
+  closeModal('modal-section');
+  setTimeout(deleteSection,200);
+}
+function deleteSection(){
+  if(!activeId)return;
+  if(!confirm('Delete this section? This cannot be undone.'))return;
+  const d=getRules();
+  d.rules.sections=d.rules.sections.filter(s=>s.id!==activeId);
+  saveData(d);
+  activeId=null;
+  document.getElementById('emptyState').style.display='flex';
+  document.getElementById('activeEditor').style.display='none';
+  document.getElementById('editorToolbar').style.display='none';
+  document.getElementById('editorFooter').style.display='none';
+  renderList();
+}
+
+// ═══ PAGE INFO ═══
+function showPageInfo(pages){
+  const targets={8:2000,16:4000,24:6000,32:8000};
+  const w=targets[pages];
+  alert(`A ${pages}-page A5 zine fits roughly ${w.toLocaleString()} words.\nAt ~250 words per page, that's ${pages} pages of content.\n\nTypical breakdown for indie TTRPGs:\n• 2–3 pages: Introduction & world flavour\n• 2–3 pages: Character creation\n• 2–3 pages: Core rules & dice mechanic\n• 2–3 pages: Combat & resolution\n• 2–4 pages: Bestiary (4–8 creatures)\n• 2–4 pages: Starter scenario`);
+}
+
+// ═══ NAVIGATION ═══
+function goBack(){
+  if(window.parent&&window.parent!==window){
+    window.parent.postMessage({type:'navigate',module:'rpg.html'},'*');
+  } else {window.location.href='rpg.html';}
+}
+
+// ═══ MODAL ═══
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ═══ SEED DEFAULT SECTIONS ═══
+function seedIfEmpty(){
+  const d=getRules();
+  if((d.rules.sections||[]).length>0)return;
+  const defaults=[
+    {title:'Introduction',type:'intro'},
+    {title:'Character Creation',type:'characters'},
+    {title:'Core Mechanic',type:'mechanic'},
+    {title:'Combat',type:'combat'},
+    {title:'Starter Scenario',type:'scenario'},
+  ];
+  defaults.forEach(s=>d.rules.sections.push({id:uid(),title:s.title,type:s.type,content:'',wordCount:0,created:Date.now()}));
+  saveData(d);
+}
+
+// ═══ INIT ═══
+seedIfEmpty();
+renderList();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderList();});
+</script>
+</body>
+</html>

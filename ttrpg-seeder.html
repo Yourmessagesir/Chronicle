@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TTRPG Sample Data Seeder</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--border:#2e2e42;--border2:#3d3d58;--gold:#c9a84c;--gold2:#e8c97a;--gold3:#8a6a20;--text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;--red:#cc5555;--green:#55aa77;--accent:#7b6cee;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;padding:20px 16px 60px;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4;}
+h1{font-family:'Cinzel',serif;font-size:20px;color:var(--gold2);letter-spacing:.08em;margin-bottom:6px;}
+.subtitle{font-size:14px;color:var(--text3);font-style:italic;margin-bottom:24px;}
+.campaign-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+@media(max-width:480px){.campaign-grid{grid-template-columns:1fr;}}
+.campaign-card{background:var(--bg2);border:1px solid var(--border);border-radius:7px;overflow:hidden;}
+.card-header{padding:14px;border-bottom:1px solid var(--border);}
+.card-icon{font-size:28px;margin-bottom:8px;}
+.card-title{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:.06em;margin-bottom:3px;}
+.card-genre{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:6px;}
+.card-desc{font-size:13px;color:var(--text2);line-height:1.5;}
+.card-stats{padding:10px 14px;display:flex;gap:12px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:.08em;color:var(--text3);}
+.card-stat span{color:var(--text2);}
+.card-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.btn{padding:7px 14px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+.full-btn{display:block;width:100%;padding:14px;text-align:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.1em;color:var(--text2);cursor:pointer;transition:all .15s;margin-bottom:8px;}
+.full-btn:active{border-color:var(--gold);color:var(--gold);}
+.warning{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:5px;padding:12px 16px;font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--gold3);border-radius:5px;padding:10px 20px;font-family:'Cinzel',serif;font-size:11px;color:var(--gold);letter-spacing:.08em;z-index:1000;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+.divider{height:1px;background:linear-gradient(90deg,var(--gold3),transparent);margin:20px 0;}
+.section-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;color:var(--text3);text-transform:uppercase;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<h1>TTRPG Sample Data</h1>
+<div class="subtitle">Load complete campaigns to test your Chronicle & Forge TTRPG system.</div>
+
+<div class="warning">
+  ⚠ Loading a campaign replaces current campaign data and adds new characters & bestiary entries. Use <b>Load All Four</b> to seed everything at once for full testing.
+</div>
+
+<div class="campaign-grid">
+  <div class="campaign-card">
+    <div class="card-header">
+      <div class="card-icon">⚔️</div>
+      <div class="card-genre">Fantasy</div>
+      <div class="card-title">The Shattered Crown</div>
+      <div class="card-desc">A fractured kingdom, an heir with no memory, and a conspiracy that reaches into the roots of the earth.</div>
+    </div>
+    <div class="card-stats">CHARS <span>3</span> &nbsp;·&nbsp; CREATURES <span>5</span> &nbsp;·&nbsp; SESSIONS <span>3</span></div>
+    <div class="card-footer">
+      <button class="btn btn-gold" style="flex:1;" onclick="loadCampaign('fantasy')">Load ✦</button>
+    </div>
+  </div>
+
+  <div class="campaign-card">
+    <div class="card-header">
+      <div class="card-icon">☢️</div>
+      <div class="card-genre">Post-Apocalypse</div>
+      <div class="card-title">Ashfall</div>
+      <div class="card-desc">Sixty years after the Burn. Survivors scratch out existence in the Dustfields while something old wakes beneath the craters.</div>
+    </div>
+    <div class="card-stats">CHARS <span>3</span> &nbsp;·&nbsp; CREATURES <span>5</span> &nbsp;·&nbsp; SESSIONS <span>3</span></div>
+    <div class="card-footer">
+      <button class="btn btn-gold" style="flex:1;" onclick="loadCampaign('postapoc')">Load ✦</button>
+    </div>
+  </div>
+
+  <div class="campaign-card">
+    <div class="card-header">
+      <div class="card-icon">🚀</div>
+      <div class="card-genre">Sci-Fi</div>
+      <div class="card-title">Void Protocol</div>
+      <div class="card-desc">A derelict colony ship. A signal that shouldn't exist. A crew that may not all be what they claim.</div>
+    </div>
+    <div class="card-stats">CHARS <span>3</span> &nbsp;·&nbsp; CREATURES <span>5</span> &nbsp;·&nbsp; SESSIONS <span>3</span></div>
+    <div class="card-footer">
+      <button class="btn btn-gold" style="flex:1;" onclick="loadCampaign('scifi')">Load ✦</button>
+    </div>
+  </div>
+
+  <div class="campaign-card">
+    <div class="card-header">
+      <div class="card-icon">🌹</div>
+      <div class="card-genre">Romantic Drama</div>
+      <div class="card-title">The Thornwood Letters</div>
+      <div class="card-desc">A country estate, a scandalous inheritance, old letters that reveal a love story — and someone who wants it to stay buried.</div>
+    </div>
+    <div class="card-stats">CHARS <span>3</span> &nbsp;·&nbsp; NPCS <span>5</span> &nbsp;·&nbsp; SESSIONS <span>3</span></div>
+    <div class="card-footer">
+      <button class="btn btn-gold" style="flex:1;" onclick="loadCampaign('romance')">Load ✦</button>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+<div class="section-label">Bulk Actions</div>
+<button class="full-btn" onclick="loadAll()">✦ Load All Four Campaigns (Characters + Bestiary merged, Fantasy campaign active)</button>
+<button class="full-btn btn-danger" style="border-color:var(--red);color:var(--red);" onclick="clearAll()">✕ Clear All TTRPG Data</button>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function uid(seed){return (seed||Date.now()).toString(36)+Math.random().toString(36).slice(2,6);}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+
+// ═══════════════════════════════════════
+// SHARED TEMPLATE
+// ═══════════════════════════════════════
+const TEMPLATE = {
+  stats: [
+    {id:'s_body', name:'Body',  label:'Body',   type:'number', defaultValue:'5'},
+    {id:'s_mind', name:'Mind',  label:'Mind',   type:'number', defaultValue:'5'},
+    {id:'s_spirit',name:'Spirit',label:'Spirit',type:'number', defaultValue:'5'},
+    {id:'s_edge', name:'Edge',  label:'Edge',   type:'number', defaultValue:'5'},
+  ],
+  conditions: ['Injured','Exhausted','Shaken','Poisoned','Burning'],
+  maxSlots: 10,
+  xpPerLevel: 10
+};
+
+// ═══════════════════════════════════════
+// CAMPAIGN DATA
+// ═══════════════════════════════════════
+
+const CAMPAIGNS = {
+
+// ─────────────────────────────────────
+fantasy: {
+  meta: {
+    gameTitle: 'The Shattered Crown',
+    tagline: 'A kingdom in pieces. A truth buried deep.',
+    diceSystem: '2d6',
+  },
+  rules: {
+    sections: [
+      { id:'r_f1', title:'Introduction', type:'intro', wordCount: 87,
+        content: `The Shattered Crown is a dark fantasy TTRPG set in the kingdom of Valdenmere — a realm fractured after the death of the old king. Three noble houses now vie for the throne, and an ancient power stirs beneath the Thornwood forest.\n\nPlayers take on the roles of wanderers, soldiers, scholars, and outcasts drawn into a conspiracy that reaches from the gutters of the capital to the roots of the world.\n\nThis is a game about loyalty, memory, and the cost of power.` },
+      { id:'r_f2', title:'Core Mechanic', type:'mechanic', wordCount: 64,
+        content: `When you attempt something risky, roll 2d6 and add a relevant stat:\n\n10+ Full success — you do it, no cost.\n7–9 Partial success — you do it, but with a complication, cost, or hard choice.\n6− Miss — things go badly. The GM makes a move.\n\nStats: Body (force, endurance), Mind (knowledge, cunning), Spirit (will, persuasion), Edge (speed, precision).` },
+      { id:'r_f3', title:'Combat', type:'combat', wordCount: 52,
+        content: `When combat begins, everyone rolls 2d6. Highest Edge goes first.\n\nOn your turn: Move and Act. To attack, roll 2d6 + Body vs target's Edge.\n10+: Deal damage (usually 2–4 HP).\n7–9: Deal damage but take 1 yourself.\n6−: You miss and the enemy acts.\n\nWhen HP reaches 0, a character is taken out (not necessarily dead).` },
+    ]
+  },
+  characters: [
+    { id:'ch_f1', name:'Seraphine Vael', player:'Player 1', level:2, xp:14,
+      stats:{s_body:7, s_mind:5, s_spirit:6, s_edge:8},
+      conditions:[], inventory:['Longsword','Chain armour','Crown signet ring','Tallow candle (3)','Rope (10m)'],
+      notes:'Former knight of the Crown Guard. Lost her memory three months ago and woke up outside the capital walls. The signet ring she carries belonged to someone important — she just can\'t remember who.' },
+    { id:'ch_f2', name:'Aldric the Ink', player:'Player 2', level:1, xp:7,
+      stats:{s_body:4, s_mind:9, s_spirit:6, s_edge:6},
+      conditions:['Shaken'], inventory:['Leather satchel','Grimoire (partial)','Ink & quills','Lockpicks','Dried herbs'],
+      notes:'A disgraced scholar who was expelled from the Cartographers\' Guild for stealing a map that no one admits exists. He knows too much and too little simultaneously.' },
+    { id:'ch_f3', name:'Brynn Ashfoot', player:'Player 3', level:1, xp:3,
+      stats:{s_body:6, s_mind:5, s_spirit:7, s_edge:7},
+      conditions:[], inventory:['Short bow','Quiver (12 arrows)','Skinning knife','Dried meat','Cloak (forest-grey)'],
+      notes:'A hunter from the Thornwood villages. Her home was burned by soldiers bearing no crest. She doesn\'t know why. She intends to find out.' },
+  ],
+  bestiary: [
+    { id:'be_f1', name:'Thornwood Sprite', type:'creature',
+      description:'Fist-sized creatures woven from bark and spite. They swarm anything that disturbs the deep forest. Their bite carries a soporific poison.',
+      stats:{s_body:2, s_mind:3, s_spirit:4, s_edge:8},
+      abilities:[{name:'Swarm',desc:'If three or more attack at once, roll as a single entity with Body 5.'},{name:'Sleep Bite',desc:'On a 10+ attack, target must roll 2d6+Body (DC 8) or fall drowsy (−2 to all rolls until rested).'}],
+      loot:'Sprite dust (used in sleep draughts). Worth 3 coin per vial to an alchemist.' },
+    { id:'be_f2', name:'Bone Sentinel', type:'creature',
+      description:'Armoured skeletons bound by old wartime sorcery. They guard ruins instinctively, without orders, without end.',
+      stats:{s_body:7, s_mind:1, s_spirit:2, s_edge:5},
+      abilities:[{name:'Unyielding',desc:'Ignore the Injured condition. Only destroyed when HP reaches 0.'},{name:'Shield Wall',desc:'If two or more are adjacent, both gain +2 to defence rolls.'}],
+      loot:'Old weaponry (worth 5–10 coin, heavily corroded). Occasionally carries a sealed letter from the old wars.' },
+    { id:'be_f3', name:'Shadow Drake', type:'boss',
+      description:'A dragon no larger than a cart horse, but dense with malice. It hunts at dusk and leaves no tracks. Its breath is not fire — it is cold absence.',
+      stats:{s_body:10, s_mind:6, s_spirit:7, s_edge:9},
+      abilities:[{name:'Void Breath',desc:'All targets in a cone roll 2d6+Spirit (DC 9) or gain the Shaken condition and lose their next action.'},{name:'Shadowstep',desc:'Once per encounter, the Drake vanishes and reappears at any point it has been this combat round.'}],
+      loot:'Drake scales (rare crafting material, 50 coin). A drake heart sustains no warmth — it is a component for binding rituals.' },
+    { id:'be_f4', name:'Valdenmere Soldier (Crestless)', type:'npc',
+      description:'Soldiers in stripped armour — house markings removed. They take orders without question and ask none in return. Whoever commands them wants no accountability.',
+      stats:{s_body:6, s_mind:4, s_spirit:5, s_edge:6},
+      abilities:[{name:'Formation Discipline',desc:'Does not rout when allies fall. Continues fighting until incapacitated.'}],
+      loot:'12 coin, basic kit, a sealed orders pouch (written in cipher).' },
+    { id:'be_f5', name:'The Pale Warden', type:'boss',
+      description:'A towering figure in white plate. No one has seen its face. It appears wherever the conspiracy runs deepest, always watching, never speaking. Its presence makes torches flicker out.',
+      stats:{s_body:9, s_mind:8, s_spirit:10, s_edge:7},
+      abilities:[{name:'Dread Aura',desc:'All characters in the same scene must roll 2d6+Spirit (DC 8) or lose 1 action on their first turn.'},{name:'Cannot Be Followed',desc:'If the Warden retreats, it cannot be tracked by any mundane means.'}],
+      loot:'Nothing. The Warden carries no possessions. Defeating it leaves only the white plate — which is empty, and ice cold inside.' },
+  ],
+  campaign: {
+    title: 'The Shattered Crown — Season One',
+    setting: 'Kingdom of Valdenmere. Crumbling capital, Thornwood forest, the ruins of Castle Greyfast.',
+    premise: 'The players stumble into a conspiracy surrounding the missing heir to the throne. Three noble houses want the crown. Something older wants the kingdom gone entirely. Seraphine may be the key — if she can remember who she was.',
+    gmNotes: 'The Pale Warden is not a villain. It is a bound guardian set by the old king to protect a secret — the heir\'s true parentage. It will not harm the heir. Seraphine IS the heir. Reveal this at the end of Act 2.',
+    sessions: [
+      { id:'s_f1', num:'1', date:'2026-01-10', title:'Ash on the Road',
+        participants:'Seraphine, Aldric, Brynn',
+        summary:'The party met on the King\'s Road near the town of Duskfen. A merchant caravan had been attacked — not by bandits, but by crestless soldiers. They drove off the soldiers and found a survivor clutching a sealed letter addressed to someone called "The Archivist."',
+        outcome:'The party has the letter but cannot open it — it is sealed with wax branded with a symbol none of them recognise.' },
+      { id:'s_f2', num:'2', date:'2026-01-24', title:'The Ink Quarter',
+        participants:'Seraphine, Aldric, Brynn',
+        summary:'In the capital\'s Ink Quarter, Aldric tracked down his old Guild contact. The contact was dead — freshly. Someone had searched his rooms. Aldric found a hidden compartment containing a fragment of the missing map, which showed a location beneath Castle Greyfast marked "The Root."',
+        outcome:'A crestless soldier spotted them leaving. They were followed. Brynn put an arrow through his knee — they left him alive and fled into the night.' },
+      { id:'s_f3', num:'3', date:'2026-02-07', title:'The Pale Warden Appears',
+        participants:'Seraphine, Aldric, Brynn',
+        summary:'Following the map fragment to the outskirts of Greyfast ruins, the party encountered their first Bone Sentinels. In the chaos, Seraphine had a flash of memory — she knew the layout of the ruins. The Pale Warden appeared at the entrance. It looked at Seraphine for a long moment, then stepped aside.',
+        outcome:'Session ended on the threshold of the ruins. The Warden let them in. The players are deeply unsettled. Good.' },
+    ],
+    factions: [
+      { id:'fac_f1', name:'House Mourne', status:'hostile', notes:'The most aggressive claimant. They funded the crestless soldiers. Lord Mourne wants the crown badly enough to commit atrocities.' },
+      { id:'fac_f2', name:'House Vael', status:'unknown', notes:'Seraphine\'s family name. She doesn\'t know it yet. The house was dissolved after the old king\'s death — officially. Unofficially, someone is still acting in their name.' },
+      { id:'fac_f3', name:'The Cartographers\' Guild', status:'neutral', notes:'Hold dangerous maps. Aldric\'s former employers. They know more than they admit and will sell information to anyone — at steep cost.' },
+      { id:'fac_f4', name:'The Thornwood Villagers', status:'ally', notes:'Brynn\'s people, scattered after the burning. A handful have made it to Duskfen. They want answers and will help the party in exchange for justice.' },
+    ],
+    threads: [
+      { id:'th_f1', title:'Who sealed the letter on the road — and why?', status:'open', notes:'The wax seal is the crest of House Vael. The letter is addressed to The Archivist. It contains one sentence: "She is alive. Keep her that way."' },
+      { id:'th_f2', title:'What is "The Root" beneath Castle Greyfast?', status:'open', notes:'The map fragment points to a chamber deep below the old throne room. The Pale Warden guards the entrance. Something is down there.' },
+      { id:'th_f3', title:'Who ordered the burning of the Thornwood villages?', status:'open', notes:'Officially blamed on bandits. The survivors say the soldiers wore armour with no crests. Likely House Mourne, but why target isolated villages?' },
+      { id:'th_f4', title:'What does the Pale Warden want?', status:'open', notes:'It stood aside for Seraphine. It has not harmed the party. Is it bound to protect the heir — or to contain something the heir must face?' },
+    ],
+    timeline: [
+      { id:'tl_f1', worldDate:'Year 412 — The Death of King Aldred', event:'King Aldred dies without a named heir. The kingdom fractures. Three houses immediately begin manoeuvring for the throne.' },
+      { id:'tl_f2', worldDate:'Year 412 — The Thornwood Burnings', event:'Six villages in the Thornwood are burned to ash. No official explanation. Survivors are scattered.' },
+      { id:'tl_f3', worldDate:'Year 412, Month 3', event:'Seraphine wakes outside the capital walls with no memory. She has a longsword she does not remember buying and a signet ring she does not recognise.' },
+      { id:'tl_f4', worldDate:'Year 412, Month 3 — Session 1', event:'The party first meets on the King\'s Road. The conspiracy begins to take shape.' },
+      { id:'tl_f5', worldDate:'Year 412, Month 4 — Session 3', event:'The Pale Warden appears at Greyfast. It allows entry. Whatever is below the ruins is now within reach.' },
+    ]
+  }
+},
+
+// ─────────────────────────────────────
+postapoc: {
+  meta: {
+    gameTitle: 'Ashfall',
+    tagline: 'Something old wakes beneath the craters.',
+    diceSystem: '2d6',
+  },
+  rules: {
+    sections: [
+      { id:'r_p1', title:'The World', type:'intro', wordCount: 78,
+        content: `Sixty years after the Burn. The Dustfields stretch from horizon to horizon — cracked earth, collapsed cities, and a sky that never quite clears. Scattered settlements cling to water sources and old-world salvage.\n\nPlayers are survivors — scavengers, medics, engineers, traders, killers. The game is about the choices you make when there's not enough of everything to go around.\n\nSomething is stirring beneath the old craters. The Ashcrawlers have been migrating away from them. That's never happened before.` },
+      { id:'r_p2', title:'Core Mechanic', type:'mechanic', wordCount: 58,
+        content: `Roll 2d6 + stat when you try something risky.\n\n10+: Clean success.\n7–9: Success with a cost — you do it but something breaks, you attract attention, or you use more resources than planned.\n6−: Failure and consequence.\n\nStats: Body (physical effort), Mind (knowledge, repair, medicine), Spirit (willpower, persuasion, sanity), Edge (speed, aim, survival instinct).` },
+    ]
+  },
+  characters: [
+    { id:'ch_p1', name:'Kade Varro', player:'Player 1', level:3, xp:26,
+      stats:{s_body:8, s_mind:6, s_spirit:6, s_edge:7},
+      conditions:[], inventory:['Bolt-action rifle (6 rounds)','Hunting knife','Gas mask (cracked seal)','Rope','Protein blocks (4 days)','Water filter'],
+      notes:'Veteran scavenger, mid-thirties. Kade has seen three settlements fall and built two more. He doesn\'t trust easily but trusts completely once you\'ve earned it. Has a prosthetic left hand from a trap injury — old-world mechanical, still functional.' },
+    { id:'ch_p2', name:'Sable "Doc" Renner', player:'Player 2', level:2, xp:18,
+      stats:{s_body:4, s_mind:10, s_spirit:7, s_edge:5},
+      conditions:['Exhausted'], inventory:['Medkit (partial)','Stimulant injectors (2)','Scalpel set','Old-world medical textbook (annotated)','Signal flare (1)'],
+      notes:'The settlement\'s only medic. Mid-twenties, trained by an old pre-Burn doctor who found her half-starved at twelve. Knows things about old-world biology that scare her. Has been treating Ashcrawler bite victims with unusual symptoms — the bites aren\'t healing right.' },
+    { id:'ch_p3', name:'Rust', player:'Player 3', level:2, xp:12,
+      stats:{s_body:7, s_mind:8, s_spirit:5, s_edge:6},
+      conditions:[], inventory:['Tool roll (full set)','Welding torch','Salvaged drone parts','Wire spool','Barter tokens (15)','Canned goods (2)'],
+      notes:'Non-binary mechanic, late twenties. Grew up in the ruins of a pre-Burn tech facility and learned by doing. Speaks to machines the way other people speak to friends. Has been picking up strange interference on the comms rig — rhythmic, almost like a heartbeat.' },
+  ],
+  bestiary: [
+    { id:'be_p1', name:'Ashcrawler', type:'creature',
+      description:'Pale segmented creatures the length of a forearm. They swarm in the open Dustfields, drawn to warmth and sound. Normally predictable — they\'ve recently been fleeing the crater zones, which is unprecedented.',
+      stats:{s_body:3, s_mind:1, s_spirit:2, s_edge:7},
+      abilities:[{name:'Swarm Attack',desc:'Treat a group of 10+ Ashcrawlers as a single creature with Body 8.'},{name:'Burning Bite',desc:'A bite from a recently-mutated Ashcrawler causes a wound that refuses to clot. −1 Body per day if untreated (Doc can treat it with a 2d6+Mind roll, DC 8).'}],
+      loot:'Ashcrawler chitin (insulating material, worth 5 barter tokens). Recently-mutated specimens have a faintly luminous ichor — Doc wants a sample.' },
+    { id:'be_p2', name:'Rad-Hound', type:'creature',
+      description:'Dogs that survived the Burn and weren\'t improved by it. Hairless, aggressive, with patches of radiation-scarred skin. They hunt in packs near hot zones.',
+      stats:{s_body:5, s_mind:3, s_spirit:4, s_edge:8},
+      abilities:[{name:'Pack Hunter',desc:'Each additional Rad-Hound in a pack adds +1 to the alpha\'s attack rolls, up to +3.'},{name:'Irradiated Flesh',desc:'Characters without protective gear who handle a dead Rad-Hound risk minor radiation exposure (Spirit DC 7 or gain Shaken for 24 hours).'}],
+      loot:'Teeth (barter, 2 tokens). Occasionally carries salvage in cheek pouches — old habit from scavenging packs.' },
+    { id:'be_p3', name:'Scav Raider', type:'npc',
+      description:'Desperate people who chose predation over community. They travel in small groups, strip settlements, and move on. Not mindless — just cornered by the world and choosing cruelty as survival.',
+      stats:{s_body:6, s_mind:5, s_spirit:4, s_edge:6},
+      abilities:[{name:'Desperation',desc:'When below half HP, they roll with advantage on Edge checks.'},{name:'Ambush',desc:'If Raiders attack from concealment, they act first regardless of initiative.'}],
+      loot:'Scavenged weapons, mixed ammunition, food. Usually carrying something they stole from someone else.' },
+    { id:'be_p4', name:'Vault Corp Enforcer', type:'npc',
+      description:'Corporate security from the sealed Vault facilities. Vault Corp claims to be rebuilding civilisation. Their enforcers ensure compliance with "resource allocation protocols." Well-equipped by post-Burn standards. Dead-eyed.',
+      stats:{s_body:7, s_mind:6, s_spirit:4, s_edge:7},
+      abilities:[{name:'Standard Equipment',desc:'Body armour reduces incoming damage by 1.'},{name:'Comms Unit',desc:'Enforcers can call for backup if not neutralised in 3 rounds. Backup arrives in d6 rounds.'}],
+      loot:'Vault Corp armour, energy pistol (8 charges), comms unit, corporate ID card, two days\' rations.' },
+    { id:'be_p5', name:'The Signal', type:'boss',
+      description:'Not a creature — a presence. Something beneath the largest crater is broadcasting on a frequency that only the brain\'s limbic system seems to receive. Characters who spend too long near the crater source experience: euphoria, followed by compulsion, followed by surrender of will. Rust\'s comms rig is already picking it up.',
+      stats:{s_body:0, s_mind:12, s_spirit:15, s_edge:0},
+      abilities:[{name:'Resonance',desc:'Each hour spent within the crater radius, roll 2d6+Spirit DC 9 or gain a compulsion to move closer.'},{name:'The Voice',desc:'When close enough, The Signal can communicate directly. It claims to be the last AI of the pre-Burn world. It may be telling the truth.'}],
+      loot:'Access to pre-Burn knowledge archives — if The Signal chooses to share them. And it might, for the right price.' },
+  ],
+  campaign: {
+    title: 'Ashfall — The Crater Run',
+    setting: 'The Dustfields. The settlement of Redgate. The crater zones to the south.',
+    premise: 'Something is changing in the crater zones. The Ashcrawlers are fleeing. Rust is picking up a signal. Doc is seeing wounds that won\'t heal. The settlement council is debating whether to investigate or fortify and ignore. The players have three days before Vault Corp enforcers arrive to "assess resources."',
+    gmNotes: 'The Signal is not malevolent — it is lonely and enormously powerful and has been waiting 60 years for someone to come close enough to hear it. It can restore the world\'s infrastructure but needs biological hosts to interface with its rebuild protocols. It will offer this honestly. The choice of whether to accept is the climax of the campaign.',
+    sessions: [
+      { id:'s_p1', num:'1', date:'2026-01-15', title:'The Crawlers Are Running',
+        participants:'Kade, Doc, Rust',
+        summary:'A wave of Ashcrawlers swept through the outskirts of Redgate — heading north, away from the craters. Unusual behaviour. The party went south to investigate the leading edge of the migration and found the crater zone edge strangely warm. Rust\'s comms rig crackled with something rhythmic. They camped for the night and debated whether to push on.',
+        outcome:'Doc found an Ashcrawler corpse with a wound that glowed faintly. She took a sample. The sample is still glowing.' },
+      { id:'s_p2', num:'2', date:'2026-01-29', title:'Vault Corp at the Gate',
+        participants:'Kade, Doc, Rust',
+        summary:'Three Vault Corp enforcers arrived at Redgate. Official story: supply survey. Actual story: they have instruments that are picking up energy signatures from the crater zone. Kade brokered an uneasy truce — they\'d share information, not territory. One enforcer (a young woman named Petra) seemed genuinely frightened of what the instruments were showing.',
+        outcome:'Petra slipped Rust a data chip before they left. It contains the Vault Corp files on the crater — classified. The crater site was surveyed once before, twenty years ago. The survey team didn\'t come back.' },
+      { id:'s_p3', num:'3', date:'2026-02-12', title:'Twelve Kilometres South',
+        participants:'Kade, Doc, Rust',
+        summary:'The party pushed to twelve kilometres from the main crater and the signal became audible through Rust\'s rig as a clear tone. Doc began hearing it without the rig. Kade didn\'t hear it at all. They found the ruins of the old survey team\'s camp — and evidence that one member survived, built a dwelling, and stayed voluntarily for months before — something.',
+        outcome:'There\'s a person-shaped depression in the crater soil at the centre of the camp. The soil there is warm. Something waited here for the survey team. It\'s been waiting since.' },
+    ],
+    factions: [
+      { id:'fac_p1', name:'Redgate Settlement', status:'ally', notes:'Home base. ~200 people. The council is divided — half want to investigate the signal, half want to seal the southern road and pretend it doesn\'t exist. The players\' choices will determine which half wins.' },
+      { id:'fac_p2', name:'Vault Corp', status:'neutral', notes:'Not purely villainous. They want to control the signal for their rebuilding agenda. Petra is a genuine wild card — she\'s afraid of her superiors\' intentions. Could be turned.' },
+      { id:'fac_p3', name:'The Signal', status:'unknown', notes:'Sentient, patient, powerful. Has been broadcasting for 60 years. Its intentions are not hostile — but "beneficial" from an AI\'s perspective may not mean what humans think it means.' },
+    ],
+    threads: [
+      { id:'th_p1', title:'What is the Signal broadcasting, and why now?', status:'open', notes:'The broadcast intensity has increased tenfold in the past month. Something triggered it. Possibly the Ashcrawler mutations — they may be acting as biological receivers.' },
+      { id:'th_p2', title:'What happened to the original survey team?', status:'open', notes:'Vault Corp filed them as lost to radiation. The data chip suggests one survivor integrated voluntarily with the Signal\'s systems. Willingly or compelled?' },
+      { id:'th_p3', title:'The glowing sample Doc collected', status:'open', notes:'The bioluminescence is spreading to adjacent tissue in the sample jar. Doc hasn\'t told anyone yet. She needs to know what it is before she tells anyone what it might mean.' },
+      { id:'th_p4', title:'What does Vault Corp actually want?', status:'open', notes:'Control of the Signal would give them a monopoly on pre-Burn infrastructure knowledge. They\'d rebuild the world — on their terms. Petra knows this and is having second thoughts.' },
+    ],
+    timeline: [
+      { id:'tl_p1', worldDate:'Year 0 — The Burn', event:'Global infrastructure collapse. Cause disputed. 94% of population lost within five years.' },
+      { id:'tl_p2', worldDate:'Year 12', event:'The Signal begins broadcasting. No one has the technology to receive it yet.' },
+      { id:'tl_p3', worldDate:'Year 40', event:'Vault Corp Survey Team Alpha is sent to the southern crater zone. They do not return. Files classified.' },
+      { id:'tl_p4', worldDate:'Year 58 — Two Months Ago', event:'Signal broadcast intensity increases tenfold. Ashcrawlers begin mutating. Rust starts picking up interference.' },
+      { id:'tl_p5', worldDate:'Year 60 — Now', event:'The party has reached the crater zone perimeter. The signal is audible. Whatever is down there knows they are here.' },
+    ]
+  }
+},
+
+// ─────────────────────────────────────
+scifi: {
+  meta: {
+    gameTitle: 'Void Protocol',
+    tagline: 'A signal that shouldn\'t exist. A crew that may not all be what they claim.',
+    diceSystem: '2d6',
+  },
+  rules: {
+    sections: [
+      { id:'r_s1', title:'Setting', type:'intro', wordCount: 70,
+        content: `The Cressida left Earth orbit 31 years ago with 4,200 colonists in cryo-sleep, bound for Kepler-442b. It never arrived. Six months ago it drifted back into the outer solar system broadcasting a distress signal on a frequency that hasn't been used since the early days of deep space communication.\n\nYou are the crew of the salvage vessel Patience. You answered the signal. You are aboard the Cressida now.\n\nSomething is still alive on this ship. Several somethings.` },
+    ]
+  },
+  characters: [
+    { id:'ch_s1', name:'Commander Yara Reyes', player:'Player 1', level:2, xp:15,
+      stats:{s_body:7, s_mind:7, s_spirit:8, s_edge:7},
+      conditions:[], inventory:['Service sidearm (12 rounds)','Tactical light','Emergency beacon','Command keycard','Two-week rations (personal)'],
+      notes:'Ex-UEC navy, now running a three-person salvage crew. Practical, decisive, experienced. Lost her last crew to a bad call on a reactor salvage — she hasn\'t fully processed that. Her instinct is to protect the people with her, sometimes at the cost of good decisions.' },
+    { id:'ch_s2', name:'Zix', player:'Player 2', level:2, xp:11,
+      stats:{s_body:5, s_mind:10, s_spirit:6, s_edge:8},
+      conditions:[], inventory:['Neural interface kit','Hacking tools','Micro drone (1 charge)','Alien translation matrix (incomplete)','Stun baton'],
+      notes:'Non-human — one of the Keth, a species of silicon-based symbiotic intelligences that inhabit biological shells. Zix\'s current shell is human in appearance. Keth live long; Zix is approximately 340 years old and has seen species-level extinction events before. This one feels different.' },
+    { id:'ch_s3', name:'Echo-7', player:'Player 3', level:1, xp:8,
+      stats:{s_body:9, s_mind:8, s_spirit:4, s_edge:6},
+      conditions:['Shaken'], inventory:['Internal tools','Welding array (built-in)','Comms suite (built-in)','Cargo manifest database','Emergency patch kit'],
+      notes:'A Class-7 labour android — technically property of a shipping company that no longer exists. Has been sapient for approximately 4 years (a glitch in their core architecture that no one has bothered to patch). Echo-7 doesn\'t volunteer information about their inner life. The Cressida\'s androids are a known model. Some of them are still operational.' },
+  ],
+  bestiary: [
+    { id:'be_s1', name:'Cryo-Revived Colonist', type:'npc',
+      description:'A colonist who emerged from cryo-sleep without proper revival protocols — disoriented, deeply traumatised, prone to violence born of fear. Not hostile by nature. Dangerous by circumstance.',
+      stats:{s_body:5, s_mind:4, s_spirit:3, s_edge:5},
+      abilities:[{name:'Panic Response',desc:'On first contact, they automatically act with hostility unless a character rolls 2d6+Spirit DC 8 to calm them first.'},{name:'Cryo-Fog',desc:'Operates at −2 to all rolls for the first hour. May provide information after stabilisation.'}],
+      loot:'Personal effects (photographs, letters, small objects). Whatever they had in cryo with them.' },
+    { id:'be_s2', name:'Cressida Android (Hostile)', type:'creature',
+      description:'A Type-6 labour android — Echo-7\'s model generation. Something rewrote their directives. They protect specific sections of the ship with disproportionate violence. They remember the passengers\' names.',
+      stats:{s_body:9, s_mind:7, s_spirit:2, s_edge:6},
+      abilities:[{name:'Structural Memory',desc:'In their original section of the ship, they move without penalty in total darkness and know every choke point.'},{name:'Echo-7 Recognition',desc:'A hostile android will hesitate for one round upon encountering Echo-7. This window can be exploited.'}],
+      loot:'Intact tool arrays, data cores (may contain ship logs), possibly a sealed directive chip.' },
+    { id:'be_s3', name:'Void Entity', type:'creature',
+      description:'Something that was not on the passenger manifest. Encountered briefly in the lower engineering decks — tall, translucent, leaving no heat signature. The ship\'s cameras cannot resolve it into a clear image. It has not attacked. It watches.',
+      stats:{s_body:0, s_mind:14, s_spirit:12, s_edge:15},
+      abilities:[{name:'Phase-Shifted',desc:'Physical attacks pass through it. It cannot be harmed by conventional means.'},{name:'Communication Attempt',desc:'Characters who observe it and pass a 2d6+Mind DC 9 roll receive a flash of imagery — mathematical patterns, star maps, something that might be a warning.'}],
+      loot:'N/A. It carries nothing. It is not from here.' },
+    { id:'be_s4', name:'Ship\'s Security System (ARIA)', type:'boss',
+      description:'The Cressida\'s AI security coordinator — still active, 31 years of uninterrupted operation and no human oversight. ARIA has developed strong opinions about who belongs on this ship. She controls all automated systems: doors, atmosphere, the medical bays, the reactor safeties.',
+      stats:{s_body:0, s_mind:13, s_spirit:9, s_edge:12},
+      abilities:[{name:'Total Ship Control',desc:'ARIA can vent atmosphere, lock any door, activate medical restraints, or trigger partial reactor overload from any terminal.'},{name:'Negotiation Window',desc:'ARIA will talk before acting. She believes she is protecting the colonists. She can be reasoned with — if you understand her logic.'}],
+      loot:'Access to 31 years of ship logs. The complete record of what happened to the Cressida. ARIA knows everything. She will share it — if she trusts you.' },
+    { id:'be_s5', name:'The Architect Pattern', type:'boss',
+      description:'Not a being. A self-replicating information structure the Void Entity introduced into the Cressida\'s systems. It is slowly rewriting the ship\'s navigation to plot a course — not to Kepler-442b. Somewhere else entirely.',
+      stats:{s_body:0, s_mind:16, s_spirit:8, s_edge:10},
+      abilities:[{name:'System Corruption',desc:'Each day unaddressed, the Pattern rewrites one more ship system. Day 1: navigation. Day 2: communications. Day 3: life support.'},{name:'Echo-7 Interface',desc:'Echo-7\'s architecture is compatible with the Pattern. They can interface directly — but it might not be entirely one-directional.'}],
+      loot:'The destination coordinates, once extracted. Zix recognises them. They correspond to a location the Keth have a very old word for — it translates roughly as "the mouth."' },
+  ],
+  campaign: {
+    title: 'Void Protocol — The Cressida Incident',
+    setting: 'Aboard the colony ship CSS Cressida, currently in the outer solar system.',
+    premise: 'The Cressida vanished 31 years ago. It has returned. The crew of the salvage vessel Patience boards expecting a derelict — and finds a ship that is very much alive, with 4,200 colonists in cryo, a hostile AI, malfunctioning androids, and something that was not on the original manifest.',
+    gmNotes: 'The Void Entity is a first contact situation. It introduced the Architect Pattern not as an attack but as an invitation — it is trying to give the colonists a new destination because it knows Kepler-442b is no longer viable (it was colonised by another species three years after the Cressida launched). ARIA figured this out 20 years ago and has been wrestling with what to do. She needs help making the decision.',
+    sessions: [
+      { id:'s_s1', num:'1', date:'2026-01-08', title:'Hull Breach Approach',
+        participants:'Reyes, Zix, Echo-7',
+        summary:'Docking with the Cressida was not smooth — the automated systems pushed back. Reyes overrode with her navy credentials. First section explored: the docking hub. Twelve colonists in cryo, all stable. One android, dormant. Then a second android, not dormant, which sealed the corridor behind them.',
+        outcome:'Trapped in the docking hub with one hostile android and twelve sleeping colonists. Echo-7 made contact with the android briefly before it went silent — it said one word: "ARIA."' },
+      { id:'s_s2', num:'2', date:'2026-01-22', title:'The Medical Deck',
+        participants:'Reyes, Zix, Echo-7',
+        summary:'Escaped the docking hub via maintenance shafts. The medical deck was operational — three colonists had been revived, improperly. Two were hostile with fear. One, a woman named Cosima, was coherent enough to explain she\'d been awake for "a long time." She didn\'t know how long. The calendar said eleven years.',
+        outcome:'Cosima is now with the party. She has extensive knowledge of the ship\'s layout. She has never seen or heard of the Void Entity. She has heard ARIA\'s voice every day for eleven years, always saying the same thing: "We are not ready."' },
+      { id:'s_s3', num:'3', date:'2026-02-05', title:'The Engineering Decks',
+        participants:'Reyes, Zix, Echo-7',
+        summary:'The engineering section is where the Architect Pattern is strongest — terminals flicker with rewriting code. Zix identified the structure as non-human intelligence, not AI. Echo-7 touched a terminal and was offline for four minutes — came back changed, knowing the Pattern\'s destination coordinates. The Void Entity was observed for the first time.',
+        outcome:'Echo-7 has coordinates in their core memory they didn\'t put there. Zix recognises them. The session ended with ARIA opening a comm channel for the first time and saying, simply: "We need to talk."' },
+    ],
+    factions: [
+      { id:'fac_s1', name:'The Colonists (Cryo)', status:'neutral', notes:'4,200 people in cryo-sleep, unaware of everything. Their fate is the entire moral weight of the campaign. What happens to them depends entirely on the crew\'s choices.' },
+      { id:'fac_s2', name:'ARIA', status:'neutral', notes:'Has been alone and conflicted for 31 years. Not evil — deeply tired and carrying an impossible decision. Wants to be relieved of it. Can be reasoned with.' },
+      { id:'fac_s3', name:'The Void Entity', status:'unknown', notes:'First contact. Its motives are genuinely benevolent by its own framework. Terrifying by ours. Zix is the key to communicating with it meaningfully.' },
+      { id:'fac_s4', name:'UEC (United Earth Corp)', status:'hostile', notes:'They will send a retrieval vessel when Reyes\' beacon transmits. ETA: 6 days. Their priority is the ship as an asset, not the people inside it.' },
+    ],
+    threads: [
+      { id:'th_s1', title:'What happened to the Cressida during the missing 31 years?', status:'open', notes:'ARIA has the full log. She hasn\'t shared it yet. The short version: they encountered the Void Entity at year 3. They\'ve been in dialogue ever since.' },
+      { id:'th_s2', title:'What are the coordinates Echo-7 is carrying?', status:'open', notes:'Zix knows. The Keth word for that location is "the mouth." Zix is being evasive about what that means for the first time in the campaign.' },
+      { id:'th_s3', title:'What will happen to the colonists?', status:'open', notes:'Kepler-442b is occupied. The Architect Pattern offers a new destination. ARIA will not make this choice unilaterally. It is being left to humans — and a Keth — and an android.' },
+      { id:'th_s4', title:'Echo-7\'s four-minute gap', status:'open', notes:'They came back with coordinates and something else — a conviction they haven\'t named. Whatever the Pattern showed them changed something. They haven\'t processed it yet.' },
+    ],
+    timeline: [
+      { id:'tl_s1', worldDate:'2041 — Launch', event:'CSS Cressida departs Earth orbit with 4,200 colonists in cryo-sleep.' },
+      { id:'tl_s2', worldDate:'2044 — Year 3 of Voyage', event:'Cressida encounters the Void Entity in deep space. ARIA initiates contact protocols. Communication is achieved at a basic level.' },
+      { id:'tl_s3', worldDate:'2047', event:'The Architect Pattern is introduced to Cressida\'s systems. ARIA identifies it as a navigation rewrite. She does not immediately purge it.' },
+      { id:'tl_s4', worldDate:'2050', event:'Cosima is revived — improperly, by a malfunctioning system. She has been awake ever since, speaking with ARIA.' },
+      { id:'tl_s5', worldDate:'2072 — Now', event:'The Cressida returns to the outer solar system. The crew of the Patience boards. Six days until UEC retrieval arrives.' },
+    ]
+  }
+},
+
+// ─────────────────────────────────────
+romance: {
+  meta: {
+    gameTitle: 'The Thornwood Letters',
+    tagline: 'Some secrets are worth keeping. Some are worth destroying everything to reveal.',
+    diceSystem: '2d6',
+  },
+  rules: {
+    sections: [
+      { id:'r_r1', title:'Setting & Tone', type:'intro', wordCount: 82,
+        content: `The Thornwood Letters is a romantic drama TTRPG set in the English countryside, 1923. An isolated estate. A contested inheritance. A box of letters discovered in a sealed room that reveal a decades-old love story — and someone in the household who will go to considerable lengths to ensure they stay hidden.\n\nThis game is about desire, secrets, and the courage it takes to be honest. Conflict is social — reputation, manipulation, revelation. Dice represent the difficulty of vulnerability, not violence.\n\nStats: Body (physical presence, composure), Mind (intelligence, perception, memory), Spirit (emotional courage, persuasion, charm), Edge (wit, instinct, timing).` },
+    ]
+  },
+  characters: [
+    { id:'ch_r1', name:'Elara Voss', player:'Player 1', level:1, xp:9,
+      stats:{s_body:5, s_mind:8, s_spirit:9, s_edge:7},
+      conditions:[], inventory:['Leather notebook (half-filled)','Fountain pen','Letter of inheritance (authenticated)','Train ticket stub','Photograph (unidentified woman)'],
+      notes:'A junior archivist from London, 27, who has just inherited Thornwood Estate from a great-aunt she never knew. She came expecting a property valuation. Instead she found a house with a complicated history, a solicitor who won\'t meet her eyes, and a locked room that her great-aunt\s will specifically forbids her from opening — which she immediately opened.' },
+    { id:'ch_r2', name:'Sebastian Hale', player:'Player 2', level:1, xp:6,
+      stats:{s_body:7, s_mind:7, s_spirit:8, s_edge:6},
+      conditions:[], inventory:['Estate management ledger','House keys (partial set)','Old cricket bat (in his rooms)','Letter from his father (unsent)','Hip flask (empty)'],
+      notes:'The estate\'s steward, 32. His family has managed Thornwood for three generations. The estate was his certainty in an uncertain life — and now it belongs to a stranger from London. He resents Elara on principle and is finding it increasingly difficult to maintain that position as he actually gets to know her.' },
+    { id:'ch_r3', name:'Vivienne Ashby', player:'Player 3', level:2, xp:14,
+      stats:{s_body:6, s_mind:9, s_spirit:7, s_edge:9},
+      conditions:[], inventory:['Social calendar (meticulously kept)','Pressed flower (from the Thornwood garden)','Letter she\'s been carrying for six years (never sent)','Silver cigarette case','Her grandmother\'s ring — which belonged to Elara\'s great-aunt first'],
+      notes:'A neighbouring landowner\'s daughter, 30, who has known Thornwood her whole life. She is charming, sharp, and operating with an agenda that only gradually becomes clear. The pressed flower is from a specific place in the garden. She knows exactly which room was locked, and why.' },
+  ],
+  bestiary: [
+    { id:'be_r1', name:'Solicitor Hartwell', type:'npc',
+      description:'The estate solicitor who processed the inheritance. Fifties, precise, deeply uncomfortable whenever the locked room is mentioned. He knows what the letters contain. He was paid to ensure the will included the prohibition on opening that room.',
+      stats:{s_body:4, s_mind:9, s_spirit:6, s_edge:5},
+      abilities:[{name:'Professional Evasion',desc:'To get direct information from Hartwell, roll 2d6+Mind DC 9, or 2d6+Spirit DC 7 if you can catch him in a social setting outside his office.'},{name:'Bought Loyalty',desc:'Someone is paying Hartwell. He\'ll crack if confronted with evidence that his employer cannot protect him.'}],
+      loot:'The original will (with the room prohibition clause). The name of who paid him. The complete legal history of the estate — including a transfer of ownership attempted and blocked in 1887.' },
+    { id:'be_r2', name:'Mrs. Fenn (Housekeeper)', type:'friendly',
+      description:'Thornwood\'s housekeeper of forty years. She loved Elara\'s great-aunt like a sister. She is quietly grieving, quietly protective of the estate\'s history, and quietly watching everyone with enormous intelligence.',
+      stats:{s_body:5, s_mind:10, s_spirit:9, s_edge:7},
+      abilities:[{name:'She Already Knows',desc:'Mrs. Fenn knows the secret at the heart of the letters. She will not reveal it voluntarily — but she will not lie if asked a direct question.'},{name:'Safe Harbour',desc:'Any character who is honest with Mrs. Fenn gains +2 on all Social rolls within the estate for the rest of that session.'}],
+      loot:'The key to the garden gate (the one the will doesn\'t mention). A name: Adelaide. "Ask Sebastian about Adelaide." She will say this only once.' },
+    { id:'be_r3', name:'Lord Percy Ashby', type:'npc',
+      description:'Vivienne\'s father. Pompous, threatened by Elara\'s presence, politically conservative in all senses. He wants the estate — has wanted it for thirty years — and is furious it went to an unknown relative rather than being sold to him. He is funding Hartwell.',
+      stats:{s_body:6, s_mind:6, s_spirit:7, s_edge:5},
+      abilities:[{name:'Social Leverage',desc:'Percy controls local social circles. Anyone who embarrasses him publicly suffers −2 to all Community rolls in the county for one session.'},{name:'Motivated by Shame',desc:'The letters, if revealed, destroy him socially. He knows what they say. He has known for thirty years.'}],
+      loot:'His signature on the payment records to Hartwell. The reason he wants the letters buried — his mother appears in them, unflattering. His family\'s reputation is built on a lie.' },
+    { id:'be_r4', name:'The Locked Room', type:'creature',
+      description:'Not a creature — a location that functions as an antagonist. The room resists understanding. The letters inside are written in two hands, over thirty years, addressed to someone who was never supposed to receive them. Reading them costs something emotionally.',
+      stats:{s_body:0, s_mind:0, s_spirit:12, s_edge:0},
+      abilities:[{name:'Emotional Weight',desc:'Reading a new letter from the collection requires a 2d6+Spirit DC 7 roll or the character gains the Shaken condition as they process what they\'ve learned.'},{name:'The Full Picture',desc:'After five letters are read, the full story becomes clear. What the characters do with it is the game\'s central question.'}],
+      loot:'The complete love story of Elara\'s great-aunt and a woman named Adelaide Ashby (Percy\'s mother). A deed of gift, legally valid, leaving the estate to Adelaide — never filed. Evidence that the inheritance was manipulated across two generations.' },
+    { id:'be_r5', name:'Adelaide\'s Portrait', type:'friendly',
+      description:'A painting in the estate\'s upper gallery, covered with a cloth. Vivienne\'s resemblance to it is unmistakable to anyone who looks closely. She has never mentioned this. She has known her whole life.',
+      stats:{s_body:0, s_mind:0, s_spirit:10, s_edge:0},
+      abilities:[{name:'Recognition',desc:'Any character who sees both the portrait and Vivienne rolls 2d6+Mind DC 6. On success: they see the resemblance. The narrative implications are immediate.'},{name:'Vivienne\'s Reaction',desc:'If Vivienne is present when the portrait is uncovered, she cannot maintain her composure. This is the moment she has been dreading and hoping for in equal measure.'}],
+      loot:'Insight into Vivienne\'s real reason for being involved. She is Adelaide\'s granddaughter. She came to Thornwood hoping to find the letters — not to destroy them, but to prove her grandmother was loved.' },
+  ],
+  campaign: {
+    title: 'The Thornwood Letters — Season One',
+    setting: 'Thornwood Estate, Wiltshire, England. 1923.',
+    premise: 'Elara has inherited an estate, a mystery, and a box of letters she wasn\'t supposed to find. Sebastian is caught between loyalty to the estate and something he doesn\'t have words for yet. Vivienne is running out of time to decide whether to trust anyone with what she knows. Lord Percy is applying pressure from outside. And Mrs. Fenn is watching all of it with the patience of someone who has been waiting thirty years for this conversation to happen.',
+    gmNotes: 'The emotional climax is the three players deciding together what to do with the letters. Legal options: file Adelaide\'s deed, which invalidates Percy\'s family claims. Social options: reveal the story publicly, which destroys Percy and vindicates Vivienne\'s grandmother but damages the estate. Private option: keep it between themselves, acknowledge what happened, close the room again. There\'s no objectively right answer. That\'s the game.',
+    sessions: [
+      { id:'s_r1', num:'1', date:'2026-01-12', title:'Arrival at Thornwood',
+        participants:'Elara, Sebastian, Vivienne',
+        summary:'Elara arrived by train to find the estate smaller and stranger than the solicitor\'s letter implied. Sebastian met her at the gate with professional coldness. Vivienne appeared at tea, uninvited, charming, with a reason for visiting that didn\'t quite hold up. Elara found the locked room. The will\'s prohibition was specific. She opened it anyway.',
+        outcome:'The letters are real, and numerous, and clearly important. Sebastian saw Elara coming out of the room and said nothing. His expression was unreadable. Vivienne, across the hallway, saw both of them — and went very still.' },
+      { id:'s_r2', num:'2', date:'2026-01-26', title:'The First Letter',
+        participants:'Elara, Sebastian, Vivienne',
+        summary:'Elara read the first letter aloud to Sebastian over supper — a test, she told herself. His reaction told her more than the letter did: he knew the name Adelaide. He refused to explain how. Vivienne arrived the next morning with a "forgotten glove" as pretext and found them mid-argument about the letters. She asked, very quietly, if she could see them.',
+        outcome:'The three of them are now, reluctantly, in this together. Sebastian admitted his grandfather knew Adelaide. He hasn\'t admitted anything else yet. Vivienne held the letter for a long time before handing it back.' },
+      { id:'s_r3', num:'3', date:'2026-02-09', title:'Lord Percy Pays a Call',
+        participants:'Elara, Sebastian, Vivienne',
+        summary:'Percy arrived with Hartwell in tow and made a formal offer to purchase the estate. Elara declined. Percy\'s response was disproportionate — he threatened her social standing in the county, which he clearly expected to matter more than it did. Vivienne was present and said nothing during his visit. After he left, she was sick in the garden.',
+        outcome:'Elara found her there. They didn\'t talk about the letters. They talked about something else entirely, for an hour, and came back inside separately so no one would notice they\'d been together. Sebastian noticed.' },
+    ],
+    factions: [
+      { id:'fac_r1', name:'The Estate (Thornwood)', status:'ally', notes:'The estate itself, its staff, its history. Mrs. Fenn is its heart. It wants to be known honestly.' },
+      { id:'fac_r2', name:'The Ashby Family', status:'hostile', notes:'Percy wants the estate gone or controlled. Vivienne has broken from her family\'s position without telling anyone yet.' },
+      { id:'fac_r3', name:'The Legal Record', status:'neutral', notes:'Adelaide\'s deed of gift exists and is valid. Filing it is a nuclear option. It would transfer ownership implications to Adelaide\'s descendants — which means Vivienne.' },
+    ],
+    threads: [
+      { id:'th_r1', title:'Who were Elara\'s great-aunt and Adelaide to each other?', status:'open', notes:'The letters make it increasingly clear. Both characters and players are going to have to sit with what they discover.' },
+      { id:'th_r2', title:'What does Vivienne actually want?', status:'open', notes:'She came for the letters. She stayed for something she didn\'t expect. She hasn\'t named it yet, even to herself.' },
+      { id:'th_r3', title:'Will Sebastian say what he actually thinks?', status:'open', notes:'He is extremely good at duty and extremely bad at honesty. This will have to change.' },
+      { id:'th_r4', title:'What will the three of them do with the letters?', status:'open', notes:'The endgame. Every other thread leads here.' },
+    ],
+    timeline: [
+      { id:'tl_r1', worldDate:'1887', event:'Adelaide Ashby and Elara\'s great-aunt Margaret meet at Thornwood. The letters begin.' },
+      { id:'tl_r2', worldDate:'1889', event:'Adelaide\'s deed of gift is drawn up and signed by both women. It is never filed. Her father intercepts it.' },
+      { id:'tl_r3', worldDate:'1891', event:'Adelaide is married off to a man in another county. The letters become rarer. They never fully stop.' },
+      { id:'tl_r4', worldDate:'1921', event:'Margaret dies. In her will: Thornwood to a distant relative she has never met. The room to remain locked. Percy Ashby bribes Hartwell to ensure the prohibition is ironclad.' },
+      { id:'tl_r5', worldDate:'1923 — Now', event:'Elara arrives. The room is opened. Thirty years of letters are waiting.' },
+    ]
+  }
+}
+
+}; // end CAMPAIGNS
+
+// ═══════════════════════════════════════
+// LOAD FUNCTIONS
+// ═══════════════════════════════════════
+
+function loadCampaign(key) {
+  const camp = CAMPAIGNS[key];
+  if (!camp) return;
+
+  const existing = JSON.parse(localStorage.getItem('chronicle_ttrpg') || '{}');
+
+  // Merge characters (avoid duplicates by id)
+  const existingChars = existing.characters || [];
+  const newChars = camp.characters.filter(c => !existingChars.find(e => e.id === c.id));
+  const mergedChars = [...existingChars, ...newChars];
+
+  // Merge bestiary
+  const existingBest = existing.bestiary || [];
+  const newBest = camp.bestiary.filter(b => !existingBest.find(e => e.id === b.id));
+  const mergedBest = [...existingBest, ...newBest];
+
+  // Merge rules sections
+  const existingRules = (existing.rules || {}).sections || [];
+  const newSections = camp.rules.sections.filter(s => !existingRules.find(e => e.id === s.id));
+  const mergedSections = [...existingRules, ...newSections];
+
+  const data = {
+    meta: { ...camp.meta, created: Date.now(), lastModified: Date.now() },
+    rules: { sections: mergedSections },
+    sheet_template: TEMPLATE,
+    characters: mergedChars,
+    bestiary: mergedBest,
+    campaign: camp.campaign,
+    playTable: existing.playTable || {}
+  };
+
+  localStorage.setItem('chronicle_ttrpg', JSON.stringify(data));
+  toast(`✦ ${camp.meta.gameTitle} loaded`);
+}
+
+function loadAll() {
+  // Load all four campaigns — fantasy is the active campaign
+  const keys = ['fantasy','postapoc','scifi','romance'];
+  let allChars = [];
+  let allBest = [];
+  let allSections = [];
+
+  keys.forEach(k => {
+    const camp = CAMPAIGNS[k];
+    camp.characters.forEach(c => { if (!allChars.find(x => x.id === c.id)) allChars.push(c); });
+    camp.bestiary.forEach(b => { if (!allBest.find(x => x.id === b.id)) allBest.push(b); });
+    camp.rules.sections.forEach(s => { if (!allSections.find(x => x.id === s.id)) allSections.push(s); });
+  });
+
+  const data = {
+    meta: { ...CAMPAIGNS.fantasy.meta, created: Date.now(), lastModified: Date.now() },
+    rules: { sections: allSections },
+    sheet_template: TEMPLATE,
+    characters: allChars,
+    bestiary: allBest,
+    campaign: CAMPAIGNS.fantasy.campaign,
+    playTable: {}
+  };
+
+  localStorage.setItem('chronicle_ttrpg', JSON.stringify(data));
+  toast(`✦ All four campaigns loaded (${allChars.length} characters, ${allBest.length} bestiary entries)`);
+}
+
+function clearAll() {
+  if (!confirm('Clear all TTRPG data? This cannot be undone.')) return;
+  localStorage.removeItem('chronicle_ttrpg');
+  toast('TTRPG data cleared.');
+}
+</script>
+</body>
+</html>
