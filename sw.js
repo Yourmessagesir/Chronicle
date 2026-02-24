@@ -1,4 +1,4 @@
-const CACHE = 'chronicle-v8';
+const CACHE = 'chronicle-v10';
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -11,13 +11,19 @@ const ASSETS = [
   './boards.html',
   './comic.html',
   './rpg.html',
+  './rpg-rules.html',
+  './rpg-characters.html',
+  './rpg-bestiary.html',
+  './rpg-campaign.html',
+  './rpg-play.html',
+  './rpg-map.html',
+  './rpg-mapplay.html',
   './cards.html',
   './vault.html',
   './settings.html',
   'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap'
 ];
 
-// Install: cache shell + initial modules
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
@@ -26,7 +32,6 @@ self.addEventListener('install', e => {
   );
 });
 
-// Activate: clean up old caches
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
@@ -35,9 +40,7 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Fetch: network-first for HTML (always get latest), cache-first for fonts/assets
 self.addEventListener('fetch', e => {
-  // Network-first for HTML so updates always reach users
   if (e.request.url.endsWith('.html') || e.request.mode === 'navigate') {
     e.respondWith(
       fetch(e.request)
@@ -50,7 +53,6 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
-  // Cache-first for fonts and other static assets
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;

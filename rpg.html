@@ -3,338 +3,232 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>TTRPG — Chronicle & Forge</title>
+<title>RPG Hub — Chronicle & Forge</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;
-  --border:#2e2e42;--border2:#3d3d58;
-  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#8a6a20;
-  --text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;
-  --red:#cc5555;--green:#55aa77;--accent:#7b6cee;
-}
+:root{--bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;--border:#2e2e42;--border2:#3d3d58;--gold:#c9a84c;--gold2:#e8c97a;--gold3:#8a6a20;--text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;--red:#cc5555;--green:#55aa77;--accent:#7b6cee;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;padding:14px 14px 60px;min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;padding:0 0 60px;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4;}
 
-/* ── HEADER ── */
-.hub-header{margin-bottom:20px;position:relative;}
-.hub-crest{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;color:var(--text3);text-transform:uppercase;margin-bottom:6px;}
-.hub-title{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--gold2);letter-spacing:.06em;line-height:1.2;margin-bottom:4px;}
-.hub-tagline{font-size:14px;color:var(--text2);font-style:italic;margin-bottom:12px;}
-.hub-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
-.hub-divider{height:1px;background:linear-gradient(90deg,var(--gold3),transparent);margin-bottom:16px;}
+/* HEADER */
+.hub-header{padding:18px 16px 12px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);}
+.hub-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.2em;color:var(--text3);text-transform:uppercase;margin-bottom:4px;}
+.hub-game{font-family:'Cinzel',serif;font-size:20px;color:var(--gold2);letter-spacing:.06em;margin-bottom:2px;}
+.hub-tagline{font-size:13px;color:var(--text2);font-style:italic;}
+.hub-edit{background:none;border:1px solid var(--border);color:var(--text3);padding:4px 10px;border-radius:3px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:.08em;cursor:pointer;margin-top:8px;}
+.hub-edit:active{border-color:var(--gold);color:var(--gold);}
 
-.btn{padding:7px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .15s;white-space:nowrap;}
-.btn:active{border-color:var(--gold);color:var(--gold);}
-.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
-.btn-sm{padding:5px 10px;font-size:9px;}
+/* STATS ROW */
+.stats-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.stat-chip{flex:1;padding:10px 6px;text-align:center;border-right:1px solid var(--border);}
+.stat-chip:last-child{border-right:none;}
+.stat-num{font-family:'Cinzel',serif;font-size:18px;color:var(--gold);display:block;}
+.stat-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;margin-top:2px;display:block;}
 
-/* ── STATS ROW ── */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;}
-.stat-chip{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:10px 6px;text-align:center;}
-.stat-chip-val{font-family:'Cinzel',serif;font-size:18px;color:var(--gold);line-height:1;}
-.stat-chip-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;margin-top:3px;}
+/* MODULE GRID */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:14px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold3),var(--gold));opacity:0;transition:opacity .2s;}
+.card:active::before{opacity:1;}
+.card:active{border-color:var(--gold3);background:var(--bg3);}
+.card.full{grid-column:1/-1;}
+.card-icon{font-size:26px;margin-bottom:8px;display:block;}
+.card-name{font-family:'Cinzel',serif;font-size:11px;color:var(--gold);letter-spacing:.06em;margin-bottom:4px;}
+.card-desc{font-size:12px;color:var(--text3);line-height:1.4;}
+.card-count{position:absolute;top:10px;right:10px;font-family:'Cinzel',serif;font-size:9px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:2px 7px;}
 
-/* ── MODULE CARDS ── */
-.section-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;color:var(--text3);text-transform:uppercase;margin-bottom:10px;}
-.module-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
-.module-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
-.module-card:active{border-color:var(--gold);transform:translateY(-1px);}
-.module-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--card-accent,var(--border2));border-radius:3px 0 0 3px;}
-.module-card-icon{font-size:22px;margin-bottom:8px;display:block;}
-.module-card-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.06em;color:var(--text);margin-bottom:3px;}
-.module-card-desc{font-size:12px;color:var(--text3);line-height:1.4;}
-.module-card-badge{position:absolute;top:10px;right:10px;font-family:'Cinzel',serif;font-size:8px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:2px 7px;}
-.module-card.featured{grid-column:span 2;display:flex;align-items:center;gap:14px;}
-.module-card.featured .module-card-icon{font-size:30px;margin-bottom:0;flex-shrink:0;}
-.module-card.featured .module-card-title{font-size:13px;}
-.module-card.featured .module-card-desc{font-size:13px;color:var(--text2);}
+/* DICE ROLLER */
+.dice-row{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;padding:0 14px 4px;}
+.die{width:44px;height:44px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.die:active{border-color:var(--gold);background:var(--bg3);transform:scale(.9);}
+.die-face{font-size:18px;line-height:1;}
+.die-label{font-family:'Cinzel',serif;font-size:7px;color:var(--text3);letter-spacing:.06em;}
+.roll-result{text-align:center;padding:8px 14px 14px;}
+.roll-num{font-family:'Cinzel',serif;font-size:38px;color:var(--gold2);line-height:1;transition:all .2s;}
+.roll-info{font-size:13px;color:var(--text3);margin-top:3px;font-style:italic;}
+@keyframes pop{0%{transform:scale(1.5);opacity:.5;}100%{transform:scale(1);opacity:1;}}
+.popping{animation:pop .25s cubic-bezier(.22,1.8,.36,1);}
 
-/* ── DICE ROLLER ── */
-.dice-panel{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:16px;}
-.dice-panel-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:10px;}
-.dice-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;}
-.die-btn{width:40px;height:40px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--gold);font-family:'Cinzel',serif;font-size:10px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;}
-.die-btn:active{background:var(--bg4);border-color:var(--gold);transform:scale(.93);}
-.die-btn .die-icon{font-size:16px;}
-.die-btn .die-label{font-size:7px;color:var(--text3);}
-.dice-result{min-height:48px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;}
-.dice-result-val{font-family:'Cinzel',serif;font-size:28px;color:var(--gold2);transition:all .2s;}
-.dice-result-info{font-size:12px;color:var(--text3);text-align:right;}
-.dice-result-info .roll-expr{color:var(--text2);font-style:italic;}
-
-/* ── LEGACY NOTICE ── */
-.legacy-bar{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;}
-.legacy-text{font-size:12px;color:var(--text3);font-style:italic;}
-
-/* ── MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:flex-end;justify-content:center;}
-.modal-overlay.open{display:flex;}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-top:1px solid var(--gold3);border-radius:8px 8px 0 0;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0));}
-.modal h2{font-family:'Cinzel',serif;font-size:15px;color:var(--gold);letter-spacing:.1em;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+/* SETTINGS MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-top:1px solid var(--gold3);border-radius:8px 8px 0 0;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:.1em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
 .field{margin-bottom:12px;}
 label{display:block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:5px;}
-input[type="text"],textarea{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;}
-input:focus,textarea:focus{border-color:var(--gold);}
-.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
-
+input[type="text"],select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;}
+input:focus{border-color:var(--gold);}
+select option{background:var(--bg3);}
+.modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end;}
+.btn{padding:7px 14px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.section-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;color:var(--text3);text-transform:uppercase;padding:0 14px;margin:4px 0 10px;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
-@keyframes rollPop{0%{transform:scale(1.3);opacity:.7;}100%{transform:scale(1);opacity:1;}}
-.rolling{animation:rollPop .25s ease-out;}
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <div class="hub-header">
-  <div class="hub-crest">Chronicle & Forge · Tabletop System</div>
-  <div class="hub-title-row">
-    <div>
-      <div class="hub-title" id="gameTitle">North Eden</div>
-      <div class="hub-tagline" id="gameTagline">Tap to add a tagline…</div>
-    </div>
-    <button class="btn btn-sm" onclick="openSettings()">⚙ Edit</button>
-  </div>
-  <div class="hub-divider"></div>
+  <div class="hub-title">Chronicle & Forge · RPG Suite</div>
+  <div class="hub-game" id="hubGame">My Game</div>
+  <div class="hub-tagline" id="hubTagline">Your world awaits</div>
+  <button class="hub-edit" onclick="openSettings()">⚙ Game Settings</button>
 </div>
 
 <!-- STATS -->
 <div class="stats-row">
-  <div class="stat-chip"><div class="stat-chip-val" id="statRules">0</div><div class="stat-chip-label">Rule Pages</div></div>
-  <div class="stat-chip"><div class="stat-chip-val" id="statChars">0</div><div class="stat-chip-label">Characters</div></div>
-  <div class="stat-chip"><div class="stat-chip-val" id="statCreatures">0</div><div class="stat-chip-label">Creatures</div></div>
-  <div class="stat-chip"><div class="stat-chip-val" id="statSessions">0</div><div class="stat-chip-label">Sessions</div></div>
+  <div class="stat-chip"><span class="stat-num" id="statPages">0</span><span class="stat-label">Pages</span></div>
+  <div class="stat-chip"><span class="stat-num" id="statChars">0</span><span class="stat-label">Characters</span></div>
+  <div class="stat-chip"><span class="stat-num" id="statCreatures">0</span><span class="stat-label">Creatures</span></div>
+  <div class="stat-chip"><span class="stat-num" id="statSessions">0</span><span class="stat-label">Sessions</span></div>
 </div>
 
 <!-- MODULE CARDS -->
-<div class="section-label">Modules</div>
-<div class="module-grid">
+<div class="grid">
 
-  <div class="module-card featured" style="--card-accent:var(--gold);" onclick="openModule('rpg-play.html')">
-    <span class="module-card-icon">⚔️</span>
+  <div class="card" onclick="nav('rpg-rules')">
+    <span class="card-icon">📖</span>
+    <div class="card-name">Rulebook</div>
+    <div class="card-desc">Write your rules, mechanics & zine content</div>
+    <div class="card-count" id="countRules">0 pg</div>
+  </div>
+
+  <div class="card" onclick="nav('rpg-characters')">
+    <span class="card-icon">🧙</span>
+    <div class="card-name">Characters</div>
+    <div class="card-desc">Sheet designer & player characters</div>
+    <div class="card-count" id="countChars">0</div>
+  </div>
+
+  <div class="card" onclick="nav('rpg-bestiary')">
+    <span class="card-icon">🐉</span>
+    <div class="card-name">Bestiary</div>
+    <div class="card-desc">Creatures, NPCs, bosses & stat blocks</div>
+    <div class="card-count" id="countBest">0</div>
+  </div>
+
+  <div class="card" onclick="nav('rpg-campaign')">
+    <span class="card-icon">📜</span>
+    <div class="card-name">Campaign</div>
+    <div class="card-desc">Sessions, factions, threads & timeline</div>
+    <div class="card-count" id="countSess">0</div>
+  </div>
+
+  <div class="card full" onclick="nav('rpg-play')" style="display:flex;align-items:center;gap:16px;padding:16px;">
+    <span style="font-size:36px;">⚔️</span>
     <div>
-      <div class="module-card-title">Play Table</div>
-      <div class="module-card-desc">Dice roller, initiative tracker, live encounter — run your game here.</div>
+      <div class="card-name" style="font-size:13px;margin-bottom:4px;">Play Table</div>
+      <div class="card-desc">Dice roller · Encounter tracker · Session notes</div>
     </div>
-  </div>
-
-  <div class="module-card" style="--card-accent:#7b6cee;" onclick="openModule('rpg-rules.html')">
-    <span class="module-card-icon">📜</span>
-    <div class="module-card-badge" id="badgeRules">—</div>
-    <div class="module-card-title">Rulebook</div>
-    <div class="module-card-desc">Write your zine — core mechanic, abilities, combat rules.</div>
-  </div>
-
-  <div class="module-card" style="--card-accent:var(--green);" onclick="openModule('rpg-characters.html')">
-    <span class="module-card-icon">🧬</span>
-    <div class="module-card-badge" id="badgeChars">—</div>
-    <div class="module-card-title">Characters</div>
-    <div class="module-card-desc">Design your sheet template and manage player characters.</div>
-  </div>
-
-  <div class="module-card" style="--card-accent:var(--red);" onclick="openModule('rpg-bestiary.html')">
-    <span class="module-card-icon">🐉</span>
-    <div class="module-card-badge" id="badgeCreatures">—</div>
-    <div class="module-card-title">Bestiary</div>
-    <div class="module-card-desc">Build creatures, NPCs, and stat blocks for your world.</div>
-  </div>
-
-  <div class="module-card" style="--card-accent:#c97ac9;" onclick="openModule('rpg-campaign.html')">
-    <span class="module-card-icon">📖</span>
-    <div class="module-card-badge" id="badgeSessions">—</div>
-    <div class="module-card-title">Campaign</div>
-    <div class="module-card-desc">Session logs, factions, plot threads, world timeline.</div>
+    <div style="margin-left:auto;font-family:Cinzel,serif;font-size:20px;color:var(--gold);opacity:.5;">›</div>
   </div>
 
 </div>
 
-<!-- QUICK DICE -->
+<!-- DICE ROLLER -->
 <div class="section-label">Quick Roll</div>
-<div class="dice-panel">
-  <div class="dice-row">
-    <button class="die-btn" onclick="rollDie(4)"><span class="die-icon">◇</span><span class="die-label">d4</span></button>
-    <button class="die-btn" onclick="rollDie(6)"><span class="die-icon">⬡</span><span class="die-label">d6</span></button>
-    <button class="die-btn" onclick="rollDie(8)"><span class="die-icon">◈</span><span class="die-label">d8</span></button>
-    <button class="die-btn" onclick="rollDie(10)"><span class="die-icon">◉</span><span class="die-label">d10</span></button>
-    <button class="die-btn" onclick="rollDie(12)"><span class="die-icon">⬟</span><span class="die-label">d12</span></button>
-    <button class="die-btn" onclick="rollDie(20)"><span class="die-icon">△</span><span class="die-label">d20</span></button>
-    <button class="die-btn" onclick="roll2d6()" style="width:auto;padding:0 10px;"><span class="die-icon">⚄⚄</span><span class="die-label">2d6</span></button>
-  </div>
-  <div class="dice-result">
-    <div class="dice-result-val" id="diceVal">—</div>
-    <div class="dice-result-info">
-      <div class="roll-expr" id="diceExpr"></div>
-      <div id="diceNote"></div>
-    </div>
-  </div>
+<div class="dice-row">
+  <div class="die" onclick="roll(4)"><div class="die-face">◇</div><div class="die-label">d4</div></div>
+  <div class="die" onclick="roll(6)"><div class="die-face">⬡</div><div class="die-label">d6</div></div>
+  <div class="die" onclick="roll(8)"><div class="die-face">◈</div><div class="die-label">d8</div></div>
+  <div class="die" onclick="roll(10)"><div class="die-face">◉</div><div class="die-label">d10</div></div>
+  <div class="die" onclick="roll(12)"><div class="die-face">⬟</div><div class="die-label">d12</div></div>
+  <div class="die" onclick="roll(20)"><div class="die-face">△</div><div class="die-label">d20</div></div>
+  <div class="die" onclick="roll2d6()" style="width:52px;"><div class="die-face" style="font-size:13px;font-family:Cinzel,serif;">2d6</div><div class="die-label">2d6</div></div>
 </div>
-
-<!-- LEGACY LINK -->
-<div class="legacy-bar" id="legacyBar" style="display:none;">
-  <span class="legacy-text">You have existing scenes from the old Scene Tree.</span>
-  <button class="btn btn-sm" onclick="openModule('rpg-legacy.html')">View Scenes →</button>
+<div class="roll-result">
+  <div class="roll-num" id="rollNum">—</div>
+  <div class="roll-info" id="rollInfo">Tap a die to roll</div>
 </div>
 
 <!-- SETTINGS MODAL -->
-<div class="modal-overlay" id="modal-settings">
+<div class="overlay" id="modal-settings">
   <div class="modal">
     <h2>Game Settings</h2>
-    <div class="field">
-      <label>Game Title</label>
-      <input type="text" id="inputTitle" placeholder="North Eden">
-    </div>
-    <div class="field">
-      <label>Tagline</label>
-      <input type="text" id="inputTagline" placeholder="A short description of your world…">
-    </div>
-    <div class="field">
-      <label>Primary Dice System</label>
-      <select id="inputDice" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;">
-        <option value="2d6">2d6 — Indie zine standard (recommended)</option>
-        <option value="d20">d20 + modifier — D&D style</option>
-        <option value="d6pool">d6 Pool — Count successes</option>
-        <option value="custom">Custom — I'll define it in the Rulebook</option>
+    <div class="field"><label>Game Title</label><input type="text" id="inTitle" placeholder="e.g. The Shattered Crown"></div>
+    <div class="field"><label>Tagline</label><input type="text" id="inTagline" placeholder="e.g. A kingdom in pieces"></div>
+    <div class="field"><label>Dice System</label>
+      <select id="inDice">
+        <option value="2d6">2d6 (Powered by the Apocalypse style)</option>
+        <option value="d20">d20 (D&D style)</option>
+        <option value="d6pool">d6 Pool (World of Darkness style)</option>
+        <option value="custom">Custom</option>
       </select>
     </div>
     <div class="modal-actions">
-      <button class="btn" onclick="closeSettings()">Cancel</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
       <button class="btn btn-gold" onclick="saveSettings()">Save ✦</button>
     </div>
   </div>
 </div>
 
 <script>
-// ═══ DATA ═══
-function getData(){
-  try{return JSON.parse(localStorage.getItem('chronicle_ttrpg')||'{}');}
-  catch{return {};}
-}
+function getData(){try{return JSON.parse(localStorage.getItem('chronicle_ttrpg')||'{}');}catch{return{};}}
 function saveData(d){localStorage.setItem('chronicle_ttrpg',JSON.stringify(d));}
-function getLegacy(){
-  try{const d=JSON.parse(localStorage.getItem('chronicle_data')||'{}');return d.rpg||null;}
-  catch{return null;}
+function nav(module){
+  if(window.parent&&window.parent!==window)window.parent.postMessage({type:'navigate',module},'*');
+  else window.location.href=module+'.html';
 }
 
-// ═══ INIT ═══
-function init(){
+function loadStats(){
   const d=getData();
   const meta=d.meta||{};
-
-  // Title & tagline
-  document.getElementById('gameTitle').textContent=meta.gameTitle||'North Eden';
-  const tag=meta.tagline||'';
-  const tagEl=document.getElementById('gameTagline');
-  tagEl.textContent=tag||'Tap ⚙ to add a tagline…';
-  tagEl.style.color=tag?'var(--text2)':'var(--text3)';
-
-  // Stats
-  const rules=d.rules||{};
-  const chars=d.characters||[];
-  const bestiary=d.bestiary||[];
-  const sessions=(d.campaign||{}).sessions||[];
-
-  // Rough page count from word count
-  const wordCount=(rules.sections||[]).reduce((a,s)=>a+(s.wordCount||0),0);
-  const pages=Math.max(0,Math.round(wordCount/250));
-
-  document.getElementById('statRules').textContent=pages;
-  document.getElementById('statChars').textContent=chars.length;
-  document.getElementById('statCreatures').textContent=bestiary.length;
-  document.getElementById('statSessions').textContent=sessions.length;
-
-  // Badges
-  setBadge('badgeRules', pages, 'pg');
-  setBadge('badgeChars', chars.length, 'chars');
-  setBadge('badgeCreatures', bestiary.length, 'entries');
-  setBadge('badgeSessions', sessions.length, 'sessions');
-
-  // Legacy scenes
-  const legacy=getLegacy();
-  if(legacy&&(legacy.scenes||[]).length>0){
-    document.getElementById('legacyBar').style.display='flex';
-  }
+  document.getElementById('hubGame').textContent=meta.gameTitle||'My Game';
+  document.getElementById('hubTagline').textContent=meta.tagline||'Your world awaits';
+  const sections=((d.rules||{}).sections)||[];
+  const words=sections.reduce((a,s)=>a+(s.wordCount||0),0);
+  document.getElementById('statPages').textContent=Math.max(0,Math.round(words/250));
+  const chars=(d.characters||[]).length;
+  const best=(d.bestiary||[]).length;
+  const sess=((d.campaign||{}).sessions||[]).length;
+  document.getElementById('statChars').textContent=chars;
+  document.getElementById('statCreatures').textContent=best;
+  document.getElementById('statSessions').textContent=sess;
+  document.getElementById('countRules').textContent=sections.length+' sections';
+  document.getElementById('countChars').textContent=chars+' chars';
+  document.getElementById('countBest').textContent=best+' entries';
+  document.getElementById('countSess').textContent=sess+' sessions';
 }
 
-function setBadge(id, count, label){
-  const el=document.getElementById(id);
-  if(!el)return;
-  el.textContent=count>0?`${count} ${label}`:'—';
-}
-
-// ═══ MODULE NAVIGATION ═══
-function openModule(path){
-  // If running inside Chronicle shell, request navigation
-  if(window.parent&&window.parent!==window){
-    window.parent.postMessage({type:'navigate',module:path},'*');
-  } else {
-    window.location.href=path;
-  }
-}
-
-// ═══ DICE ═══
-const diceResults=[];
-function rollDie(sides){
-  const result=Math.floor(Math.random()*sides)+1;
-  showRoll(result, `d${sides}`, result===sides?'Maximum!':result===1?'Minimum':null);
+// Dice
+function roll(sides){
+  const r=Math.floor(Math.random()*sides)+1;
+  const el=document.getElementById('rollNum');
+  el.textContent=r;el.classList.remove('popping');void el.offsetWidth;el.classList.add('popping');
+  const crit=r===sides,fumble=r===1;
+  document.getElementById('rollInfo').textContent=crit?`d${sides} — Critical! Maximum`:(fumble?`d${sides} — Fumble. Minimum`:`d${sides}`);
 }
 function roll2d6(){
-  const a=Math.floor(Math.random()*6)+1;
-  const b=Math.floor(Math.random()*6)+1;
-  const total=a+b;
-  let note='';
-  if(total>=10)note='Full success ✦';
-  else if(total>=7)note='Partial success';
-  else note='Miss / complication';
-  showRoll(total,'2d6',note);
-}
-function showRoll(val, expr, note){
-  const el=document.getElementById('diceVal');
-  el.textContent=val;
-  el.classList.remove('rolling');
-  void el.offsetWidth;
-  el.classList.add('rolling');
-  document.getElementById('diceExpr').textContent=expr;
-  document.getElementById('diceNote').textContent=note||'';
-  document.getElementById('diceNote').style.color=
-    note&&note.includes('Full')?'var(--gold)':
-    note&&note.includes('Partial')?'var(--text2)':
-    note&&note.includes('Miss')?'var(--red)':'var(--text3)';
+  const a=Math.floor(Math.random()*6)+1,b=Math.floor(Math.random()*6)+1,t=a+b;
+  const el=document.getElementById('rollNum');
+  el.textContent=t;el.classList.remove('popping');void el.offsetWidth;el.classList.add('popping');
+  document.getElementById('rollInfo').textContent=t>=10?'Full success ✦':t>=7?'Partial success — cost or complication':'Miss — failure or setback';
 }
 
-// ═══ SETTINGS ═══
+// Settings modal
 function openSettings(){
-  const d=getData();
-  const meta=d.meta||{};
-  document.getElementById('inputTitle').value=meta.gameTitle||'';
-  document.getElementById('inputTagline').value=meta.tagline||'';
-  document.getElementById('inputDice').value=meta.diceSystem||'2d6';
+  const d=getData(),m=d.meta||{};
+  document.getElementById('inTitle').value=m.gameTitle||'';
+  document.getElementById('inTagline').value=m.tagline||'';
+  document.getElementById('inDice').value=m.diceSystem||'2d6';
   document.getElementById('modal-settings').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeSettings(){
-  document.getElementById('modal-settings').classList.remove('open');
-  document.body.style.overflow='';
 }
 function saveSettings(){
-  const d=getData();
-  if(!d.meta)d.meta={};
-  d.meta.gameTitle=document.getElementById('inputTitle').value.trim()||'North Eden';
-  d.meta.tagline=document.getElementById('inputTagline').value.trim();
-  d.meta.diceSystem=document.getElementById('inputDice').value;
+  const d=getData();if(!d.meta)d.meta={};
+  d.meta.gameTitle=document.getElementById('inTitle').value.trim()||'My Game';
+  d.meta.tagline=document.getElementById('inTagline').value.trim();
+  d.meta.diceSystem=document.getElementById('inDice').value;
   d.meta.lastModified=Date.now();
-  saveData(d);
-  closeSettings();
-  init();
+  saveData(d);closeModal();loadStats();
 }
-document.getElementById('modal-settings').addEventListener('click',e=>{
-  if(e.target===document.getElementById('modal-settings'))closeSettings();
-});
+function closeModal(){document.getElementById('modal-settings').classList.remove('open');}
+document.getElementById('modal-settings').addEventListener('click',e=>{if(e.target===document.getElementById('modal-settings'))closeModal();});
 
-// ═══ START ═══
-init();
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)init();});
+loadStats();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadStats();});
 </script>
 </body>
 </html>
