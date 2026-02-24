@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;--border:#2e2e42;--border2:#3d3d58;--gold:#c9a84c;--gold2:#e8c97a;--text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;--red:#cc5555;--green:#55aa77;--accent:#7b6cee;--accent2:#a99bff;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;padding:14px;min-height:100vh;padding-bottom:40px;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4;}
+.btn{padding:7px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,#8a6a20,var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+.field{margin-bottom:12px;}
+label{display:block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;color:var(--text2);text-transform:uppercase;margin-bottom:4px;}
+input[type="text"],input[type="password"],textarea{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;}
+input:focus,textarea:focus{border-color:var(--gold);}
+textarea{resize:vertical;min-height:60px;}
+
+/* Lock screen */
+#lockScreen{text-align:center;padding:40px 20px;}
+#lockScreen .lock-icon{font-size:48px;margin-bottom:16px;}
+.lock-title{font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:.1em;margin-bottom:8px;}
+.lock-sub{font-size:13px;color:var(--text2);margin-bottom:20px;font-style:italic;}
+
+/* Password entries */
+.pw-entry{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.pw-header{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;}
+.pw-icon{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--bg4),var(--bg3));border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:14px;color:var(--gold);flex-shrink:0;}
+.pw-body{padding:0 14px 0;max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;}
+.pw-body.open{max-height:400px;padding:0 14px 14px;}
+.chevron{font-size:10px;color:var(--text3);transition:transform .2s;flex-shrink:0;}
+.chevron.open{transform:rotate(90deg);color:var(--gold);}
+.pw-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
+.pw-row:last-child{border:none;}
+.pw-label{font-family:'Cinzel',serif;font-size:9px;color:var(--text3);letter-spacing:.08em;min-width:64px;}
+.pw-val{flex:1;font-size:14px;color:var(--text);word-break:break-all;}
+.pw-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:3px 8px;border-radius:3px;font-family:'Cinzel',serif;font-size:8px;cursor:pointer;flex-shrink:0;}
+.pw-btn:active{border-color:var(--gold);color:var(--gold);}
+.empty-state{text-align:center;padding:20px;color:var(--text3);font-style:italic;font-size:13px;}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:8px 8px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:.1em;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- Lock Screen -->
+<div id="lockScreen">
+  <div class="lock-icon">🔒</div>
+  <div class="lock-title">Password Vault</div>
+  <div class="lock-sub">AES-256 encrypted. Enter your master password to unlock.</div>
+  <div class="field" style="max-width:280px;margin:0 auto 12px;">
+    <input type="password" id="masterPw" placeholder="Master password" onkeydown="if(event.key==='Enter')unlockVault()">
+  </div>
+  <button class="btn btn-gold" onclick="unlockVault()">Unlock Vault</button>
+</div>
+
+<!-- Unlocked View -->
+<div id="vaultView" style="display:none;">
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <button class="btn btn-gold" style="flex:1;" onclick="openAddPw()">+ Add Password</button>
+    <button class="btn" onclick="lockVault()">🔒 Lock</button>
+  </div>
+  <div id="pwList"></div>
+</div>
+
+<!-- Password Modal -->
+<div class="modal-overlay" id="modal-pw">
+  <div class="modal">
+    <h2 id="pwModalTitle">Add Password</h2>
+    <div class="field"><label>Site / App</label><input type="text" id="pwSite" placeholder="Google, Netflix…"></div>
+    <div class="field"><label>Username / Email</label><input type="text" id="pwUser" placeholder="you@email.com"></div>
+    <div class="field"><label>Password</label>
+      <div style="position:relative;">
+        <input type="password" id="pwPass" placeholder="Password">
+        <button onclick="toggleVis()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:11px;font-family:'Cinzel',serif;" id="visBtn">SHOW</button>
+      </div>
+    </div>
+    <button class="btn" style="width:100%;margin-bottom:12px;" onclick="generatePw()">⚡ Generate Strong Password</button>
+    <div class="field"><label>URL (optional)</label><input type="text" id="pwUrl" placeholder="https://…"></div>
+    <div class="field"><label>Notes</label><textarea id="pwNotes" placeholder="Security questions, backup codes…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="delPwBtn" onclick="deletePw()" style="display:none;">Delete</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="savePw()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+let vaultKey=null, editingPwId=null;
+
+function getData(){try{return JSON.parse(localStorage.getItem('chronicle_data'))||{};}catch(e){return{};}}
+function saveData(d){localStorage.setItem('chronicle_data',JSON.stringify(d));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(m){if(window.parent!==window)window.parent.postMessage({type:'toast',msg:m},'*');}
+
+// ═══ CRYPTO ═══
+async function getVaultSalt(){
+  let s=localStorage.getItem('chronicle_vsalt');
+  if(!s){s=btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));localStorage.setItem('chronicle_vsalt',s);}
+  return Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+}
+async function deriveKey(pw){
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:await getVaultSalt(),iterations:310000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function enc(key,pt){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(pt));
+  const b=new Uint8Array(12+ct.byteLength);b.set(iv,0);b.set(new Uint8Array(ct),12);
+  return btoa(String.fromCharCode(...b));
+}
+async function dec(key,b64){
+  const b=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(0,12)},key,b.slice(12)));
+}
+
+// ═══ LOCK / UNLOCK ═══
+async function unlockVault(){
+  const pw=document.getElementById('masterPw').value;if(!pw)return;
+  let key;try{key=await deriveKey(pw);}catch(e){alert('Key derivation failed.');return;}
+  const token=localStorage.getItem('chronicle_vtoken');
+  if(token){try{const t=await dec(key,token);if(t!=='chronicle_vault_ok'){alert('Wrong password.');return;}}catch(e){alert('Wrong password.');return;}}
+  else{localStorage.setItem('chronicle_vtoken',await enc(key,'chronicle_vault_ok'));}
+  vaultKey=key;
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('vaultView').style.display='block';
+  renderPasswords();
+}
+function lockVault(){
+  vaultKey=null;
+  document.getElementById('vaultView').style.display='none';
+  document.getElementById('lockScreen').style.display='block';
+  document.getElementById('masterPw').value='';
+}
+
+// ═══ RENDER ═══
+async function renderPasswords(){
+  const d=getData();const list=document.getElementById('pwList');
+  if(!(d.passwords||[]).length){list.innerHTML='<div class="empty-state">No passwords saved yet.</div>';return;}
+  list.innerHTML='';
+  for(const pw of d.passwords){
+    let user='[encrypted]';try{user=await dec(vaultKey,pw.encUser);}catch(e){}
+    const init=(pw.site||'?')[0].toUpperCase();
+    const el=document.createElement('div');el.className='pw-entry';
+    el.innerHTML=`<div class="pw-header" onclick="togglePw('pwb-${pw.id}','pwch-${pw.id}')">
+      <div class="pw-icon">${init}</div>
+      <div style="flex:1;"><div style="font-family:'Cinzel',serif;font-size:14px;">${esc(pw.site)}</div><div style="font-size:12px;color:var(--text2);">${esc(user)}</div></div>
+      <span class="chevron" id="pwch-${pw.id}">▶</span>
+    </div>
+    <div class="pw-body" id="pwb-${pw.id}">
+      <div class="pw-row"><span class="pw-label">USER</span><span class="pw-val" id="pwu-${pw.id}">${esc(user)}</span><button class="pw-btn" onclick="copyEl('pwu-${pw.id}')">Copy</button></div>
+      <div class="pw-row"><span class="pw-label">PASS</span><span class="pw-val" id="pwp-${pw.id}" style="letter-spacing:.15em;font-size:18px;">••••••••</span><button class="pw-btn" onclick="reveal('${pw.id}')">👁</button><button class="pw-btn" onclick="copyPw('${pw.id}')">Copy</button></div>
+      ${pw.url?`<div class="pw-row"><span class="pw-label">URL</span><a href="${esc(pw.url)}" target="_blank" style="color:var(--accent2);font-size:13px;word-break:break-all;">${esc(pw.url)}</a></div>`:''}
+      ${pw.notes?`<div class="pw-row" style="align-items:flex-start;"><span class="pw-label">NOTES</span><span style="font-size:13px;color:var(--text2);white-space:pre-wrap;">${esc(pw.notes)}</span></div>`:''}
+      <div style="margin-top:10px;"><button class="btn" style="font-size:10px;padding:3px 8px;" onclick="openEditPw('${pw.id}')">Edit</button></div>
+    </div>`;
+    list.appendChild(el);
+  }
+}
+
+function togglePw(bId,cId){const b=document.getElementById(bId),c=document.getElementById(cId);b.classList.toggle('open');c.classList.toggle('open',b.classList.contains('open'));}
+
+async function reveal(id){
+  const el=document.getElementById('pwp-'+id);const d=getData();const pw=(d.passwords||[]).find(x=>x.id===id);if(!pw)return;
+  if(el.dataset.revealed){el.textContent='••••••••';el.style.letterSpacing='.15em';el.style.fontSize='18px';delete el.dataset.revealed;return;}
+  try{el.textContent=await dec(vaultKey,pw.encPass);el.style.letterSpacing='normal';el.style.fontSize='14px';el.dataset.revealed='1';}catch(e){el.textContent='[error]';}
+}
+async function copyPw(id){const d=getData();const pw=(d.passwords||[]).find(x=>x.id===id);if(!pw)return;try{await navigator.clipboard.writeText(await dec(vaultKey,pw.encPass));toast('Password copied');}catch(e){}}
+async function copyEl(id){try{await navigator.clipboard.writeText(document.getElementById(id)?.textContent||'');toast('Copied');}catch(e){}}
+
+// ═══ CRUD ═══
+function openAddPw(){
+  if(!vaultKey){unlockVault();return;}
+  editingPwId=null;document.getElementById('pwModalTitle').textContent='Add Password';document.getElementById('delPwBtn').style.display='none';
+  ['pwSite','pwUser','pwPass','pwUrl','pwNotes'].forEach(id=>document.getElementById(id).value='');
+  openModal();
+}
+async function openEditPw(id){
+  editingPwId=id;const d=getData();const pw=(d.passwords||[]).find(x=>x.id===id);if(!pw)return;
+  document.getElementById('pwModalTitle').textContent='Edit '+pw.site;document.getElementById('delPwBtn').style.display='inline-block';
+  document.getElementById('pwSite').value=pw.site||'';document.getElementById('pwUrl').value=pw.url||'';document.getElementById('pwNotes').value=pw.notes||'';
+  try{document.getElementById('pwUser').value=await dec(vaultKey,pw.encUser);}catch(e){}
+  try{document.getElementById('pwPass').value=await dec(vaultKey,pw.encPass);}catch(e){}
+  openModal();
+}
+async function savePw(){
+  if(!vaultKey){alert('Vault not unlocked.');return;}
+  const site=document.getElementById('pwSite').value.trim(),pass=document.getElementById('pwPass').value;if(!site||!pass)return;
+  const d=getData();if(!d.passwords)d.passwords=[];
+  const obj={id:editingPwId||uid(),site,encUser:await enc(vaultKey,document.getElementById('pwUser').value),encPass:await enc(vaultKey,pass),url:document.getElementById('pwUrl').value.trim(),notes:document.getElementById('pwNotes').value.trim(),updated:Date.now()};
+  if(editingPwId){const i=d.passwords.findIndex(x=>x.id===editingPwId);if(i>=0)d.passwords[i]=obj;}else d.passwords.push(obj);
+  saveData(d);closeModal();renderPasswords();toast('Password saved ✦');
+}
+function deletePw(){if(!confirm('Delete?'))return;const d=getData();d.passwords=(d.passwords||[]).filter(x=>x.id!==editingPwId);saveData(d);closeModal();renderPasswords();}
+function generatePw(){const c='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*';document.getElementById('pwPass').value=Array.from({length:20},()=>c[Math.floor(Math.random()*c.length)]).join('');document.getElementById('pwPass').type='text';document.getElementById('visBtn').textContent='HIDE';}
+function toggleVis(){const el=document.getElementById('pwPass');el.type=el.type==='password'?'text':'password';document.getElementById('visBtn').textContent=el.type==='password'?'SHOW':'HIDE';}
+
+// ═══ MODAL ═══
+function openModal(){document.getElementById('modal-pw').classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(){document.getElementById('modal-pw').classList.remove('open');document.body.style.overflow='';}
+document.getElementById('modal-pw').addEventListener('click',e=>{if(e.target.id==='modal-pw')closeModal();});
+</script>
+</body>
+</html>

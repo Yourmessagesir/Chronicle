@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--border:#2e2e42;--border2:#3d3d58;--gold:#c9a84c;--gold2:#e8c97a;--text:#d4d4e8;--text2:#9090aa;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.toolbar{display:flex;gap:6px;padding:8px 10px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center;flex-shrink:0;}
+.toolbar span{font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:.08em;}
+.btn{padding:5px 10px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.04em;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+iframe{flex:1;border:none;background:var(--bg);width:100%;}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <span>⚙ CARD FORGE</span>
+  <div style="flex:1"></div>
+  <button class="btn" onclick="document.getElementById('forgeFrame').src='./forge.html'">↺ RELOAD</button>
+  <button class="btn" onclick="window.open('./forge.html','_blank')">⬡ FULL</button>
+  <button class="btn" onclick="window.open('./layout-builder.html','_blank')">🗺 LAYOUTS</button>
+  <button class="btn" onclick="window.open('./playtest.html','_blank')">▶ PLAYTEST</button>
+</div>
+<iframe id="forgeFrame" src="./forge.html" allow="same-origin"></iframe>
+</body>
+</html>

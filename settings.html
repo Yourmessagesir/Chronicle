@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;--border:#2e2e42;--border2:#3d3d58;--gold:#c9a84c;--gold2:#e8c97a;--text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;--red:#cc5555;--green:#55aa77;--amber:#cc8844;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;padding:14px;min-height:100vh;padding-bottom:40px;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4;}
+.btn{padding:7px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,#8a6a20,var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+.field{margin-bottom:12px;}
+label{display:block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;color:var(--text2);text-transform:uppercase;margin-bottom:4px;}
+input[type="text"],input[type="password"],input[type="file"]{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;}
+input:focus{border-color:var(--gold);}
+
+.section{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:14px;}
+.section-title{font-family:'Cinzel',serif;font-size:11px;color:var(--gold);letter-spacing:.1em;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.section-sub{font-size:12px;color:var(--text2);margin-bottom:10px;font-style:italic;}
+.status{font-family:'Cinzel',serif;font-size:10px;min-height:16px;margin-top:6px;}
+
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text2);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+</style>
+</head>
+<body>
+
+<!-- EXPORT -->
+<div class="section">
+  <div class="section-title">Export Backup</div>
+  <div class="section-sub">Download a full backup of Chronicle data. Optionally encrypt with a password.</div>
+  <div class="field"><label>Encryption Password (optional)</label>
+    <input type="password" id="exportPw" placeholder="Leave blank for unencrypted" oninput="checkStrength()">
+  </div>
+  <div class="status" id="exportStrength"></div>
+  <button class="btn btn-gold" style="width:100%;" onclick="doExport()">Download Backup</button>
+</div>
+
+<!-- IMPORT -->
+<div class="section">
+  <div class="section-title">Import Backup</div>
+  <div class="section-sub">Merge from a previous backup. Existing data is preserved — only new items are added.</div>
+  <div class="field"><label>Backup File</label><input type="file" id="importFile" accept=".json" style="padding:6px;"></div>
+  <div class="field"><label>Password (if encrypted)</label><input type="password" id="importPw" placeholder="Leave blank if unencrypted"></div>
+  <button class="btn btn-gold" style="width:100%;" onclick="doImport()">Import & Merge</button>
+  <div class="status" id="importStatus"></div>
+</div>
+
+<!-- FORGE BACKUP -->
+<div class="section">
+  <div class="section-title">Card Forge Backup</div>
+  <div class="section-sub">Separate backup for Card Forge data (layouts, cards, decks).</div>
+  <button class="btn btn-gold" style="width:100%;margin-bottom:8px;" onclick="doForgeExport()">Export Forge Data</button>
+  <div class="field"><label>Import Forge Backup</label><input type="file" id="forgeImportFile" accept=".json" style="padding:6px;" onchange="doForgeImport(event)"></div>
+  <div class="status" id="forgeImportStatus"></div>
+</div>
+
+<!-- PIN -->
+<div class="section">
+  <div class="section-title">Security</div>
+  <button class="btn" style="width:100%;" onclick="requestPinChange()">Change PIN</button>
+</div>
+
+<!-- DANGER ZONE -->
+<div class="section" style="border-color:rgba(204,85,85,.3);">
+  <div class="section-title" style="color:var(--red);">Danger Zone</div>
+  <button class="btn btn-danger" style="width:100%;" onclick="clearAll()">Clear All Data</button>
+</div>
+
+<script>
+'use strict';
+
+function getData(){try{return JSON.parse(localStorage.getItem('chronicle_data'))||{};}catch(e){return{};}}
+function saveData(d){localStorage.setItem('chronicle_data',JSON.stringify(d));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function toast(m){if(window.parent!==window)window.parent.postMessage({type:'toast',msg:m},'*');}
+
+// ═══ CRYPTO HELPERS ═══
+async function deriveKey(pw,salt){
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:310000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encData(pt,pw){
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(pw,salt),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(pt));
+  const b=new Uint8Array(28+ct.byteLength);b.set(salt,0);b.set(iv,16);b.set(new Uint8Array(ct),28);
+  return btoa(String.fromCharCode(...b));
+}
+async function decData(b64,pw){
+  const b=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  const key=await deriveKey(pw,b.slice(0,16));
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(16,28)},key,b.slice(28)));
+}
+
+function checkStrength(){
+  const pw=document.getElementById('exportPw').value,el=document.getElementById('exportStrength');
+  if(!pw){el.textContent='';return;}
+  let s=0;if(pw.length>=8)s++;if(pw.length>=14)s++;if(/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw))s++;if(/[^A-Za-z0-9]/.test(pw))s++;
+  el.textContent='● Strength: '+['','Weak','Fair','Good','Strong','Very Strong'][s];
+  el.style.color=['','var(--red)','var(--amber)','var(--amber)','var(--green)','var(--green)'][s];
+}
+
+// ═══ EXPORT ═══
+async function doExport(){
+  const d=getData();const pw=document.getElementById('exportPw').value;
+  const ts=new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  const vtoken=localStorage.getItem('chronicle_vtoken')||null;
+  const payload=JSON.stringify({version:2,exported:new Date().toISOString(),vtoken,data:d});
+  let fc,fn;
+  if(pw){try{fc=JSON.stringify({chronicle_encrypted:true,version:2,payload:await encData(payload,pw)});fn=`chronicle_${ts}.enc.json`;}catch(e){alert('Encryption failed');return;}}
+  else{fc=payload;fn=`chronicle_${ts}.json`;}
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([fc],{type:'application/json'})),download:fn});
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast('Backup downloaded ✦');
+}
+
+// ═══ IMPORT ═══
+async function doImport(){
+  const file=document.getElementById('importFile').files[0];
+  const st=document.getElementById('importStatus');
+  if(!file){st.textContent='No file selected.';st.style.color='var(--amber)';return;}
+  st.textContent='Reading…';st.style.color='var(--text2)';
+  let parsed;try{parsed=JSON.parse(await file.text());}catch(e){st.textContent='✕ Invalid file.';st.style.color='var(--red)';return;}
+  let incoming,vtoken=null;
+  if(parsed.chronicle_encrypted){
+    const pw=document.getElementById('importPw').value;if(!pw){st.textContent='✕ Enter password.';st.style.color='var(--amber)';return;}
+    try{const dec=JSON.parse(await decData(parsed.payload,pw));incoming=dec.data;vtoken=dec.vtoken||null;}catch(e){st.textContent='✕ Wrong password.';st.style.color='var(--red)';return;}
+  }else if(parsed.data){incoming=parsed.data;vtoken=parsed.vtoken||null;}
+  else{st.textContent='✕ Unrecognised format.';st.style.color='var(--red)';return;}
+
+  if(vtoken&&!localStorage.getItem('chronicle_vtoken'))localStorage.setItem('chronicle_vtoken',vtoken);
+
+  const d=getData();
+  const counts={entries:0,personas:0,people:0,passwords:0};
+  const merge=(key)=>{
+    if(!d[key])d[key]=[];
+    const ids=new Set(d[key].map(x=>x.id));
+    (incoming[key]||[]).forEach(x=>{if(!ids.has(x.id)){d[key].push(x);counts[key]=(counts[key]||0)+1;}});
+  };
+  merge('entries');merge('personas');merge('people');merge('passwords');
+
+  // Books
+  if(incoming.books&&incoming.books.length){
+    if(!d.books)d.books=[];
+    const bids=new Set(d.books.map(b=>b.id));
+    incoming.books.forEach(b=>{if(!bids.has(b.id))d.books.push(b);});
+  }
+  // Boards, comic, rpg — overwrite if not present
+  if(incoming.boards&&!d.boards)d.boards=incoming.boards;
+  if(incoming.comic&&!d.comic)d.comic=incoming.comic;
+  if(incoming.rpg&&!d.rpg)d.rpg=incoming.rpg;
+
+  saveData(d);
+  st.style.color='var(--green)';
+  st.textContent=`✓ Merged: ${counts.entries} entries · ${counts.personas} personas · ${counts.people} people · ${counts.passwords} passwords`;
+  toast('Import complete ✦');
+}
+
+// ═══ FORGE BACKUP ═══
+function doForgeExport(){
+  const KEYS=['cardforge_v3','cardforge_layouts_v2','cardforge_active_layout'];
+  const backup={forge_backup:true,version:1,exported:new Date().toISOString(),stores:{}};
+  KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v)backup.stores[k]=v;});
+  if(!Object.keys(backup.stores).length){alert('No Forge data found.');return;}
+  const ts=new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'})),download:`forge_backup_${ts}.json`});
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast('Forge backup downloaded ✦');
+}
+function doForgeImport(e){
+  const file=e.target.files[0];const st=document.getElementById('forgeImportStatus');
+  if(!file){st.textContent='No file.';return;}
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const p=JSON.parse(ev.target.result);
+      if(!p.forge_backup||!p.stores){st.textContent='✕ Not a Forge backup.';st.style.color='var(--red)';return;}
+      let count=0;
+      Object.entries(p.stores).forEach(([k,v])=>{
+        if(k==='cardforge_v3'){
+          try{
+            const ex=JSON.parse(localStorage.getItem(k)||'{"cards":[],"decks":[],"fusions":[],"games":[],"nextId":1}');
+            const inc=JSON.parse(v);
+            const mergeById=(a1,a2)=>{const ids=new Set(a1.map(x=>x.id));a2.forEach(x=>{if(!ids.has(x.id))a1.push(x);});return a1;};
+            ex.cards=mergeById(ex.cards||[],inc.cards||[]);ex.decks=mergeById(ex.decks||[],inc.decks||[]);
+            ex.fusions=mergeById(ex.fusions||[],inc.fusions||[]);ex.games=mergeById(ex.games||[],inc.games||[]);
+            ex.nextId=Math.max(ex.nextId||1,inc.nextId||1)+1;
+            localStorage.setItem(k,JSON.stringify(ex));
+          }catch(err){localStorage.setItem(k,v);}
+        }else{localStorage.setItem(k,v);}
+        count++;
+      });
+      st.style.color='var(--green)';st.textContent=`✓ Forge restored (${count} stores).`;
+    }catch(err){st.style.color='var(--red)';st.textContent='✕ Invalid file.';}
+  };
+  r.readAsText(file);e.target.value='';
+}
+
+// ═══ PIN ═══
+function requestPinChange(){
+  if(window.parent!==window)window.parent.postMessage({type:'navigate',module:'pin-change'},'*');
+  else toast('Use the main shell to change PIN.');
+}
+
+// ═══ CLEAR ═══
+function clearAll(){
+  if(!confirm('Permanently delete ALL Chronicle data?'))return;
+  if(!confirm('Final warning — cannot be undone!'))return;
+  localStorage.removeItem('chronicle_data');
+  localStorage.removeItem('chronicle_vtoken');
+  toast('All data cleared.');
+  setTimeout(()=>location.reload(),500);
+}
+</script>
+</body>
+</html>
