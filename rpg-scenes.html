@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Scenes — Chronicle & Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;--border:#2e2e42;--border2:#3d3d58;--gold:#c9a84c;--gold2:#e8c97a;--gold3:#8a6a20;--text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;--red:#cc5555;--green:#55aa77;--accent:#7b6cee;--accent2:#a99bff;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;padding:0 0 60px;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;}
+.back-btn{background:none;border:none;color:var(--text2);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;cursor:pointer;}
+.back-btn:active{color:var(--gold);}
+.topbar-title{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:.08em;flex:1;}
+.btn{padding:6px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.btn-sm{padding:4px 9px;font-size:9px;}
+.btn-danger{border-color:var(--red);color:var(--red);}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);}
+.tab{flex:1;padding:11px 4px;text-align:center;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+/* VIEWS */
+.view{display:none;padding:14px;}
+.view.active{display:block;}
+
+/* SCENE TREE */
+.tree-node{margin-bottom:8px;}
+.tree-card{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:10px 12px;}
+.tree-card.start{border-left:3px solid var(--green);}
+.tree-card.end{border-left:3px solid var(--red);}
+.tree-card-head{display:flex;align-items:flex-start;gap:8px;}
+.tree-card-body{flex:1;min-width:0;}
+.tree-card-title{font-family:'Cinzel',serif;font-size:12px;color:var(--text);letter-spacing:.04em;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.badge{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.06em;padding:1px 6px;border-radius:8px;}
+.badge-start{background:rgba(85,170,119,.2);color:var(--green);border:1px solid rgba(85,170,119,.4);}
+.badge-end{background:rgba(204,85,85,.2);color:var(--red);border:1px solid rgba(204,85,85,.4);}
+.badge-normal{background:rgba(123,108,238,.15);color:var(--accent2);border:1px solid rgba(123,108,238,.3);}
+.tree-narr{font-size:12px;color:var(--text3);margin-top:4px;font-style:italic;line-height:1.4;}
+.tree-children{margin-left:14px;border-left:2px solid var(--border);padding-left:12px;margin-top:8px;}
+.branch-label{font-family:'Cinzel',serif;font-size:10px;color:var(--accent2);padding:3px 0 6px;line-height:1.4;}
+.add-link{background:none;border:1px dashed var(--border);color:var(--text3);padding:4px 10px;border-radius:3px;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;display:block;margin:4px 0;transition:all .15s;width:100%;text-align:left;}
+.add-link:active{border-color:var(--gold);color:var(--gold);}
+.unlinked-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:var(--text3);margin:16px 0 8px;padding:6px 10px;border-top:1px solid var(--border);}
+.ref-back{font-size:11px;color:var(--accent2);padding:4px 8px;font-style:italic;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-style:italic;font-size:14px;}
+
+/* PLAYTEST */
+.pt-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.pt-stat{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:9px;text-align:center;}
+.pt-stat-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.1em;color:var(--text3);margin-bottom:5px;}
+.pt-bar-wrap{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-bottom:4px;}
+.pt-bar{height:100%;border-radius:2px;transition:width .5s;}
+.pt-stat-val{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);}
+.pt-scene-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.14em;color:var(--text3);text-align:center;margin-bottom:8px;}
+.pt-narr{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px;font-size:15px;line-height:1.75;margin-bottom:12px;min-height:80px;}
+.pt-choice{display:block;width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:'Crimson Pro',serif;font-size:15px;cursor:pointer;margin-bottom:7px;text-align:left;transition:all .15s;}
+.pt-choice:active{border-color:var(--gold);color:var(--gold);}
+.pt-log-item{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:8px 12px;margin-bottom:5px;}
+.pt-log-scene{font-family:'Cinzel',serif;font-size:9px;color:var(--text3);letter-spacing:.06em;margin-bottom:2px;}
+.pt-log-choice{font-size:12px;color:var(--text2);font-style:italic;}
+.pt-log-outcome{font-size:13px;color:var(--text);margin-top:3px;}
+.section-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;color:var(--text3);text-transform:uppercase;margin:14px 0 8px;}
+.section-label:first-child{margin-top:0;}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-top:1px solid var(--gold3);border-radius:8px 8px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0));}
+.modal h2{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:.1em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.field{margin-bottom:12px;}
+label{display:block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:5px;}
+input[type="text"],textarea,select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:15px;width:100%;outline:none;}
+input:focus,textarea:focus{border-color:var(--gold);}
+textarea{resize:vertical;min-height:80px;line-height:1.6;}
+select option{background:var(--bg3);}
+.modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:space-between;align-items:center;}
+.choice-block{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px;margin-bottom:8px;}
+.choice-block-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.choice-block-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;color:var(--text3);}
+.del-choice{background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;line-height:1;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="goBack()">← Hub</button>
+  <div class="topbar-title">Scene Tree</div>
+  <button class="btn btn-sm btn-gold" id="addBtn" onclick="openAdd()">+ Scene</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="tab-tree"     onclick="switchTab('tree')">Tree</div>
+  <div class="tab"        id="tab-playtest" onclick="switchTab('playtest')">▶ Playtest</div>
+</div>
+
+<!-- TREE VIEW -->
+<div class="view active" id="view-tree">
+  <div id="treeContainer"></div>
+</div>
+
+<!-- PLAYTEST VIEW -->
+<div class="view" id="view-playtest">
+  <div class="pt-stats">
+    <div class="pt-stat">
+      <div class="pt-stat-label">HEALTH</div>
+      <div class="pt-bar-wrap"><div class="pt-bar" id="bar-hp" style="background:var(--red);width:100%;"></div></div>
+      <div class="pt-stat-val" id="val-hp">100</div>
+    </div>
+    <div class="pt-stat">
+      <div class="pt-stat-label">RESOLVE</div>
+      <div class="pt-bar-wrap"><div class="pt-bar" id="bar-res" style="background:var(--accent2);width:50%;"></div></div>
+      <div class="pt-stat-val" id="val-res">50</div>
+    </div>
+    <div class="pt-stat">
+      <div class="pt-stat-label">RESOURCES</div>
+      <div class="pt-bar-wrap"><div class="pt-bar" id="bar-rsc" style="background:var(--gold);width:100%;"></div></div>
+      <div class="pt-stat-val" id="val-rsc">3</div>
+    </div>
+  </div>
+  <div class="pt-scene-label" id="ptSceneLabel">—</div>
+  <div class="pt-narr" id="ptNarr">No scenes yet. Build the tree first.</div>
+  <div id="ptChoices"></div>
+  <div class="section-label" id="ptLogLabel" style="display:none;">Recent</div>
+  <div id="ptLog"></div>
+</div>
+
+<!-- SCENE MODAL -->
+<div class="overlay" id="modal-scene">
+  <div class="modal">
+    <h2 id="sceneModalTitle">New Scene</h2>
+    <div class="field"><label>Title</label><input type="text" id="inTitle" placeholder="Scene name…"></div>
+    <div class="field"><label>Type</label>
+      <select id="inType">
+        <option value="normal">Normal</option>
+        <option value="start">Start (entry point)</option>
+        <option value="end">End (conclusion)</option>
+      </select>
+    </div>
+    <div class="field"><label>Narration</label><textarea id="inNarr" style="min-height:120px;" placeholder="Describe what happens in this scene…"></textarea></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-family:Cinzel,serif;font-size:9px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase;">Choices</span>
+      <button class="btn btn-sm" onclick="addChoiceBlock()">+ Add Choice</button>
+    </div>
+    <div id="choiceBlocks"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="delSceneBtn" style="display:none;" onclick="deleteScene()">Delete</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="closeOverlay()">Cancel</button>
+        <button class="btn btn-gold" onclick="saveScene()">Save ✦</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function getData(){try{return JSON.parse(localStorage.getItem('chronicle_ttrpg')||'{}');}catch{return{};}}
+function saveData(d){localStorage.setItem('chronicle_ttrpg',JSON.stringify(d));}
+function getScenes(){return getData().scenes||[];}
+function saveScenes(s){const d=getData();d.scenes=s;saveData(d);}
+
+let editingId=null, parentLink=null, ptState=null, currentTab='tree';
+
+// ── TABS ──
+function switchTab(t){
+  currentTab=t;
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('view-'+t).classList.add('active');
+  document.getElementById('addBtn').style.display=t==='tree'?'inline-block':'none';
+  if(t==='playtest')initPlaytest();
+}
+
+// ── TREE ──
+function renderTree(){
+  const scenes=getScenes();
+  const container=document.getElementById('treeContainer');
+  if(!scenes.length){container.innerHTML='<div class="empty-state">No scenes yet.<br>Tap + Scene to begin building your narrative.</div>';return;}
+  const referenced=new Set(scenes.flatMap(s=>(s.choices||[]).map(c=>c.nextId).filter(Boolean)));
+  let roots=scenes.filter(s=>s.type==='start');
+  if(!roots.length)roots=scenes.filter(s=>!referenced.has(s.id));
+  if(!roots.length)roots=[scenes[0]];
+  const rendered=new Set();
+  container.innerHTML='';
+  roots.forEach(r=>container.appendChild(buildNode(r,scenes,rendered,0)));
+  const unlinked=scenes.filter(s=>!rendered.has(s.id));
+  if(unlinked.length){
+    const lbl=document.createElement('div');lbl.className='unlinked-label';lbl.textContent='— Unlinked Scenes —';
+    container.appendChild(lbl);
+    unlinked.forEach(s=>container.appendChild(buildNode(s,scenes,rendered,0)));
+  }
+}
+function buildNode(scene,scenes,rendered,depth){
+  if(rendered.has(scene.id)||depth>12){
+    const ref=document.createElement('div');ref.className='ref-back';
+    ref.textContent=`↩ ${scene.title} (see above)`;return ref;
+  }
+  rendered.add(scene.id);
+  const node=document.createElement('div');node.className='tree-node';
+  const typeBadge=scene.type==='start'?`<span class="badge badge-start">START</span>`:scene.type==='end'?`<span class="badge badge-end">END</span>`:`<span class="badge badge-normal">scene</span>`;
+  const card=document.createElement('div');card.className=`tree-card ${scene.type}`;
+  card.innerHTML=`<div class="tree-card-head">
+    <div class="tree-card-body">
+      <div class="tree-card-title">${esc(scene.title)} ${typeBadge}</div>
+      ${scene.narr?`<div class="tree-narr">${esc(scene.narr.slice(0,100))}${scene.narr.length>100?'…':''}</div>`:''}
+    </div>
+    <button class="btn btn-sm" onclick="event.stopPropagation();openEdit('${scene.id}')">Edit</button>
+  </div>`;
+  node.appendChild(card);
+  (scene.choices||[]).forEach((ch,ci)=>{
+    const branch=document.createElement('div');branch.className='tree-children';
+    const lbl=document.createElement('div');lbl.className='branch-label';
+    lbl.textContent=`▸ ${ch.text}${ch.outcome?' — "'+ch.outcome.slice(0,50)+(ch.outcome.length>50?'…':'')+'"':''}`;
+    branch.appendChild(lbl);
+    if(ch.nextId){
+      const child=scenes.find(s=>s.id===ch.nextId);
+      if(child)branch.appendChild(buildNode(child,scenes,rendered,depth+1));
+      else{const m=document.createElement('div');m.style.cssText='font-size:11px;color:var(--red);padding:4px 8px;';m.textContent='⚠ Missing scene';branch.appendChild(m);}
+    } else {
+      const ab=document.createElement('button');ab.className='add-link';ab.textContent='+ Link next scene';
+      ab.onclick=()=>{parentLink={sceneId:scene.id,choiceIdx:ci};openAdd();};branch.appendChild(ab);
+    }
+    node.appendChild(branch);
+  });
+  if(scene.type!=='end'){
+    const ab=document.createElement('button');ab.className='add-link';ab.style.marginTop='6px';ab.textContent='+ Add choice';
+    ab.onclick=()=>openEdit(scene.id);node.appendChild(ab);
+  }
+  return node;
+}
+
+// ── SCENE CRUD ──
+function openAdd(){
+  editingId=null;
+  document.getElementById('sceneModalTitle').textContent='New Scene';
+  document.getElementById('inTitle').value='';
+  document.getElementById('inType').value='normal';
+  document.getElementById('inNarr').value='';
+  document.getElementById('choiceBlocks').innerHTML='';
+  document.getElementById('delSceneBtn').style.display='none';
+  addChoiceBlock();
+  openOverlay();
+}
+function openEdit(id){
+  const s=getScenes().find(x=>x.id===id);if(!s)return;
+  editingId=id;
+  document.getElementById('sceneModalTitle').textContent='Edit Scene';
+  document.getElementById('inTitle').value=s.title||'';
+  document.getElementById('inType').value=s.type||'normal';
+  document.getElementById('inNarr').value=s.narr||'';
+  document.getElementById('choiceBlocks').innerHTML='';
+  (s.choices||[]).forEach(ch=>addChoiceBlock(ch));
+  if(!(s.choices||[]).length)addChoiceBlock();
+  document.getElementById('delSceneBtn').style.display='inline-block';
+  openOverlay();
+}
+function addChoiceBlock(ch={}){
+  const scenes=getScenes();
+  const i=document.getElementById('choiceBlocks').children.length;
+  if(i>=5)return;
+  const opts=scenes.filter(s=>s.id!==editingId).map(s=>`<option value="${s.id}"${s.id===ch.nextId?' selected':''}>${esc(s.title)}</option>`).join('');
+  const div=document.createElement('div');div.className='choice-block';
+  div.innerHTML=`<div class="choice-block-head"><span class="choice-block-label">Choice ${i+1}</span><button type="button" class="del-choice" onclick="this.closest('.choice-block').remove()">×</button></div>
+    <div class="field" style="margin-bottom:7px;"><label>Text</label><input type="text" class="ch-text" value="${esc(ch.text||'')}" placeholder="What does the player do?"></div>
+    <div class="field" style="margin-bottom:7px;"><label>Outcome</label><textarea class="ch-out" style="min-height:50px;">${esc(ch.outcome||'')}</textarea></div>
+    <div class="field"><label>Effect on Health</label><input type="number" class="ch-hp" value="${ch.effect?.hp||0}" min="-50" max="50" style="max-width:80px;"></div>
+    <div class="field"><label>→ Leads to scene</label><select class="ch-next"><option value="">— Dead end —</option>${opts}</select></div>`;
+  document.getElementById('choiceBlocks').appendChild(div);
+}
+function saveScene(){
+  const title=document.getElementById('inTitle').value.trim();if(!title)return;
+  const choices=[];
+  document.querySelectorAll('.choice-block').forEach(div=>{
+    const t=div.querySelector('.ch-text').value.trim();if(!t)return;
+    const o=div.querySelector('.ch-out').value.trim();
+    const hp=parseInt(div.querySelector('.ch-hp').value)||0;
+    const n=div.querySelector('.ch-next').value;
+    choices.push({text:t,outcome:o,nextId:n||null,effect:{hp}});
+  });
+  const scene={id:editingId||uid(),title,type:document.getElementById('inType').value,narr:document.getElementById('inNarr').value.trim(),choices};
+  let scenes=getScenes();
+  if(editingId){const i=scenes.findIndex(x=>x.id===editingId);if(i>=0)scenes[i]=scene;else scenes.push(scene);}
+  else scenes.push(scene);
+  if(parentLink){
+    const p=scenes.find(s=>s.id===parentLink.sceneId);
+    if(p&&p.choices[parentLink.choiceIdx])p.choices[parentLink.choiceIdx].nextId=scene.id;
+    parentLink=null;
+  }
+  saveScenes(scenes);closeOverlay();renderTree();
+}
+function deleteScene(){
+  if(!editingId||!confirm('Delete this scene?'))return;
+  let scenes=getScenes().filter(s=>s.id!==editingId);
+  // Clean up dangling nextId refs
+  scenes.forEach(s=>(s.choices||[]).forEach(c=>{if(c.nextId===editingId)c.nextId=null;}));
+  saveScenes(scenes);closeOverlay();renderTree();
+}
+
+// ── PLAYTEST ──
+function initPlaytest(){
+  const scenes=getScenes();
+  if(!scenes.length){document.getElementById('ptNarr').innerHTML='<em>No scenes yet.</em>';document.getElementById('ptChoices').innerHTML='';return;}
+  if(!ptState){
+    const start=scenes.find(s=>s.type==='start')||scenes[0];
+    ptState={sceneId:start.id,hp:100,resolve:50,resources:3,log:[]};
+  }
+  renderPlaytest();
+}
+function renderPlaytest(){
+  if(!ptState)return;
+  const scenes=getScenes();
+  updatePtStats();
+  const scene=scenes.find(s=>s.id===ptState.sceneId);
+  if(!scene){
+    document.getElementById('ptNarr').innerHTML='<em>Scene not found.</em>';
+    document.getElementById('ptChoices').innerHTML=`<button class="pt-choice" onclick="ptRestart()">↺ Restart</button>`;return;
+  }
+  document.getElementById('ptSceneLabel').textContent=`— ${scene.title.toUpperCase()} —`;
+  document.getElementById('ptNarr').innerHTML=scene.narr?scene.narr.replace(/\n/g,'<br>'):'<em>No narration.</em>';
+  const ce=document.getElementById('ptChoices');
+  if(scene.type==='end'||!(scene.choices||[]).filter(c=>c.text).length){
+    ce.innerHTML=`<div style="font-family:Cinzel,serif;font-size:11px;color:var(--text2);text-align:center;margin-bottom:8px;">${scene.type==='end'?'— THE END —':'— No choices —'}</div><button class="pt-choice" onclick="ptRestart()">↺ Play Again</button>`;
+  } else {
+    ce.innerHTML=scene.choices.filter(c=>c.text).map((ch,i)=>`<button class="pt-choice" onclick="ptChoose(${i})">▸ ${esc(ch.text)}</button>`).join('');
+  }
+  renderPtLog();
+}
+function ptChoose(i){
+  const scenes=getScenes();const scene=scenes.find(s=>s.id===ptState.sceneId);if(!scene)return;
+  const choices=scene.choices.filter(c=>c.text);const ch=choices[i];if(!ch)return;
+  ptState.hp=Math.max(0,Math.min(100,ptState.hp+(ch.effect?.hp||0)));
+  ptState.log.push({scene:scene.title,choice:ch.text,outcome:ch.outcome});
+  updatePtStats();
+  document.getElementById('ptSceneLabel').textContent=`— ${scene.title.toUpperCase()} —`;
+  document.getElementById('ptNarr').innerHTML=`<span style="color:var(--gold2);font-style:italic;">${esc(ch.outcome||'…')}</span>`;
+  if(ch.nextId){
+    document.getElementById('ptChoices').innerHTML=`<button class="pt-choice" onclick="ptGoto('${ch.nextId}')">▸ Continue →</button>`;
+  } else {
+    document.getElementById('ptChoices').innerHTML=`<div style="font-family:Cinzel,serif;font-size:11px;color:var(--text2);text-align:center;margin-bottom:8px;">— Dead end —</div><button class="pt-choice" onclick="ptRestart()">↺ Restart</button>`;
+  }
+  renderPtLog();
+}
+function ptGoto(id){ptState.sceneId=id;renderPlaytest();}
+function ptRestart(){
+  const scenes=getScenes();const s=scenes.find(x=>x.type==='start')||scenes[0];
+  ptState={sceneId:s?s.id:null,hp:100,resolve:50,resources:3,log:[]};
+  renderPlaytest();
+}
+function updatePtStats(){
+  if(!ptState)return;
+  document.getElementById('bar-hp').style.width=ptState.hp+'%';
+  document.getElementById('val-hp').textContent=ptState.hp;
+  document.getElementById('bar-res').style.width=ptState.resolve+'%';
+  document.getElementById('val-res').textContent=ptState.resolve;
+  document.getElementById('bar-rsc').style.width=(ptState.resources/3*100)+'%';
+  document.getElementById('val-rsc').textContent=ptState.resources;
+}
+function renderPtLog(){
+  const el=document.getElementById('ptLog');
+  if(!ptState?.log.length){el.innerHTML='';document.getElementById('ptLogLabel').style.display='none';return;}
+  document.getElementById('ptLogLabel').style.display='block';
+  el.innerHTML=ptState.log.slice(-4).reverse().map(e=>`
+    <div class="pt-log-item">
+      <div class="pt-log-scene">${esc(e.scene)}</div>
+      <div class="pt-log-choice">▸ ${esc(e.choice)}</div>
+      ${e.outcome?`<div class="pt-log-outcome">${esc(e.outcome)}</div>`:''}
+    </div>`).join('');
+}
+
+// ── MODAL / NAV ──
+function openOverlay(){document.getElementById('modal-scene').classList.add('open');document.body.style.overflow='hidden';}
+function closeOverlay(){document.getElementById('modal-scene').classList.remove('open');document.body.style.overflow='';}
+document.getElementById('modal-scene').addEventListener('click',e=>{if(e.target===document.getElementById('modal-scene'))closeOverlay();});
+function goBack(){if(window.parent&&window.parent!==window)window.parent.postMessage({type:'navigate',module:'rpg'},'*');else window.location.href='rpg.html';}
+
+renderTree();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&currentTab==='tree')renderTree();});
+</script>
+</body>
+</html>

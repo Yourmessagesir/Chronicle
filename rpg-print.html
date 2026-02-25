@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Print — Chronicle & Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--bg2:#13131a;--bg3:#1a1a24;--bg4:#222230;--border:#2e2e42;--border2:#3d3d58;--gold:#c9a84c;--gold2:#e8c97a;--gold3:#8a6a20;--text:#d4d4e8;--text2:#9090aa;--text3:#5a5870;--red:#cc5555;--green:#55aa77;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;padding:0 0 60px;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4;}
+
+.topbar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;}
+.back-btn{background:none;border:none;color:var(--text2);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;cursor:pointer;}
+.back-btn:active{color:var(--gold);}
+.topbar-title{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:.08em;flex:1;}
+.btn{padding:6px 12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:active{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:var(--gold2);color:#1a1200;font-weight:600;}
+.btn-sm{padding:4px 9px;font-size:9px;}
+
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);}
+.tab{flex:1;padding:11px 4px;text-align:center;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+.view{display:none;}
+.view.active{display:block;}
+
+/* CONTROLS */
+.controls{padding:12px 14px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.controls label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;color:var(--text2);white-space:nowrap;}
+.controls select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:3px;font-family:'Crimson Pro',serif;font-size:13px;outline:none;flex:1;min-width:100px;}
+.controls select option{background:var(--bg3);}
+
+/* PREVIEW AREA */
+.preview-wrap{padding:14px;overflow-y:auto;}
+.preview-hint{text-align:center;padding:30px 20px;color:var(--text3);font-style:italic;font-size:14px;}
+
+/* ── CHARACTER SHEET PRINT ── */
+.sheet{background:#fff;color:#1a1a1a;font-family:'Crimson Pro',Georgia,serif;max-width:640px;margin:0 auto;border-radius:4px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.5);}
+.sheet-header{background:#1a1a1a;color:#e8c97a;padding:18px 20px;display:flex;align-items:flex-start;justify-content:space-between;}
+.sheet-game{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.18em;opacity:.7;margin-bottom:4px;}
+.sheet-name{font-family:'Cinzel',serif;font-size:22px;letter-spacing:.06em;}
+.sheet-player{font-size:13px;opacity:.7;margin-top:3px;}
+.sheet-level{font-family:'Cinzel',serif;font-size:13px;background:rgba(232,201,122,.2);border:1px solid rgba(232,201,122,.4);padding:5px 12px;border-radius:3px;text-align:center;}
+.sheet-level-num{font-size:24px;display:block;line-height:1.1;}
+.sheet-level-lbl{font-size:8px;letter-spacing:.12em;opacity:.8;}
+.sheet-body{padding:16px 20px;}
+.sheet-section{margin-bottom:14px;}
+.sheet-section-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#888;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:10px;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;}
+.stat-box{border:1px solid #ddd;border-radius:4px;text-align:center;padding:8px 4px;}
+.stat-val{font-family:'Cinzel',serif;font-size:22px;color:#1a1a1a;display:block;}
+.stat-name{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.1em;color:#888;margin-top:2px;}
+.xp-bar-wrap{height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-bottom:4px;}
+.xp-bar-fill{height:100%;background:#c9a84c;border-radius:3px;}
+.xp-label{font-family:'Cinzel',serif;font-size:8px;color:#888;letter-spacing:.06em;}
+.conditions-row{display:flex;flex-wrap:wrap;gap:6px;}
+.condition-tag{border:1px solid #ddd;border-radius:12px;padding:3px 10px;font-family:'Cinzel',serif;font-size:9px;color:#888;position:relative;padding-left:22px;}
+.condition-tag::before{content:'○';position:absolute;left:8px;color:#bbb;}
+.condition-tag.active{border-color:#c9a84c;color:#8a5a00;background:#fffaf0;}
+.condition-tag.active::before{content:'●';color:#c9a84c;}
+.inv-slots{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
+.inv-slot{border:1px solid #ddd;border-radius:3px;padding:5px 8px;min-height:30px;font-size:13px;}
+.inv-slot.filled{background:#f9f9f9;border-color:#bbb;}
+.inv-slot-label{font-family:'Cinzel',serif;font-size:7px;color:#aaa;display:block;margin-bottom:1px;letter-spacing:.06em;}
+.notes-box{border:1px solid #ddd;border-radius:3px;min-height:60px;padding:8px;font-size:13px;color:#444;line-height:1.6;white-space:pre-wrap;}
+.sheet-footer{background:#f5f0e8;border-top:1px solid #ddd;padding:8px 20px;display:flex;justify-content:space-between;align-items:center;}
+.sheet-footer-text{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.1em;color:#aaa;}
+
+/* ── RULEBOOK PRINT ── */
+.zine{background:#fff;color:#1a1a1a;font-family:'Crimson Pro',Georgia,serif;max-width:640px;margin:0 auto;border-radius:4px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.5);}
+.zine-cover{background:#1a1a1a;color:#e8c97a;padding:40px 28px;text-align:center;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+.zine-cover-game{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.22em;opacity:.6;}
+.zine-cover-title{font-family:'Cinzel',serif;font-size:28px;letter-spacing:.08em;}
+.zine-cover-sub{font-size:14px;opacity:.7;font-style:italic;}
+.zine-cover-dice{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.14em;opacity:.5;margin-top:6px;border-top:1px solid rgba(232,201,122,.3);padding-top:8px;width:100%;}
+.zine-body{padding:20px 24px;}
+.zine-section{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #eee;}
+.zine-section:last-child{border-bottom:none;}
+.zine-section-type{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.18em;color:#aaa;text-transform:uppercase;margin-bottom:4px;}
+.zine-section-title{font-family:'Cinzel',serif;font-size:17px;color:#1a1a1a;letter-spacing:.04em;margin-bottom:8px;}
+.zine-content{font-size:14px;line-height:1.8;color:#333;white-space:pre-wrap;}
+.zine-word-count{font-family:'Cinzel',serif;font-size:8px;color:#bbb;letter-spacing:.06em;margin-top:6px;}
+.zine-footer{background:#f5f0e8;border-top:1px solid #ddd;padding:8px 24px;display:flex;justify-content:space-between;}
+.zine-footer-text{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.1em;color:#aaa;}
+
+/* PRINT MEDIA */
+@media print{
+  body{background:#fff!important;padding:0!important;}
+  body::before{display:none!important;}
+  .topbar,.tabs,.controls{display:none!important;}
+  .view{display:block!important;}
+  .preview-wrap{padding:0!important;}
+  .sheet,.zine{box-shadow:none!important;border-radius:0!important;max-width:100%!important;}
+  .print-page-break{page-break-after:always;}
+}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="goBack()">← Hub</button>
+  <div class="topbar-title">Print Views</div>
+  <button class="btn btn-gold btn-sm" onclick="window.print()">🖨 Print</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="tab-sheet"    onclick="switchTab('sheet')">Character Sheet</div>
+  <div class="tab"        id="tab-rulebook" onclick="switchTab('rulebook')">Rulebook</div>
+</div>
+
+<!-- CHARACTER SHEET TAB -->
+<div class="view active" id="view-sheet">
+  <div class="controls">
+    <label>Character</label>
+    <select id="charSelect" onchange="renderSheet()"><option value="">— Select character —</option></select>
+    <button class="btn btn-sm" onclick="renderSheet()">Refresh</button>
+  </div>
+  <div class="preview-wrap" id="sheetPreview">
+    <div class="preview-hint">Select a character above to preview their print-ready sheet.</div>
+  </div>
+</div>
+
+<!-- RULEBOOK TAB -->
+<div class="view" id="view-rulebook">
+  <div class="controls" style="justify-content:flex-end;">
+    <button class="btn btn-sm" onclick="renderRulebook()">Refresh</button>
+  </div>
+  <div class="preview-wrap" id="rulebookPreview">
+    <div class="preview-hint">Loading rulebook…</div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function getData(){try{return JSON.parse(localStorage.getItem('chronicle_ttrpg')||'{}');}catch{return{};}}
+
+let currentTab = 'sheet';
+
+function switchTab(t){
+  currentTab = t;
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('view-'+t).classList.add('active');
+  if(t==='rulebook') renderRulebook();
+}
+
+// ── CHARACTER SHEET ──
+function populateCharSelect(){
+  const chars = getData().characters || [];
+  const sel = document.getElementById('charSelect');
+  sel.innerHTML = '<option value="">— Select character —</option>' +
+    chars.map(c=>`<option value="${c.id}">${esc(c.name)}${c.player?' ('+esc(c.player)+')':''}</option>`).join('');
+}
+
+function renderSheet(){
+  const d = getData();
+  const id = document.getElementById('charSelect').value;
+  const char = (d.characters||[]).find(c=>c.id===id);
+  const preview = document.getElementById('sheetPreview');
+  if(!char){ preview.innerHTML='<div class="preview-hint">Select a character to preview.</div>'; return; }
+
+  const tmpl = d.sheet_template || {};
+  const stats = tmpl.stats || [];
+  const conditions = tmpl.conditions || [];
+  const maxSlots = tmpl.maxSlots || 10;
+  const xpPerLevel = tmpl.xpPerLevel || 10;
+  const xp = char.xp || 0;
+  const level = char.level || 1;
+  const xpPct = Math.min(100, Math.round((xp % xpPerLevel) / xpPerLevel * 100));
+  const meta = d.meta || {};
+  const inv = char.inventory || [];
+
+  const statsHTML = stats.map(s=>{
+    const val = (char.stats||{})[s.name] ?? s.default ?? '';
+    if(s.type==='checkbox') return `<div class="stat-box"><span class="stat-val">${val?'☑':'☐'}</span><div class="stat-name">${esc(s.name)}</div></div>`;
+    return `<div class="stat-box"><span class="stat-val">${esc(String(val))}</span><div class="stat-name">${esc(s.name)}</div></div>`;
+  }).join('');
+
+  const condHTML = conditions.map(c=>{
+    const active = (char.conditions||[]).includes(c);
+    return `<span class="condition-tag${active?' active':''}">${esc(c)}</span>`;
+  }).join('');
+
+  const slotHTML = Array.from({length:maxSlots},(_,i)=>{
+    const item = inv[i];
+    return `<div class="inv-slot${item?' filled':''}"><span class="inv-slot-label">Slot ${i+1}</span>${item?esc(item):''}</div>`;
+  }).join('');
+
+  preview.innerHTML = `
+    <div class="sheet">
+      <div class="sheet-header">
+        <div>
+          <div class="sheet-game">${esc(meta.gameTitle||'Chronicle & Forge')}</div>
+          <div class="sheet-name">${esc(char.name)}</div>
+          ${char.player?`<div class="sheet-player">Player: ${esc(char.player)}</div>`:''}
+        </div>
+        <div class="sheet-level">
+          <span class="sheet-level-num">${level}</span>
+          <span class="sheet-level-lbl">LEVEL</span>
+        </div>
+      </div>
+      <div class="sheet-body">
+        ${stats.length?`
+        <div class="sheet-section">
+          <div class="sheet-section-title">Stats</div>
+          <div class="stats-grid">${statsHTML}</div>
+        </div>`:''}
+        <div class="sheet-section">
+          <div class="sheet-section-title">Experience</div>
+          <div class="xp-bar-wrap"><div class="xp-bar-fill" style="width:${xpPct}%"></div></div>
+          <div class="xp-label">${xp} XP — Level ${level} (${xpPct}% to next)</div>
+        </div>
+        ${conditions.length?`
+        <div class="sheet-section">
+          <div class="sheet-section-title">Conditions</div>
+          <div class="conditions-row">${condHTML}</div>
+        </div>`:''}
+        <div class="sheet-section">
+          <div class="sheet-section-title">Inventory (${inv.filter(Boolean).length}/${maxSlots} slots)</div>
+          <div class="inv-slots">${slotHTML}</div>
+        </div>
+        ${char.notes?`
+        <div class="sheet-section">
+          <div class="sheet-section-title">Notes</div>
+          <div class="notes-box">${esc(char.notes)}</div>
+        </div>`:''}
+      </div>
+      <div class="sheet-footer">
+        <span class="sheet-footer-text">${esc(meta.gameTitle||'Chronicle & Forge')}</span>
+        <span class="sheet-footer-text">${esc(char.name)} · Level ${level}</span>
+      </div>
+    </div>`;
+}
+
+// ── RULEBOOK ──
+function renderRulebook(){
+  const d = getData();
+  const meta = d.meta || {};
+  const rules = d.rules || {};
+  const sections = rules.sections || [];
+  const preview = document.getElementById('rulebookPreview');
+
+  if(!sections.length){
+    preview.innerHTML='<div class="preview-hint">No rulebook content yet. Add sections in the Rulebook module.</div>';
+    return;
+  }
+
+  const totalWords = sections.reduce((a,s)=>a+(s.wordCount||0),0);
+  const pages = Math.max(1, Math.round(totalWords/250));
+  const diceMap={'2d6':'2d6 System','d20':'d20 System','d6pool':'d6 Pool','custom':'Custom System'};
+  const diceLabel = diceMap[meta.diceSystem||'2d6']||'2d6 System';
+
+  const sectionsHTML = sections.map(s=>`
+    <div class="zine-section">
+      <div class="zine-section-type">${esc(s.type||'section')}</div>
+      <div class="zine-section-title">${esc(s.title)}</div>
+      <div class="zine-content">${esc(s.content||'')}</div>
+      <div class="zine-word-count">${s.wordCount||0} words</div>
+    </div>`).join('');
+
+  preview.innerHTML = `
+    <div class="zine">
+      <div class="zine-cover">
+        <div class="zine-cover-game">Chronicle & Forge · RPG Suite</div>
+        <div class="zine-cover-title">${esc(meta.gameTitle||'My Game')}</div>
+        ${meta.tagline?`<div class="zine-cover-sub">${esc(meta.tagline)}</div>`:''}
+        <div class="zine-cover-dice">Core System: ${diceLabel}</div>
+      </div>
+      <div class="zine-body">${sectionsHTML}</div>
+      <div class="zine-footer">
+        <span class="zine-footer-text">${esc(meta.gameTitle||'My Game')}</span>
+        <span class="zine-footer-text">~${pages} pages · ${totalWords} words</span>
+      </div>
+    </div>`;
+}
+
+// ── NAV ──
+function goBack(){
+  if(window.parent&&window.parent!==window)window.parent.postMessage({type:'navigate',module:'rpg'},'*');
+  else window.location.href='rpg.html';
+}
+
+// ── INIT ──
+populateCharSelect();
+renderRulebook();
+</script>
+</body>
+</html>

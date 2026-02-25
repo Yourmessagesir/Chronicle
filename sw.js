@@ -1,4 +1,4 @@
-const CACHE = 'chronicle-v10';
+const CACHE = 'chronicle-v11';
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -18,6 +18,8 @@ const ASSETS = [
   './rpg-play.html',
   './rpg-map.html',
   './rpg-mapplay.html',
+  './rpg-scenes.html',
+  './rpg-print.html',
   './cards.html',
   './vault.html',
   './settings.html',
